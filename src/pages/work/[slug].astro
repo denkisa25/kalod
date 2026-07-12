@@ -1,0 +1,70 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { getProjects } from '../../lib/projects';
+import { roleLine } from '../../lib/format';
+
+export function getStaticPaths() {
+  const projects = getProjects();
+  return projects.map((project, i) => ({
+    params: { slug: project.slug },
+    props: {
+      project,
+      prev: projects[(i - 1 + projects.length) % projects.length],
+      next: projects[(i + 1) % projects.length],
+    },
+  }));
+}
+
+const { project, prev, next } = Astro.props;
+const description = project.excerpt || `${roleLine(project.roles)} — ${project.title}, by kaloyan dimitrov.`;
+
+// spec §13: VideoObject + CreativeWork per project with role credits.
+// uploadDate is unknown for most WP-era posts (only a publish date was
+// captured, not the actual production date) — using project.date is the
+// best available signal rather than inventing one.
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CreativeWork',
+  name: project.title,
+  creator: { '@type': 'Person', name: 'Kaloyan Dimitrov' },
+  ...(project.client && { about: project.client }),
+  ...(project.video && {
+    video: {
+      '@type': 'VideoObject',
+      name: project.title,
+      description,
+      thumbnailUrl: new URL(project.poster, Astro.site).toString(),
+      uploadDate: project.date,
+      embedUrl: project.video,
+    },
+  }),
+};
+---
+<BaseLayout
+  title={`${project.title} | kaloyan dimitrov`}
+  description={description}
+  image={project.poster}
+  ogType={project.video ? 'video.other' : 'website'}
+>
+  <Header current="work" />
+  <main id="main">
+    <div class="project-detail">
+      <div class="kind">{roleLine(project.roles)}</div>
+      <h1>{project.title}</h1>
+      <img class="poster-still" src={project.poster} alt={project.title} width="1600" height="900" />
+      <div class="cols">
+        <div class="col"><div class="lbl">role</div><b>{roleLine(project.roles)}</b></div>
+        {project.client && <div class="col"><div class="lbl">client</div><b>{project.client}</b></div>}
+      </div>
+      {project.excerpt && <p class="desc">{project.excerpt}</p>}
+      <div class="prevnext">
+        <a href={`/work/${prev.slug}`}>&larr; {prev.title}</a>
+        <a href={`/work/${next.slug}`}>{next.title} &rarr;</a>
+      </div>
+    </div>
+  </main>
+  <Footer />
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} is:inline />
+</BaseLayout>

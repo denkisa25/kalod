@@ -1,0 +1,25 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+<BaseLayout title="about | kaloyan dimitrov" description="kaloyan dimitrov is a composer, sound designer and mix engineer working across film, television and advertising.">
+  <Header current="about" />
+  <main id="main">
+    <section class="block">
+      <div id="about">
+        <div class="portrait placeholder-art">
+          <div class="init">kd</div>
+          <div class="cap">portrait / studio photo — pending</div>
+        </div>
+        <div class="bio">
+          <div class="eyebrow">about</div>
+          <p>kaloyan dimitrov is a composer, sound designer and mix engineer working across film, television and advertising. from sundance-selected features to full network rebrands, his work lives where picture ends and feeling begins.</p>
+          <p>two decades of cues for audi, pepsi, nestlé, societe generale, btv and the films of miramar — composed, designed and mixed in sofia, heard everywhere.</p>
+          <div class="disciplines"><span>music</span><span>mix</span><span>sound design</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>

@@ -1,0 +1,73 @@
+/* Design tokens — spec.md §3 (extracted brand values) + §9 (scale)
+   v3 update (docs/design/README.md): accent moved from the phase0-extracted
+   blue to a gold/brown pulled from the ambient bg-loop pattern. Not a
+   pixel-sampled extraction — a design judgment call, pending client
+   sign-off before launch. */
+:root {
+  --color-bg: #0e0f10;
+  --color-ink: #c9c9cb;
+  --color-heading: #ffffff;
+  --color-accent: #c99a55;
+  --focus-ring: var(--color-accent);
+  --color-scrim: color-mix(in srgb, var(--color-bg) 60%, black);
+  --color-line: color-mix(in srgb, var(--color-ink) 20%, transparent);
+  /* 60%, not 55% — spec §12 requires ≥4.5:1 for meta text over the scrim;
+     55% measured ~4.2:1 against --color-bg, this measures ~4.75:1 */
+  --color-meta: color-mix(in srgb, var(--color-ink) 60%, transparent);
+  --gradient-scrim: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-bg) 25%, transparent) 0%,
+    transparent 35%,
+    color-mix(in srgb, var(--color-bg) 92%, transparent) 100%
+  );
+  /* warm gold-to-black page backdrop — reasoned approximation (README),
+     not extracted from the live site; swap for a pixel match if the
+     client sends a screenshot */
+  --surface-gradient: radial-gradient(
+    120% 90% at 12% -10%,
+    color-mix(in srgb, var(--color-accent) 16%, var(--color-bg)) 0%,
+    var(--color-bg) 55%
+  );
+
+  /* Type */
+  --font-display: 'Agency FB', 'Bahnschrift', 'Arial Narrow', sans-serif;
+  --font-body: Verdana, Geneva, sans-serif;
+  --text-hero: clamp(2.5rem, 8vw, 7rem);
+  --text-h2: clamp(1.5rem, 3vw, 2.5rem);
+  --text-body: clamp(1rem, 1.1vw, 1.125rem);
+  --text-meta-size: 0.75rem;
+  --text-meta-tracking: 0.08em;
+
+  /* Space — 4px base, musical ratio ~1.618 upper steps */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 40px;
+  --space-6: 64px;
+  --space-7: 104px;
+  --space-8: 168px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --dur-1: 150ms;
+  --dur-2: 300ms;
+  --dur-3: 600ms;
+  --dur-4: 1200ms;
+
+  /* Radius — cinematic, full-bleed, no rounded cards */
+  --radius: 0;
+
+  /* z-index scale — fixed-position layers only, low to high. Documented
+     after a code-review pass: the previous ad-hoc values (header/mobileNav
+     both z-index 39-ish) had already caused one real bug — the mobile nav
+     overlay painted over the header's own brand/close controls (see
+     docs/design/README.md). Insert a new fixed-position layer by picking
+     the right tier below, not a guessed number. */
+  --z-nav-affordance: 39; /* filters, desktop rail, mobile rail */
+  --z-mobile-nav: 40;     /* mobile nav overlay panel */
+  --z-header: 41;         /* header — must stay above the mobile nav overlay */
+  --z-detail: 50;         /* detail overlay (video player modal) */
+  --z-opener: 100;        /* opener (first-visit takeover) */
+  --z-skip-link: 200;     /* skip-to-content — always on top when focused */
+}

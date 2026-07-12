@@ -1,0 +1,66 @@
+---
+import '../styles/tokens.css';
+import '../styles/fonts.css';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  /** Pages with the opener island start with header/main hidden and reveal
+   *  via body.ready once the opener finishes (spec §6). Every other page
+   *  renders body.ready immediately server-side so nothing ever depends on
+   *  JS to become visible. */
+  hasOpener?: boolean;
+  /** og:image — defaults to the site's general share image; project pages
+   *  pass their poster (spec §13: "poster as og:image"). */
+  image?: string;
+  /** og:type — project pages pass "video.other". */
+  ogType?: string;
+}
+const {
+  title,
+  description = 'kaloyan dimitrov — music + sound post. composer, sound designer, mix engineer.',
+  hasOpener = false,
+  image = '/posters/viktoria-trailer-2.jpg',
+  ogType = 'website',
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const imageURL = new URL(image, Astro.site);
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonicalURL} />
+  <link rel="icon" href="/favicon.svg" />
+
+  <meta property="og:type" content={ogType} />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:image" content={imageURL} />
+  <meta property="og:url" content={canonicalURL} />
+  <meta property="og:site_name" content="kaloyan dimitrov" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={imageURL} />
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: 'Kaloyan Dimitrov',
+    jobTitle: 'Composer, Sound Designer, Mix Engineer',
+    description: 'Composer, sound designer and mix engineer working across film, television and advertising.',
+    url: 'https://kalodimitrov.com',
+    knowsAbout: ['Music Composition', 'Sound Design', 'Audio Mixing'],
+  })} is:inline />
+</head>
+<body class={hasOpener ? undefined : 'ready'}>
+  <a class="skip-link" href="#main">skip to content</a>
+  <slot />
+</body>
+</html>

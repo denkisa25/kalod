@@ -1,0 +1,30 @@
+<!--
+  Captions/subtitles (spec §12): none of today's YouTube embeds carry
+  client-authored captions, and there's no VTT source yet to attach. Once
+  the client's projects move to Vimeo Pro (VideoSource → VimeoSource, see
+  README), request dialogue-bearing work be captioned at upload — Vimeo
+  surfaces VTT tracks through its own player chrome, so no change is
+  needed here beyond swapping the provider.
+-->
+<div id="detail" role="dialog" aria-modal="true" aria-label="watch project">
+  <div id="dEyebrow" class="eyebrow-bar" hidden>video unavailable — client hasn&rsquo;t supplied a link yet</div>
+  <div class="bar">
+    <span id="dCount">cue 01</span>
+    <button id="dClose" type="button">close &#10005; <small>esc</small></button>
+  </div>
+  <div class="stage">
+    <div id="player">
+      <div class="skeleton" aria-hidden="true"><span></span><span></span></div>
+      <div class="ph">video pending — client to supply link</div>
+    </div>
+  </div>
+  <div class="info">
+    <h3 id="dTitle"><small id="dKind"></small><span id="dName"></span></h3>
+    <div class="dcol"><div class="lbl">role</div><b id="dRoles"></b></div>
+    <div class="dcol"><div class="lbl">client / credits</div><b id="dClient"></b><span id="dNote"></span></div>
+    <div class="prevnext">
+      <button id="dPrev" type="button">&larr; prev cue</button>
+      <button id="dNext" type="button">next cue &rarr;</button>
+    </div>
+  </div>
+</div>

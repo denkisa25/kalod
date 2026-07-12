@@ -1,0 +1,20 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+<BaseLayout title="contacts | kaloyan dimitrov" description="get in touch with kaloyan dimitrov — email, phone and socials for music, mix and sound design work.">
+  <Header current="contacts" />
+  <main id="main">
+    <section class="block" id="contact">
+      <div class="eyebrow">contacts</div>
+      <h2>let&rsquo;s talk sound</h2>
+      <a class="mail" href="mailto:studio@kalodimitrov.com">studio@kalodimitrov.com</a>
+      <div class="lines">
+        <a href="tel:+359000000000">+359 &middot;&middot;&middot; &middot;&middot;&middot; &middot;&middot;&middot;</a>
+        <a href="#">vimeo</a><a href="#">imdb</a><a href="#">linkedin</a>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>

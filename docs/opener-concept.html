@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>kaloyan dimitrov — opener concept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   TOKENS — placeholders pending Phase 0 extraction (spec §3).
+   Swap these four values + fonts and the whole demo rebrands.
+   Current placeholder direction: near-black room, warm ink,
+   VU-meter amber accent (grounded in analog console metering).
+   ============================================================ */
+:root{
+  --bg:      #0b0b0d;
+  --ink:     #e9e4da;
+  --accent:  #e2a13c;          /* VU-meter amber */
+  --meta:    rgba(233,228,218,.45);
+  --line:    rgba(233,228,218,.12);
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body:    "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --ease: cubic-bezier(.16,1,.3,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:var(--font-body); overflow:hidden;
+  -webkit-font-smoothing:antialiased; text-transform:lowercase;
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-transform:lowercase}
+
+/* ---------- opener layer ---------- */
+#opener{position:fixed;inset:0;z-index:10;background:var(--bg);
+  transition:opacity 1.2s var(--ease);}
+#opener.gone{opacity:0;pointer-events:none}
+#fx{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+/* choice screen */
+#choice{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:clamp(28px,5vh,48px);
+  text-align:center;padding:24px;
+  transition:opacity .6s var(--ease), transform .6s var(--ease);}
+#choice.gone{opacity:0;transform:translateY(-10px);pointer-events:none}
+#choice .prompt{
+  font-family:var(--font-display);
+  font-size:clamp(1.15rem,3.4vw,1.9rem);
+  font-variation-settings:"wght" 300,"wdth" 96;
+  letter-spacing:.04em; color:var(--ink);
+}
+#choice .buttons{display:flex;gap:clamp(20px,4vw,44px);flex-wrap:wrap;justify-content:center}
+.enter{
+  position:relative;
+  font-size:clamp(.8rem,1.6vw,.95rem); letter-spacing:.22em;
+  color:var(--meta); padding:14px 6px;
+  transition:color .3s var(--ease);
+}
+.enter::after{content:"";position:absolute;left:0;right:100%;bottom:6px;height:1px;
+  background:var(--accent);transition:right .45s var(--ease)}
+.enter:hover,.enter:focus-visible{color:var(--ink);outline:none}
+.enter:hover::after,.enter:focus-visible::after{right:0}
+.enter.primary{color:var(--accent)}
+.enter.primary:hover{color:var(--ink)}
+
+#skipnote{position:absolute;bottom:26px;left:0;right:0;text-align:center;
+  font-size:.68rem;letter-spacing:.25em;color:var(--meta);
+  opacity:0;transition:opacity .8s var(--ease)}
+#skipnote.show{opacity:.7}
+
+/* ---------- landing (post-opener) ---------- */
+#site{position:fixed;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:clamp(14px,3vh,26px);
+  opacity:0;transition:opacity 1.4s var(--ease) .2s}
+#site.show{opacity:1}
+#wordmark{
+  font-family:var(--font-display);
+  font-size:clamp(2.2rem,9vw,6.4rem);
+  font-variation-settings:"wght" 640,"wdth" 78;
+  letter-spacing:.01em; line-height:1;
+  animation:breathe 5.5s ease-in-out infinite;
+}
+@keyframes breathe{
+  0%,100%{font-variation-settings:"wght" 640,"wdth" 78}
+  50%    {font-variation-settings:"wght" 560,"wdth" 80}
+}
+#tagline{font-size:clamp(.72rem,1.6vw,.9rem);letter-spacing:.5em;color:var(--meta);padding-left:.5em}
+#reelhint{margin-top:3vh;display:flex;align-items:center;gap:14px;
+  font-size:.78rem;letter-spacing:.22em;color:var(--meta)}
+#reelhint .dot{width:34px;height:34px;border:1px solid var(--line);border-radius:50%;
+  display:grid;place-items:center;color:var(--accent);font-size:.6rem}
+#replay{position:fixed;bottom:26px;left:0;right:0;display:flex;justify-content:center;gap:34px;
+  font-size:.68rem;letter-spacing:.25em}
+#replay button{color:var(--meta);transition:color .3s}
+#replay button:hover{color:var(--accent)}
+
+#confidential{position:fixed;top:20px;right:24px;font-size:.62rem;letter-spacing:.2em;
+  color:var(--meta);opacity:.6;z-index:20;text-align:right;line-height:1.7}
+
+@media (prefers-reduced-motion: reduce){
+  #wordmark{animation:none}
+}
+</style>
+</head>
+<body>
+
+<div id="confidential">concept demo — direction A “the console”<br>palette &amp; cue are placeholders pending brand extraction</div>
+
+<!-- landing state that the opener resolves into -->
+<main id="site" aria-hidden="true">
+  <h1 id="wordmark">kaloyan dimitrov</h1>
+  <div id="tagline">music + sound post</div>
+  <div id="reelhint"><span class="dot">▶</span><span>showreel 1:00 — full-bleed video hero lives here</span></div>
+  <nav id="replay">
+    <button id="againSound">replay with sound</button>
+    <button id="againQuiet">replay quietly</button>
+  </nav>
+</main>
+
+<!-- opener -->
+<div id="opener">
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <div id="choice" role="dialog" aria-label="sound preference">
+    <div class="prompt">this site is meant to be heard</div>
+    <div class="buttons">
+      <button class="enter primary" id="withSound">enter with sound</button>
+      <button class="enter" id="withoutSound">enter quietly</button>
+    </div>
+  </div>
+  <div id="skipnote">tap anywhere to skip</div>
+</div>
+
+<script>
+/* ============================================================
+   OPENER — audio-reactive brand moment (spec §6)
+   One timeline, two drivers:
+     • with sound  -> live Web Audio synthesis + AnalyserNode
+     • quietly     -> deterministic envelope, identical choreography
+   Timeline (ms): thumps @600/1300, riser 2000→4600,
+   hits @2600/3300/3900, DROP @4600 -> particles resolve
+   into the wordmark, done @6800.
+   ============================================================ */
+(() => {
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const BG = css('--bg'), INK = css('--ink'), ACCENT = css('--accent');
+
+const T = { thumps:[600,1300], riser:[2000,4600], hits:[2600,3300,3900], drop:4600, end:6800 };
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const opener = document.getElementById('opener');
+const choice = document.getElementById('choice');
+const skipnote = document.getElementById('skipnote');
+const site = document.getElementById('site');
+const canvas = document.getElementById('fx');
+const ctx = canvas.getContext('2d');
+
+let W=0,H=0,DPR=1, state='idle', t0=0, raf=null;
+let audio=null, analyser=null, tdata=null;
+let particles=[], targets=[], firedEvents=new Set();
+let idleT=0;
+
+function resize(){
+  DPR = Math.min(devicePixelRatio||1, 2);
+  W = innerWidth; H = innerHeight;
+  canvas.width = W*DPR; canvas.height = H*DPR;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  targets = sampleWordmark();
+}
+addEventListener('resize', resize);
+
+/* ---- sample "kaloyan dimitrov" into particle targets ---- */
+function sampleWordmark(){
+  const off = document.createElement('canvas');
+  const s = Math.min(W*0.086, 96);
+  off.width = W; off.height = H;
+  const o = off.getContext('2d');
+  o.fillStyle = '#fff';
+  o.font = `640 ${s}px Archivo, Helvetica, Arial, sans-serif`;
+  o.textAlign='center'; o.textBaseline='middle';
+  o.fillText('kaloyan dimitrov', W/2, H/2);
+  const img = o.getImageData(0,0,W,H).data;
+  const pts=[]; const stride = Math.max(3, Math.round(W/340));
+  for(let y=0;y<H;y+=stride) for(let x=0;x<W;x+=stride)
+    if(img[(y*W+x)*4+3] > 128) pts.push({x,y});
+  return pts;
+}
+
+/* ---- envelope: the cue's dynamics as a pure function (quiet mode + shaping) ---- */
+function env(t){
+  let e = t < T.riser[0] ? 0.22
+        : t < T.drop     ? 0.22 + 0.78 * Math.pow((t-T.riser[0])/(T.drop-T.riser[0]), 1.6)
+        : Math.exp(-(t-T.drop)/700);
+  for(const h of [...T.thumps, ...T.hits, T.drop])
+    if(t >= h) e += (h===T.drop?1.0:0.55) * Math.exp(-(t-h)/170);
+  return Math.min(e, 1.6);
+}
+/* organic pseudo-waveform for quiet mode */
+function pseudo(x, t){
+  return Math.sin(x*.021 + t*.0061)*.5
+       + Math.sin(x*.047 - t*.0043)*.3
+       + Math.sin(x*.009 + t*.0021)*.2;
+}
+
+/* ============================================================
+   AUDIO — the cue, synthesized live (placeholder for Kaloyan's
+   real 5–10s signature cue; the analyser wiring is identical)
+   ============================================================ */
+function noiseBuffer(actx){
+  const b = actx.createBuffer(1, actx.sampleRate*2, actx.sampleRate);
+  const d = b.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  return b;
+}
+function buildCue(){
+  const actx = new (window.AudioContext||window.webkitAudioContext)();
+  const master = actx.createGain(); master.gain.value = 0.9;
+  analyser = actx.createAnalyser(); analyser.fftSize = 1024;
+  tdata = new Uint8Array(analyser.fftSize);
+  master.connect(analyser); analyser.connect(actx.destination);
+  const now = actx.currentTime + 0.06;
+  const at = (ms) => now + ms/1000;
+  const nb = noiseBuffer(actx);
+
+  // room tone
+  {const src=actx.createBufferSource(); src.buffer=nb; src.loop=true;
+   const f=actx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=380;
+   const g=actx.createGain(); g.gain.setValueAtTime(0,now);
+   g.gain.linearRampToValueAtTime(.03, at(400));
+   g.gain.linearRampToValueAtTime(0, at(T.end));
+   src.connect(f).connect(g).connect(master); src.start(now); src.stop(at(T.end));}
+
+  // sub thumps + ticks
+  const thump=(ms,gain=0.9,f0=130,f1=42)=>{
+    const o=actx.createOscillator(); o.type='sine';
+    o.frequency.setValueAtTime(f0,at(ms));
+    o.frequency.exponentialRampToValueAtTime(f1,at(ms+140));
+    const g=actx.createGain(); g.gain.setValueAtTime(0,at(ms));
+    g.gain.linearRampToValueAtTime(gain,at(ms+12));
+    g.gain.exponentialRampToValueAtTime(.001,at(ms+420));
+    o.connect(g).connect(master); o.start(at(ms)); o.stop(at(ms+500));
+    const s=actx.createBufferSource(); s.buffer=nb;
+    const hf=actx.createBiquadFilter(); hf.type='highpass'; hf.frequency.value=3000;
+    const ng=actx.createGain(); ng.gain.setValueAtTime(.18,at(ms));
+    ng.gain.exponentialRampToValueAtTime(.001,at(ms+60));
+    s.connect(hf).connect(ng).connect(master); s.start(at(ms)); s.stop(at(ms+80));
+  };
+  T.thumps.forEach(ms=>thump(ms,.8));
+  T.hits.forEach((ms,i)=>thump(ms,.55+i*.12,180,60));
+
+  // riser: bandpassed noise sweep + sine gliss
+  {const s=actx.createBufferSource(); s.buffer=nb; s.loop=true;
+   const bp=actx.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=1.1;
+   bp.frequency.setValueAtTime(220,at(T.riser[0]));
+   bp.frequency.exponentialRampToValueAtTime(3600,at(T.riser[1]));
+   const g=actx.createGain(); g.gain.setValueAtTime(0,at(T.riser[0]));
+   g.gain.linearRampToValueAtTime(.22,at(T.riser[1]-120));
+   g.gain.setValueAtTime(0,at(T.riser[1]));
+   s.connect(bp).connect(g).connect(master); s.start(at(T.riser[0])); s.stop(at(T.riser[1]));
+   const o=actx.createOscillator(); o.type='sine';
+   o.frequency.setValueAtTime(70,at(T.riser[0]));
+   o.frequency.exponentialRampToValueAtTime(620,at(T.riser[1]));
+   const og=actx.createGain(); og.gain.setValueAtTime(0,at(T.riser[0]));
+   og.gain.linearRampToValueAtTime(.05,at(T.riser[1]-150));
+   og.gain.setValueAtTime(0,at(T.riser[1]));
+   o.connect(og).connect(master); o.start(at(T.riser[0])); o.stop(at(T.riser[1]));}
+
+  // THE DROP: big hit + crash + resolving pad (A minor add9, low & warm)
+  thump(T.drop, 1.0, 150, 34);
+  {const s=actx.createBufferSource(); s.buffer=nb;
+   const lp=actx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=2400;
+   const g=actx.createGain(); g.gain.setValueAtTime(.4,at(T.drop));
+   g.gain.exponentialRampToValueAtTime(.001,at(T.drop+1100));
+   s.connect(lp).connect(g).connect(master); s.start(at(T.drop)); s.stop(at(T.drop+1200));}
+  {const lp=actx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=820;
+   const pg=actx.createGain(); pg.gain.setValueAtTime(0,at(T.drop+40));
+   pg.gain.linearRampToValueAtTime(.16,at(T.drop+380));
+   pg.gain.linearRampToValueAtTime(0,at(T.end));
+   lp.connect(pg).connect(master);
+   for(const [f,detune] of [[110,0],[110,7],[164.81,-5],[246.94,4],[261.63,0]]){
+     const o=actx.createOscillator(); o.type='sawtooth';
+     o.frequency.value=f; o.detune.value=detune;
+     const og=actx.createGain(); og.gain.value=.22;
+     o.connect(og).connect(lp); o.start(at(T.drop+40)); o.stop(at(T.end));
+   }}
+  return actx;
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function spawnBurst(n, big=false){
+  const cy = H/2;
+  for(let i=0;i<n;i++){
+    const x = Math.random()*W;
+    const p = {
+      x, y: cy + (Math.random()-.5)*H*.12,
+      vx:(Math.random()-.5)*(big?7:3.4),
+      vy:(Math.random()-.5)*(big?9:4.6),
+      life: 1, decay: big? 0 : .012+Math.random()*.02,
+      target: null, size: big? 1.1+Math.random()*1.4 : .7+Math.random()*1.2
+    };
+    if(big && targets.length) p.target = targets[(Math.random()*targets.length)|0];
+    particles.push(p);
+  }
+}
+
+function drawIdle(dt){
+  idleT += dt;
+  ctx.fillStyle = BG; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle = ACCENT; ctx.globalAlpha = .5; ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  const cy = H*0.5 + Math.min(H*.18, 150); // resting line sits under the prompt
+  for(let x=0;x<=W;x+=3){
+    const y = cy + pseudo(x, idleT)*2.2;
+    x===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  }
+  ctx.stroke(); ctx.globalAlpha = 1;
+}
+
+function drawPlay(t){
+  // trail fade
+  ctx.globalAlpha = .32; ctx.fillStyle = BG; ctx.fillRect(0,0,W,H); ctx.globalAlpha = 1;
+
+  const e = env(t), cy = H/2;
+  const preDrop = t < T.drop;
+
+  // event triggers (deterministic — perfect sync in both modes)
+  for(const h of T.thumps)  if(t>=h && !firedEvents.has(h)){ firedEvents.add(h); spawnBurst(50); }
+  for(const h of T.hits)    if(t>=h && !firedEvents.has(h)){ firedEvents.add(h); spawnBurst(110); }
+  if(t>=T.drop && !firedEvents.has('drop')){
+    firedEvents.add('drop');
+    particles.length = 0;
+    spawnBurst(Math.min(targets.length, 1300), true);
+  }
+
+  // waveform line (fades out after the drop)
+  if(t < T.drop + 500){
+    const lineAlpha = preDrop ? .9 : Math.max(0, 1-(t-T.drop)/500);
+    const amp = Math.min(H*.22, 40 + e*110);
+    if(analyser) analyser.getByteTimeDomainData(tdata);
+    ctx.strokeStyle = ACCENT; ctx.globalAlpha = lineAlpha; ctx.lineWidth = 1.6;
+    ctx.shadowColor = ACCENT; ctx.shadowBlur = 14*e;
+    ctx.beginPath();
+    for(let x=0;x<=W;x+=2){
+      let v;
+      if(analyser){
+        const i = Math.floor(x/W * (tdata.length-1));
+        v = (tdata[i]-128)/128;
+        v = v*1.5 + pseudo(x,t)*.15*e;       // real signal, lightly styled
+      } else {
+        v = pseudo(x,t) * e * (0.7 + 0.3*Math.sin(t*.02 + x*.001));
+      }
+      const y = cy + v*amp;
+      x===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+  }
+
+  // particles
+  for(let i=particles.length-1;i>=0;i--){
+    const p = particles[i];
+    if(p.target){                       // converge to wordmark
+      p.vx += (p.target.x-p.x)*.03; p.vy += (p.target.y-p.y)*.03;
+      p.vx *= .82; p.vy *= .82;
+    } else {
+      p.vy += .02; p.life -= p.decay;
+      if(p.life<=0){ particles.splice(i,1); continue; }
+    }
+    p.x += p.vx; p.y += p.vy;
+    ctx.globalAlpha = p.target ? .95 : p.life*.8;
+    ctx.fillStyle = p.target ? INK : ACCENT;
+    ctx.fillRect(p.x, p.y, p.size, p.size);
+  }
+  ctx.globalAlpha = 1;
+}
+
+let last = 0;
+function loop(now){
+  if(!last) last = now;
+  const dt = now-last; last = now;
+  if(state==='idle'){ drawIdle(dt); }
+  else if(state==='playing'){
+    const t = now - t0;
+    drawPlay(t);
+    if(t >= T.end) return finish();
+  }
+  raf = requestAnimationFrame(loop);
+}
+
+/* ============================================================
+   FLOW
+   ============================================================ */
+function start(withSound){
+  if(state!=='idle') return;
+  if(REDUCED) return finish(true);      // reduced motion: straight to wordmark
+  state='playing';
+  choice.classList.add('gone');
+  skipnote.classList.add('show');
+  firedEvents.clear(); particles.length = 0;
+  if(withSound){ try{ audio = buildCue(); }catch(e){ audio=null; analyser=null; } }
+  t0 = performance.now();
+}
+function finish(instant=false){
+  state='done';
+  cancelAnimationFrame(raf); raf=null; last=0;
+  if(audio){ try{audio.close();}catch(e){} audio=null; analyser=null; }
+  skipnote.classList.remove('show');
+  site.classList.add('show'); site.setAttribute('aria-hidden','false');
+  opener.classList.add('gone');
+  if(instant) opener.style.transition='none';
+}
+function reset(withSound){
+  opener.style.transition='';
+  opener.classList.remove('gone');
+  site.classList.remove('show'); site.setAttribute('aria-hidden','true');
+  choice.classList.remove('gone');
+  state='idle'; last=0; particles.length=0; firedEvents.clear();
+  ctx.fillStyle=BG; ctx.fillRect(0,0,W,H);
+  raf = requestAnimationFrame(loop);
+  // small beat so the choice screen is seen, then auto-start on replay intent
+  setTimeout(()=>start(withSound), withSound===undefined? 1e9 : 350);
+}
+
+document.getElementById('withSound').addEventListener('click', e=>{e.stopPropagation(); start(true);});
+document.getElementById('withoutSound').addEventListener('click', e=>{e.stopPropagation(); start(false);});
+document.getElementById('againSound').addEventListener('click', ()=>reset(true));
+document.getElementById('againQuiet').addEventListener('click', ()=>reset(false));
+opener.addEventListener('pointerdown', ()=>{ if(state==='playing') finish(); });
+addEventListener('keydown', (e)=>{ if(state==='playing' && e.key!=='Tab') finish(); });
+
+resize();
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>{ targets = sampleWordmark(); });
+raf = requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+---
+interface Props {
+  /** Only the homepage has the opener island to replay against. */
+  showReplay?: boolean;
+}
+const { showReplay = false } = Astro.props;
+---
+<footer>
+  <span>&copy; 2026 kaloyan dimitrov &middot; all rights reserved &middot; all works &copy; their respective owners</span>
+  <span>
+    {/* no privacy page exists yet — spec §8 IA doesn't list one; placeholder
+        like the vimeo/imdb/linkedin links below, not a working route */}
+    <a href="#">privacy</a>
+    {showReplay && <>&nbsp;&middot;&nbsp;<button id="replayOpener" type="button">replay opener</button></>}
+  </span>
+</footer>

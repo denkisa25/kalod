@@ -1,0 +1,16 @@
+/* Agency FB — extracted from kalodimitrov.com (phase0/extraction/fonts) */
+@font-face {
+  font-family: 'Agency FB';
+  src: url('/fonts/agencyfb-reg.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Agency FB';
+  src: url('/fonts/agencyfb-bold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}

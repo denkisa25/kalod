@@ -1,0 +1,140 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import DetailOverlay from '../components/DetailOverlay.astro';
+import Opener from '../components/Opener.astro';
+import { getFeaturedProjects } from '../lib/projects';
+import { pad, roleLine } from '../lib/format';
+
+const projects = getFeaturedProjects(10);
+
+const CLIENTS = [
+  'audi', 'pepsi', 'nestlé', 'danone', 'carlsberg', 'bayer',
+  'societe generale', 'btv', 'miramar film', 'ddb sofia',
+  'graffiti bbdo', 'mtel', 'postbank',
+];
+
+// consumed client-side by src/scripts/video-layer.ts — the same 10 cues
+// rendered below, trimmed to what the background loop + detail overlay need
+const cueData = projects.map((p, i) => ({
+  idx: i,
+  slug: p.slug,
+  title: p.title,
+  kind: roleLine(p.roles),
+  roles: p.roles,
+  client: p.client,
+  excerpt: p.excerpt,
+  videoRef: p.videoRef,
+}));
+// guard against a stray "</script>" in extracted content prematurely closing the tag
+const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
+---
+<BaseLayout
+  title="kaloyan dimitrov | music + sound post"
+  description="composer, sound designer and mix engineer working across film, television and advertising. music, mix and sound design for sundance-selected features, tv branding and international campaigns."
+  image={projects[0].poster}
+  hasOpener
+>
+  <Header />
+
+  <div id="filters" role="group" aria-label="filter by role">
+    <button class="filter" data-f="all" aria-pressed="true" type="button"><span class="fader"></span>all</button>
+    <button class="filter" data-f="music" aria-pressed="false" type="button"><span class="fader"></span>music</button>
+    <button class="filter" data-f="mix" aria-pressed="false" type="button"><span class="fader"></span>mix</button>
+    <button class="filter" data-f="sound-design" aria-pressed="false" type="button"><span class="fader"></span>sound design</button>
+  </div>
+
+  <nav id="rail" aria-label="cue navigation">
+    {projects.map((p, i) => (
+      <a href={`#cue-${i}`} data-idx={i} data-roles={p.roles.join(',')}>{pad(i + 1)}</a>
+    ))}
+  </nav>
+
+  <nav id="mobileRail" aria-label="cue progress">
+    {projects.map((p, i) => (
+      <a href={`#cue-${i}`} data-idx={i} data-roles={p.roles.join(',')} aria-label={`cue ${pad(i + 1)}`}></a>
+    ))}
+  </nav>
+
+  <main id="main">
+    <div id="feed">
+      {projects.map((p, i) => (
+        <section class="cue" id={`cue-${i}`} data-idx={i} data-roles={p.roles.join(',')}>
+          <div class="bgwrap">
+            <img
+              class="poster"
+              src={p.poster}
+              alt={p.title}
+              width="1920"
+              height="1080"
+              loading={i === 0 ? 'eager' : 'lazy'}
+              fetchpriority={i === 0 ? 'high' : 'auto'}
+            />
+          </div>
+          <div class="shade"></div>
+          <div class="meta">
+            <div class="top">
+              <span class="idx">cue {pad(i + 1)}</span>
+              <span class="kind">{roleLine(p.roles)}</span>
+            </div>
+            <h2>{p.title}</h2>
+            <div class="roleline">
+              <b>{roleLine(p.roles)}</b>
+              {p.client && <>&nbsp;—&nbsp;{p.client}</>}
+            </div>
+            <div class="sub">
+              <div>{p.excerpt && <p class="desc">{p.excerpt}</p>}</div>
+              <a class="watch" href={`/work/${p.slug}`} data-idx={i}>
+                <span class="ring">&#9654;</span><span>watch with sound</span>
+              </a>
+            </div>
+          </div>
+          {i === 0 && <div class="scrollhint">scroll — next cue</div>}
+        </section>
+      ))}
+    </div>
+
+    <div id="feedEmpty" class="feed-empty" hidden>
+      <p>no cues match this filter.</p>
+      <button type="button">show all</button>
+    </div>
+
+    <section class="block" id="about-teaser">
+      <div class="about-teaser">
+        <div class="eyebrow">about</div>
+        <p>two decades composing, designing and mixing sound for film, television and advertising — from sundance to primetime.</p>
+        <a href="/about">more about kaloyan &rarr;</a>
+      </div>
+    </section>
+
+    <section class="block" id="clients">
+      <div class="track" aria-label="selected clients">
+        {CLIENTS.map((c) => <span>{c}</span>)}
+        {CLIENTS.map((c) => <span aria-hidden="true">{c}</span>)}
+      </div>
+    </section>
+
+    <section class="block" id="contact">
+      <div class="eyebrow">contacts</div>
+      <h2>let&rsquo;s talk sound</h2>
+      <a class="mail" href="mailto:studio@kalodimitrov.com">studio@kalodimitrov.com</a>
+      <div class="lines">
+        <a href="tel:+359000000000">+359 &middot;&middot;&middot; &middot;&middot;&middot; &middot;&middot;&middot;</a>
+        <a href="#">vimeo</a><a href="#">imdb</a><a href="#">linkedin</a>
+      </div>
+    </section>
+  </main>
+
+  <DetailOverlay />
+  <Footer showReplay />
+  <Opener />
+
+  <script type="application/json" id="cue-data" set:html={cueDataJson} is:inline></script>
+  <script>
+    import { initFeedInteractions } from '../scripts/feed-interactions';
+    import { initVideoLayer } from '../scripts/video-layer';
+    initFeedInteractions();
+    initVideoLayer();
+  </script>
+</BaseLayout>

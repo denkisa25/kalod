@@ -1,0 +1,29 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { getProjects } from '../../lib/projects';
+import { pad, roleLine } from '../../lib/format';
+
+const projects = getProjects().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+---
+<BaseLayout title="work | kaloyan dimitrov" description="the full index of film, tv and advertising work by kaloyan dimitrov — music, mix and sound design credits.">
+  <Header current="work" />
+  <main id="main">
+    <div class="work-index">
+      <h1>work</h1>
+      <ol class="work-list">
+        {projects.map((p, i) => (
+          <li>
+            <a class="work-row" href={`/work/${p.slug}`}>
+              <span class="n">{pad(i + 1)}</span>
+              <span class="t">{p.title}</span>
+              <span class="r">{roleLine(p.roles)}</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </main>
+  <Footer />
+</BaseLayout>

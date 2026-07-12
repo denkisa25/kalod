@@ -1,0 +1,54 @@
+---
+import { pad } from '../lib/format';
+
+interface Props {
+  current?: 'work' | 'about' | 'contacts';
+}
+const { current } = Astro.props;
+
+const links: Array<{ href: string; label: 'work' | 'about' | 'contacts' }> = [
+  { href: '/work', label: 'work' },
+  { href: '/about', label: 'about' },
+  { href: '/contacts', label: 'contacts' },
+];
+---
+<header>
+  <a class="brand" href="/">kaloyan dimitrov<small>music + sound post</small></a>
+  <nav class="desktop-nav" aria-label="primary">
+    {links.map((l) => (
+      <a href={l.href} aria-current={current === l.label ? 'page' : undefined}>{l.label}</a>
+    ))}
+    <button id="soundToggle" type="button" aria-label="sound — coming soon" title="sound — coming soon" disabled>
+      <span></span><span></span><span></span><span></span><span></span>
+    </button>
+  </nav>
+  <div class="mobile-controls">
+    <button id="soundToggleMobile" type="button" aria-label="sound — coming soon" title="sound — coming soon" disabled>
+      <span></span><span></span><span></span><span></span><span></span>
+    </button>
+    <button id="navToggle" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="open menu">
+      <span class="bars" aria-hidden="true"><span></span><span></span></span>
+      <span class="cross" aria-hidden="true">&#10005;</span>
+    </button>
+  </div>
+</header>
+
+<div id="mobileNav" aria-hidden="true">
+  <nav aria-label="main menu">
+    <ol>
+      {links.map((l, i) => (
+        <li>
+          <a href={l.href} aria-current={current === l.label ? 'page' : undefined}>
+            <span class="n">{pad(i + 1)}</span>
+            {l.label}
+          </a>
+        </li>
+      ))}
+    </ol>
+  </nav>
+</div>
+
+<script>
+  import { initMobileNav } from '../scripts/mobile-nav';
+  initMobileNav();
+</script>

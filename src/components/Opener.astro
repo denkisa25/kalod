@@ -1,0 +1,17 @@
+<div id="opener">
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <div id="choice" role="dialog" aria-label="sound preference">
+    <div class="prompt">this site is meant to be heard</div>
+    <div class="sub">sound design · original music · final mix</div>
+    <div class="buttons">
+      <button class="enter primary" id="withSound" type="button">enter with sound</button>
+      <button class="enter" id="withoutSound" type="button">enter quietly</button>
+    </div>
+  </div>
+  <div id="skipnote">tap anywhere to skip</div>
+</div>
+
+<script>
+  import { initOpener } from '../scripts/opener/index';
+  initOpener();
+</script>
