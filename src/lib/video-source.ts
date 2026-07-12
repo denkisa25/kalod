@@ -36,6 +36,9 @@ class YouTubeSource implements VideoSource {
       autoplay: '1', mute: '1', loop: '1', playlist: ref.id,
       controls: '0', playsinline: '1', modestbranding: '1',
       rel: '0', iv_load_policy: '3', disablekb: '1',
+      // CR-4: the feed's volume control drives these through the IFrame
+      // Player API (unMute/setVolume/mute), which requires this flag.
+      enablejsapi: '1',
     });
     return `https://www.youtube.com/embed/${ref.id}?${p}`;
   }

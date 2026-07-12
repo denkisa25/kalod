@@ -10,7 +10,7 @@ const { showReplay = false } = Astro.props;
   <span>
     {/* no privacy page exists yet — spec §8 IA doesn't list one; placeholder
         like the vimeo/imdb/linkedin links below, not a working route */}
-    <a href="#">privacy</a>
-    {showReplay && <>&nbsp;&middot;&nbsp;<button id="replayOpener" type="button">replay opener</button></>}
+    <a href="#" data-blip>privacy</a>
+    {showReplay && <>&nbsp;&middot;&nbsp;<button id="replayOpener" type="button" data-blip>replay opener</button></>}
   </span>
 </footer>

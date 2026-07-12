@@ -175,12 +175,28 @@ header.header--hero .mobile-controls {
   min-height: 44px;
   padding: 4px 2px;
   opacity: 0.55;
+  transition: opacity var(--dur-2);
+}
+#soundToggle:hover, #soundToggleMobile:hover,
+#soundToggle[aria-pressed="true"], #soundToggleMobile[aria-pressed="true"] {
+  opacity: 1;
 }
 #soundToggle span, #soundToggleMobile span {
   width: 2.5px;
   background: var(--color-meta);
   height: 3px;
   border-radius: 1px;
+  transition: height var(--dur-2) var(--ease-out), background var(--dur-2);
+}
+/* CR-4/D2 — this is now the single, real sound control (not decorative):
+   bars read like a live EQ, and light up accent when sound is on. */
+#soundToggle span:nth-child(1), #soundToggleMobile span:nth-child(1) { height: 5px; }
+#soundToggle span:nth-child(2), #soundToggleMobile span:nth-child(2) { height: 10px; }
+#soundToggle span:nth-child(3), #soundToggleMobile span:nth-child(3) { height: 15px; }
+#soundToggle span:nth-child(4), #soundToggleMobile span:nth-child(4) { height: 9px; }
+#soundToggle span:nth-child(5), #soundToggleMobile span:nth-child(5) { height: 4px; }
+#soundToggle[aria-pressed="true"] span, #soundToggleMobile[aria-pressed="true"] span {
+  background: var(--color-accent);
 }
 
 /* hamburger / close toggle — CR-13: 44x44 hit area, visual glyph unchanged

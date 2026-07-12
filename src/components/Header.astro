@@ -23,12 +23,12 @@ const links: Array<{ href: string; label: 'work' | 'about' | 'contacts' }> = [
     {links.map((l) => (
       <a href={l.href} aria-current={current === l.label ? 'page' : undefined}>{l.label}</a>
     ))}
-    <button id="soundToggle" type="button" aria-label="sound — coming soon" title="sound — coming soon" disabled>
+    <button id="soundToggle" type="button" aria-pressed="false" aria-label="sound off — unmute" title="sound off — unmute" disabled>
       <span></span><span></span><span></span><span></span><span></span>
     </button>
   </nav>
   <div class="mobile-controls">
-    <button id="soundToggleMobile" type="button" aria-label="sound — coming soon" title="sound — coming soon" disabled>
+    <button id="soundToggleMobile" type="button" aria-pressed="false" aria-label="sound off — unmute" title="sound off — unmute" disabled>
       <span></span><span></span><span></span><span></span><span></span>
     </button>
     <button id="navToggle" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="open menu">
@@ -56,6 +56,8 @@ const links: Array<{ href: string; label: 'work' | 'about' | 'contacts' }> = [
 <script>
   import { initMobileNav } from '../scripts/mobile-nav';
   import { initHeaderScroll } from '../scripts/header-scroll';
+  import { initSoundControl } from '../scripts/sound-control';
   initMobileNav();
   initHeaderScroll();
+  initSoundControl();
 </script>

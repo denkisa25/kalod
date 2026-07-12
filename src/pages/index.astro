@@ -39,10 +39,10 @@ const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
   <Header hero />
 
   <div id="filters" role="group" aria-label="filter by role">
-    <button class="filter" data-f="all" aria-pressed="true" type="button"><span class="fader"></span>all</button>
-    <button class="filter" data-f="music" aria-pressed="false" type="button"><span class="fader"></span>music</button>
-    <button class="filter" data-f="mix" aria-pressed="false" type="button"><span class="fader"></span>mix</button>
-    <button class="filter" data-f="sound-design" aria-pressed="false" type="button"><span class="fader"></span>sound design</button>
+    <button class="filter" data-f="all" aria-pressed="true" type="button" data-blip><span class="fader"></span>all</button>
+    <button class="filter" data-f="music" aria-pressed="false" type="button" data-blip><span class="fader"></span>music</button>
+    <button class="filter" data-f="mix" aria-pressed="false" type="button" data-blip><span class="fader"></span>mix</button>
+    <button class="filter" data-f="sound-design" aria-pressed="false" type="button" data-blip><span class="fader"></span>sound design</button>
   </div>
 
   <nav id="rail" aria-label="cue navigation">
@@ -85,7 +85,7 @@ const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
             </div>
             <div class="sub">
               <div>{p.excerpt && <p class="desc">{p.excerpt}</p>}</div>
-              <a class="watch" href={`/work/${p.slug}`} data-idx={i}>
+              <a class="watch" href={`/work/${p.slug}`} data-idx={i} data-blip>
                 <span class="ring">&#9654;</span><span>watch with sound</span>
               </a>
               {p.credits.length > 0 && (
