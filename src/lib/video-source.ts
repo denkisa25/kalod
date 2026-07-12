@@ -50,6 +50,9 @@ class YouTubeSource implements VideoSource {
     const p = new URLSearchParams({
       autoplay: '1', playsinline: '1', modestbranding: '1',
       rel: '0', iv_load_policy: '3',
+      // CR-8: no native YouTube control bar — controls=0, driven entirely
+      // through the IFrame Player API (player-controls.ts)
+      controls: '0', enablejsapi: '1',
     });
     return `https://www.youtube.com/embed/${ref.id}?${p}`;
   }

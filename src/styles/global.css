@@ -563,6 +563,7 @@ body.ready main { opacity: 1; }
   gap: var(--space-3);
   text-align: center;
 }
+.feed-empty[hidden] { display: none; }
 .feed-empty p { font-size: var(--text-h2); color: var(--color-heading); }
 .feed-empty button {
   font-size: 0.72rem;
@@ -709,48 +710,51 @@ footer {
 footer a:hover, footer button:hover { color: var(--color-accent); }
 
 /* ============================================================
-   DETAIL OVERLAY (Session 2 — video player)
+   DETAIL OVERLAY / PLAYER (CR-8/CR-9 — custom controls, letterbox+ambient)
    ============================================================ */
 #detail {
   position: fixed;
   inset: 0;
   z-index: var(--z-detail);
-  background: var(--color-bg);
-  display: flex;
-  flex-direction: column;
+  background: #000;
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--dur-2) var(--ease-out);
 }
 #detail.open { opacity: 1; pointer-events: auto; }
-.eyebrow-bar {
-  padding: 10px clamp(20px, 4vw, 48px) 0;
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
-  color: var(--color-accent);
-}
-#detail .bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 18px clamp(20px, 4vw, 48px);
-  font-size: 0.7rem;
-  letter-spacing: 0.22em;
-  color: var(--color-meta);
-}
-#detail .bar button:hover { color: var(--color-accent); }
-#detail .bar button small { margin-left: 6px; color: var(--color-meta); letter-spacing: 0.1em; }
-#detail .stage {
-  flex: 1;
+
+/* CR-9 — letterbox the video to its true aspect (the classic "meet"
+   scaling trick: width/height 100% capped by a max- computed from the
+   *other* viewport dimension via the aspect ratio, aspect-ratio locks it)
+   and fill the surround with a blurred, dimmed, scaled copy of the same
+   video so the screen still reads as full-bleed. Background loops on the
+   home feed keep cover/crop — this treatment is only for this player. */
+.stage {
+  position: absolute;
+  inset: 0;
   display: grid;
   place-items: center;
-  padding: 0 clamp(20px, 4vw, 48px);
+  overflow: hidden;
+}
+.stage-ambient { position: absolute; inset: 0; overflow: hidden; }
+.stage-ambient iframe {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) scale(1.15);
+  width: max(100%, 177.78vh);
+  height: max(100%, 56.25vw);
+  border: 0;
+  pointer-events: none;
+  filter: blur(40px) brightness(0.35);
 }
 #player {
   position: relative;
-  width: min(100%, calc((100svh - 280px) * 16 / 9));
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  max-width: calc(100svh * 16 / 9);
+  max-height: calc(100vw * 9 / 16);
   aspect-ratio: 16 / 9;
-  outline: 1px solid var(--color-line);
   background: #000;
 }
 #player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
@@ -788,13 +792,111 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
-#detail .info {
-  padding: clamp(16px, 3vh, 26px) clamp(20px, 4vw, 48px);
+
+/* CR-8 — all UI chrome (top bar, transport controls, metadata) auto-hides
+   as one unit after 2.5s idle during playback (player-controls.ts toggles
+   .idle) and returns instantly on pointer move/tap/key. */
+.chrome {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: opacity 0.4s var(--ease-out);
+}
+.chrome.idle { opacity: 0; }
+.chrome.idle .chrome-top, .chrome.idle .controls, .chrome.idle .info { pointer-events: none; }
+.chrome-top { background: linear-gradient(180deg, color-mix(in srgb, var(--color-bg) 70%, transparent), transparent); }
+.eyebrow-bar {
+  padding: 10px clamp(20px, 4vw, 48px) 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  color: var(--color-accent);
+}
+#detail .bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px clamp(20px, 4vw, 48px);
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  color: var(--color-meta);
+}
+#detail .bar button:hover { color: var(--color-accent); }
+#detail .bar button small { margin-left: 6px; color: var(--color-meta); letter-spacing: 0.1em; }
+
+/* thin amber playhead — the site's waveform motif, not an icon-pack look */
+.controls {
+  background: linear-gradient(0deg, color-mix(in srgb, var(--color-bg) 85%, transparent), transparent);
+  padding: 0 clamp(20px, 4vw, 48px) 10px;
+}
+.scrub {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+.scrub-track { position: relative; width: 100%; height: 2px; background: var(--color-line); }
+.scrub-fill { position: absolute; inset: 0 auto 0 0; width: 0%; background: var(--color-accent); }
+.controls-row {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 2vw, 22px);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  color: var(--color-ink);
+  padding-bottom: 6px;
+}
+.controls-row button {
+  min-height: 44px;
+  padding: 4px 2px;
+  color: var(--color-meta);
+  text-transform: lowercase;
+  transition: color var(--dur-2);
+}
+.controls-row button:hover, .controls-row button:focus-visible { color: var(--color-accent); }
+.c-time { white-space: nowrap; color: var(--color-meta); font-variant-numeric: tabular-nums; }
+.c-spacer { flex: 1; }
+#cVolume {
+  width: 80px;
+  accent-color: var(--color-accent);
+}
+
+/* mobile: the row doesn't fit at 390px with every control — the volume
+   slider and the keyboard-shortcut hint (which touch users can't trigger
+   anyway) drop, everything else wraps onto a second line instead of
+   overlapping. */
+@media (max-width: 480px) {
+  .controls-row { flex-wrap: wrap; row-gap: 0; }
+  #cVolume, #cHint { display: none; }
+  .c-spacer { flex-basis: 100%; height: 0; }
+}
+
+.shortcut-hint {
+  position: absolute;
+  z-index: 3;
+  bottom: 90px;
+  right: clamp(20px, 4vw, 48px);
+  background: color-mix(in srgb, var(--color-bg) 90%, transparent);
+  border: 1px solid var(--color-line);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--color-ink);
+}
+.shortcut-hint[hidden] { display: none; }
+
+.info {
+  background: linear-gradient(0deg, color-mix(in srgb, var(--color-bg) 92%, transparent) 40%, transparent);
+  padding: clamp(16px, 3vh, 26px) clamp(20px, 4vw, 48px) 0;
   display: flex;
   gap: clamp(16px, 4vw, 56px);
   align-items: flex-start;
   flex-wrap: wrap;
-  border-top: 1px solid var(--color-line);
 }
 #dTitle {
   font-family: var(--font-display);
@@ -815,9 +917,6 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
 .dcol { flex: 1 1 180px; font-size: 0.76rem; line-height: 1.85; color: var(--color-meta); }
 .dcol b { display: block; font-weight: 400; color: var(--color-ink); }
 .dcol .lbl { font-size: 0.7rem; letter-spacing: 0.22em; color: var(--color-accent); margin-bottom: 5px; }
-#detail .prevnext { display: flex; gap: 24px; font-size: 0.7rem; letter-spacing: 0.22em; align-items: center; }
-#detail .prevnext button { color: var(--color-meta); transition: color var(--dur-2); }
-#detail .prevnext button:hover { color: var(--color-accent); }
 
 /* ============================================================
    WORK INDEX (full list view)

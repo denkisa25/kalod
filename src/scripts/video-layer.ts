@@ -1,6 +1,7 @@
 import { getVideoSource, type VideoRef } from '../lib/video-source';
 import { loadYouTubeAPI, type YTPlayer } from '../lib/youtube-api';
 import { isSoundEnabled, onSoundChange } from './sound-control';
+import { initPlayerControls } from './player-controls';
 import { pad, roleLine, CUE_ACTIVE_THRESHOLD, type Role } from '../lib/format';
 import { trapTabKey } from '../lib/focus-trap';
 
@@ -252,11 +253,12 @@ export const NOOP_FEED_AUDIO: FeedAudioController = {
 export function initDetailOverlay(cueList: CueData[], feedAudio: FeedAudioController): void {
   const detail = $('#detail');
   const player = $('#player');
+  const ambient = $('.stage-ambient');
   if (!detail || !player) return;
 
   // these are all static elements inside #detail that never leave the DOM
   // across a render() — only their text/visibility changes — so they're
-  // queried once here instead of on every open/prev/next/arrow-key call
+  // queried once here instead of on every open/prev/next/key call
   const dCount = $<HTMLElement>('#dCount')!;
   const dKind = $<HTMLElement>('#dKind')!;
   const dName = $<HTMLElement>('#dName')!;
@@ -267,18 +269,21 @@ export function initDetailOverlay(cueList: CueData[], feedAudio: FeedAudioContro
   const eyebrow = $<HTMLElement>('#dEyebrow');
   const ph = $<HTMLElement>('.ph', player);
   const skeleton = $<HTMLElement>('.skeleton', player);
+  const controls = initPlayerControls();
 
   const noVideo = videoDisabled();
   let current = 0;
   let lastFocus: HTMLElement | null = null;
+  let renderToken = 0; // invalidates a stale YT.Player onReady from a superseded render()
 
   function focusable(): HTMLElement[] {
-    return Array.from(detail!.querySelectorAll<HTMLElement>('button, a[href]'));
+    return Array.from(detail!.querySelectorAll<HTMLElement>('button, a[href], input'));
   }
 
   function render(i: number) {
     current = ((i % cueList.length) + cueList.length) % cueList.length;
     const p = cueList[current];
+    const token = ++renderToken;
     dCount.textContent = `cue ${pad(current + 1)} / ${pad(cueList.length)}`;
     dKind.textContent = p.kind;
     dName.textContent = p.title;
@@ -287,6 +292,8 @@ export function initDetailOverlay(cueList: CueData[], feedAudio: FeedAudioContro
     dNote.textContent = p.excerpt;
 
     player!.querySelectorAll('iframe').forEach((f) => f.remove());
+    ambient?.querySelectorAll('iframe').forEach((f) => f.remove());
+    controls.bindPlayer(null);
     const source = getVideoSource(p.videoRef);
     const src = !noVideo ? source?.getPlayerEmbed(p.videoRef) : null;
 
@@ -306,6 +313,27 @@ export function initDetailOverlay(cueList: CueData[], feedAudio: FeedAudioContro
         if (skeleton) skeleton.style.display = 'none';
       });
       player!.appendChild(f);
+
+      // CR-9 — a muted, looping, chromeless copy of the same video for the
+      // blurred ambient surround (getBackgroundEmbed, not getPlayerEmbed —
+      // it must never carry a second audio source)
+      const ambientSrc = source?.getBackgroundEmbed(p.videoRef);
+      if (ambient && ambientSrc) {
+        const bg = document.createElement('iframe');
+        bg.src = ambientSrc;
+        bg.allow = 'autoplay';
+        bg.title = '';
+        bg.setAttribute('aria-hidden', 'true');
+        bg.tabIndex = -1;
+        ambient.appendChild(bg);
+      }
+
+      if (p.videoRef.provider === 'youtube') {
+        loadYouTubeAPI().then((YT) => {
+          if (token !== renderToken || player!.querySelector('iframe') !== f) return;
+          new YT.Player(f, { events: { onReady: (e) => controls.bindPlayer(e.target) } });
+        });
+      }
     } else {
       if (skeleton) skeleton.style.display = 'none';
       if (ph) {
@@ -327,9 +355,12 @@ export function initDetailOverlay(cueList: CueData[], feedAudio: FeedAudioContro
   }
 
   function close() {
+    renderToken++; // any in-flight loadYouTubeAPI().then() for this cue is now stale
     detail!.classList.remove('open');
     document.body.style.overflow = '';
     player!.querySelectorAll('iframe').forEach((f) => f.remove());
+    ambient?.querySelectorAll('iframe').forEach((f) => f.remove());
+    controls.bindPlayer(null);
     feedAudio.resumeFromOverlay(); // CR-4: closing it restores the prior state
     lastFocus?.focus();
   }
@@ -345,14 +376,19 @@ export function initDetailOverlay(cueList: CueData[], feedAudio: FeedAudioContro
     });
   });
 
+  // CR-8 keyboard map: Space/←→/↑↓/M/? live in player-controls.ts (they
+  // target playback, not this overlay's own navigation). N/P/Esc are the
+  // overlay's own concerns — cue navigation and closing — so they stay here
+  // alongside the focus trap.
   addEventListener('keydown', (e) => {
     if (!detail!.classList.contains('open')) return;
+    if ((e.target as HTMLElement | null)?.tagName === 'INPUT') return;
     if (e.key === 'Escape') {
       close();
       return;
     }
-    if (e.key === 'ArrowLeft') render(current - 1);
-    if (e.key === 'ArrowRight') render(current + 1);
+    if (e.key === 'n' || e.key === 'N') render(current + 1);
+    if (e.key === 'p' || e.key === 'P') render(current - 1);
     trapTabKey(e, focusable());
   });
 }

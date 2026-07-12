@@ -1,25 +1,32 @@
-/** Minimal ambient surface for the YouTube IFrame Player API — CR-4 needs
- *  unMute/setVolume/mute/isMuted, driven through real YT.Player instances
- *  (not raw postMessage), so background loops can be volume-ramped for the
- *  feed's crossfade. No @types/youtube dependency; this is the entire
- *  subset the codebase actually calls. */
+/** Minimal ambient surface for the YouTube IFrame Player API — driven
+ *  through real YT.Player instances (not raw postMessage) for CR-4's feed
+ *  volume ramps and CR-8's custom transport controls. No @types/youtube
+ *  dependency; this is the entire subset the codebase actually calls. */
 export interface YTPlayer {
   mute(): void;
   unMute(): void;
   isMuted(): boolean;
   setVolume(volume: number): void;
+  getVolume(): number;
   getPlayerState(): number;
+  playVideo(): void;
+  pauseVideo(): void;
+  seekTo(seconds: number, allowSeekAhead: boolean): void;
+  getCurrentTime(): number;
+  getDuration(): number;
+  destroy(): void;
 }
 
 interface YTPlayerOptions {
   events?: {
     onReady?: (event: { target: YTPlayer }) => void;
+    onStateChange?: (event: { target: YTPlayer; data: number }) => void;
   };
 }
 
 interface YTNamespace {
   Player: new (el: HTMLElement | string, opts?: YTPlayerOptions) => YTPlayer;
-  PlayerState: { PLAYING: number };
+  PlayerState: { PLAYING: number; PAUSED: number; ENDED: number; BUFFERING: number; CUED: number; UNSTARTED: number };
 }
 
 declare global {

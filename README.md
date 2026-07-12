@@ -163,6 +163,31 @@ Pro account. To cut over once the client's Vimeo Pro account is live:
    domain-restriction tokens) may need small adjustments to the query
    string `VimeoSource.getBackgroundEmbed`/`getPlayerEmbed` build. This is
    the one part of the swap that needs a live test, not just a code change.
+2a. **CR-8's custom player controls (`player-controls.ts`) are wired against
+   the YouTube IFrame Player API (`lib/youtube-api.ts` — `YT.Player`,
+   `mute`/`unMute`/`setVolume`/`seekTo`/`getCurrentTime`/`getDuration`/
+   `getPlayerState`).** Vimeo's equivalent is the `@vimeo/player` SDK
+   (`Player` class), whose method names differ slightly (e.g. `getDuration()`
+   returns a Promise, not a synchronous number) and which uses real DOM
+   events (`play`, `pause`, `timeupdate`, `volumechange`) instead of polling
+   `getPlayerState()` every frame. Swapping providers means adding a small
+   `VimeoPlayerAdapter` that implements the same `YTPlayer`-shaped interface
+   `player-controls.ts` already consumes (so that file itself doesn't need
+   to change), not calling the Vimeo SDK directly from the controls code.
+2b. **CR-9's ambient background layer reuses `getBackgroundEmbed()`** (muted,
+   looping) for the blurred surround — `VimeoSource.getBackgroundEmbed`
+   already returns a matching muted/looping embed, so this specific piece
+   needs no new code, only the spot-check in step 2 above.
+2c. **`getPreviewFrames()` (CR-7's gallery hover cross-fade) has no Vimeo
+   implementation** — `VimeoSource.getPreviewFrames()` returns `null` today,
+   which falls back to the static poster (no crash, just no hover
+   animation for Vimeo-sourced tiles). Vimeo's oEmbed API can return a
+   `thumbnail_url`, but not two *distinct* frames the way YouTube's
+   `hqdefault.jpg`/`2.jpg` do — getting a second frame would mean either
+   accepting a single still (no cross-fade) or switching that tile to the
+   real muted-preview-loop option CR-7 lists as the preferred approach,
+   which Vimeo Pro's progressive MP4s make cheap (no separate embed
+   needed, just a `<video>` tag pointed at the direct file).
 3. Once every project is on Vimeo, delete `YouTubeSource` from
    `video-source.ts` and the `getVideoSource()` provider map — the
    `VideoSource` interface and every call site stay exactly the same, only

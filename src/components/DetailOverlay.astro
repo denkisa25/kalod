@@ -7,24 +7,61 @@
   needed here beyond swapping the provider.
 -->
 <div id="detail" role="dialog" aria-modal="true" aria-label="watch project">
-  <div id="dEyebrow" class="eyebrow-bar" hidden>video unavailable — client hasn&rsquo;t supplied a link yet</div>
-  <div class="bar">
-    <span id="dCount">cue 01</span>
-    <button id="dClose" type="button" data-blip>close &#10005; <small>esc</small></button>
-  </div>
   <div class="stage">
+    <!-- CR-9: a blurred, dimmed, scaled copy of the same video fills the
+         surround so the screen reads full without cropping the letterboxed
+         foreground player's true aspect. Muted — it's ambiance, not a
+         second audio source. Populated by video-layer.ts. -->
+    <div class="stage-ambient" aria-hidden="true"></div>
     <div id="player">
       <div class="skeleton" aria-hidden="true"><span></span><span></span></div>
       <div class="ph">video pending — client to supply link</div>
     </div>
   </div>
-  <div class="info">
-    <h3 id="dTitle"><small id="dKind"></small><span id="dName"></span></h3>
-    <div class="dcol"><div class="lbl">role</div><b id="dRoles"></b></div>
-    <div class="dcol"><div class="lbl">client / credits</div><b id="dClient"></b><span id="dNote"></span></div>
-    <div class="prevnext">
-      <button id="dPrev" type="button" data-blip>&larr; prev cue</button>
-      <button id="dNext" type="button" data-blip>next cue &rarr;</button>
+
+  <div class="chrome">
+    <div class="chrome-top">
+      <div id="dEyebrow" class="eyebrow-bar" hidden>video unavailable — client hasn&rsquo;t supplied a link yet</div>
+      <div class="bar">
+        <span id="dCount">cue 01</span>
+        <button id="dClose" type="button" data-blip>close &#10005; <small>esc</small></button>
+      </div>
     </div>
+
+    <!-- CR-8: custom control layer — no native YouTube chrome. Auto-hides
+         after 2.5s idle with the rest of .chrome, returns on pointer
+         move/tap/key (player-controls.ts). -->
+    <div class="controls" id="playerControls">
+      <div class="scrub" id="scrub" role="slider" aria-label="seek" tabindex="0" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="scrub-track"><div class="scrub-fill" id="scrubFill"></div></div>
+      </div>
+      <div class="controls-row">
+        <button id="cPlay" type="button" aria-label="play" data-blip>play</button>
+        <button id="cBack" type="button" aria-label="rewind 10 seconds" data-blip>&laquo; 10s</button>
+        <button id="cFwd" type="button" aria-label="forward 10 seconds" data-blip>10s &raquo;</button>
+        <span class="c-time"><span id="cElapsed">0:00</span>&nbsp;/&nbsp;<span id="cTotal">0:00</span></span>
+        <span class="c-spacer"></span>
+        <button id="cMute" type="button" aria-label="mute" data-blip>vol</button>
+        <input id="cVolume" type="range" min="0" max="100" value="100" aria-label="volume" />
+        <button id="dPrev" type="button" aria-label="previous cue" data-blip>&larr; prev</button>
+        <button id="dNext" type="button" aria-label="next cue" data-blip>next &rarr;</button>
+        <button id="cHint" type="button" aria-label="keyboard shortcuts" aria-expanded="false" data-blip>?</button>
+      </div>
+    </div>
+
+    <div class="info">
+      <h3 id="dTitle"><small id="dKind"></small><span id="dName"></span></h3>
+      <div class="dcol"><div class="lbl">role</div><b id="dRoles"></b></div>
+      <div class="dcol"><div class="lbl">client / credits</div><b id="dClient"></b><span id="dNote"></span></div>
+    </div>
+  </div>
+
+  <div class="shortcut-hint" id="shortcutHint" role="tooltip" hidden>
+    <span>space play/pause</span>
+    <span>&larr; / &rarr; &plusmn;10s</span>
+    <span>&uarr; / &darr; volume</span>
+    <span>m mute</span>
+    <span>n / p next / prev cue</span>
+    <span>esc close</span>
   </div>
 </div>
