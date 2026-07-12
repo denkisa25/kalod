@@ -3,6 +3,14 @@
    ============================================================ */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 ol, ul { list-style: none; }
+/* !important, not just a plain rule: the UA stylesheet's own [hidden]
+   rule is easily beaten by any later same-specificity author rule that
+   sets `display` unconditionally (exactly what happened four separate
+   times in this codebase — .feed-empty, .shortcut-hint, .work-list,
+   .work-gallery all shipped with .hidden silently doing nothing until
+   found by code review). One !important rule here means no future
+   component can reintroduce that bug class by accident. */
+[hidden] { display: none !important; }
 
 html { scroll-snap-type: y proximity; }
 
@@ -132,8 +140,12 @@ header.header--hero .brand { font-size: clamp(1.6rem, 4.5vw, 2.8rem); }
   justify-self: end;
   transition: opacity 0.5s var(--ease-out);
 }
+/* CR-3/D1 hides the nav links during the hero state for the grand-logo
+   effect, but #navToggle (the mobile menu button) must stay reachable —
+   otherwise a mobile visitor has NO way to reach work/about/contacts
+   until they scroll past the entire first cue (found by code review). */
 header.header--hero .desktop-nav,
-header.header--hero .mobile-controls {
+header.header--hero #soundToggleMobile {
   opacity: 0;
   pointer-events: none;
 }
@@ -431,6 +443,11 @@ body.ready main { opacity: 1; }
   align-items: flex-end;
 }
 .cue.hidden { display: none; }
+/* CR-6 — role-filter.ts toggles this same class on work-list rows and
+   gallery tiles too (one shared filter, three surfaces); each surface's
+   own base display must be un-set here or filtering is a no-op visually
+   even though the class is applied correctly. */
+.work-row.hidden, .gallery-tile.hidden { display: none; }
 .cue .bgwrap { position: absolute; inset: 0; background: #000; }
 .cue .poster {
   position: absolute;
@@ -563,7 +580,6 @@ body.ready main { opacity: 1; }
   gap: var(--space-3);
   text-align: center;
 }
-.feed-empty[hidden] { display: none; }
 .feed-empty p { font-size: var(--text-h2); color: var(--color-heading); }
 .feed-empty button {
   font-size: 0.72rem;
@@ -716,7 +732,7 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
   position: fixed;
   inset: 0;
   z-index: var(--z-detail);
-  background: #000;
+  background: var(--color-bg);
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--dur-2) var(--ease-out);
@@ -831,6 +847,10 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
   background: linear-gradient(0deg, color-mix(in srgb, var(--color-bg) 85%, transparent), transparent);
   padding: 0 clamp(20px, 4vw, 48px) 10px;
 }
+/* non-YouTube providers (Vimeo stub) keep their own native controls —
+   this custom transport isn't wired to them, showing it would be a dead
+   control surface (see video-layer.ts render()) */
+#detail.native-controls .controls { display: none; }
 .scrub {
   height: 44px;
   display: flex;
@@ -888,7 +908,6 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
   letter-spacing: 0.08em;
   color: var(--color-ink);
 }
-.shortcut-hint[hidden] { display: none; }
 
 .info {
   background: linear-gradient(0deg, color-mix(in srgb, var(--color-bg) 92%, transparent) 40%, transparent);
@@ -948,7 +967,6 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
 .view-switch button[aria-pressed="true"] { color: var(--color-accent); }
 
 .work-list { display: flex; flex-direction: column; padding-bottom: var(--space-8); }
-.work-list[hidden] { display: none; }
 .work-row {
   display: flex;
   align-items: center;
@@ -1001,7 +1019,6 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
   gap: 6px;
   padding-bottom: var(--space-8);
 }
-.work-gallery[hidden] { display: none; }
 @media (max-width: 900px) { .work-gallery { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px) { .work-gallery { grid-template-columns: 1fr; } }
 

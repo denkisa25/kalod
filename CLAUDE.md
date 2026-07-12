@@ -55,11 +55,15 @@ about a visual/timing decision, open this file and match it.
 
 ## Stack rules
 - Astro, static output. Interactive islands only for: opener canvas, cue feed
-  video loader, detail overlay, sound toggle, role filter bar, mobile nav.
+  video loader, detail overlay, sound toggle, role filter bar, mobile nav,
+  header scroll behavior, work-page view switcher, gallery hover/auto-preview.
   Everything else zero-JS. (Filters and mobile nav were added to this list
   in Session 4 — both are explicitly-requested functional requirements, not
   scope creep; a code-review pass flagged them against the original
-  4-island list and this line was stale, not the code.)
+  4-island list and this line was stale, not the code. Header scroll/view
+  switcher/gallery preview were added the same way after Session 9's
+  regression-gate code review — all three are explicit CR-001 requirements
+  from Sessions 5 and 7, not scope creep either.)
 - Vanilla CSS with custom properties mirroring spec §3 tokens. No Tailwind.
 - No animation libraries. Canvas 2D + Web Audio API for the opener
   (engine already written in the reference file), CSS/WAAPI for the rest.

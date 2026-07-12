@@ -40,15 +40,18 @@ export function initPlayerControls(): PlayerControls {
   let idleTimer: ReturnType<typeof setTimeout> | null = null;
 
   function updatePlayIcon(): void {
-    if (!playBtn || !player) return;
-    const playing = player.getPlayerState() === YT_PLAYING;
+    if (!playBtn) return;
+    // no player bound (cue transition in flight) — reset to the default
+    // rather than leaving the previous cue's label showing (found by
+    // code review: this used to bail out entirely on a null player)
+    const playing = player ? player.getPlayerState() === YT_PLAYING : false;
     playBtn.textContent = playing ? 'pause' : 'play';
     playBtn.setAttribute('aria-label', playing ? 'pause' : 'play');
   }
 
   function updateMuteIcon(): void {
-    if (!muteBtn || !player) return;
-    const muted = player.isMuted();
+    if (!muteBtn) return;
+    const muted = player ? player.isMuted() : false;
     muteBtn.textContent = muted ? 'muted' : 'vol';
     muteBtn.setAttribute('aria-label', muted ? 'unmute' : 'mute');
   }

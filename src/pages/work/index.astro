@@ -47,7 +47,7 @@ const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
       <ol class="work-list" id="workList">
         {projects.map((p, i) => (
           <li>
-            <a class="work-row watch" href={`/work/${p.slug}`} data-idx={i} data-roles={p.roles.join(',')}>
+            <a class="work-row" href={`/work/${p.slug}`} data-roles={p.roles.join(',')}>
               <span class="thumb">
                 <Image src={p.poster} alt="" width={160} height={90} />
               </span>

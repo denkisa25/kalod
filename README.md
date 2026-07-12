@@ -262,11 +262,44 @@ questions (§15) — things this build can't resolve on its own:
 
 ## Performance & accessibility budgets (spec §11/§12)
 
-Verified via a throttled (Slow 4G, 4x CPU) Chrome DevTools trace on the
-built site: homepage LCP ~1.9s, project-detail LCP ~1.3s (budget: <2.5s),
-CLS 0.00 on both (budget: ≈0), total page JS ~6.7KB gzip (budget: <80KB).
-Lighthouse: Accessibility 100, SEO 100, Best Practices 92 — all ≥90. Re-run
-`npx astro build && npx astro preview` plus a Chrome DevTools MCP trace
-(or Lighthouse in Chrome DevTools directly) after any change that touches
-images, fonts, or the opener/video islands, since those are what the
-budgets are actually protecting.
+Re-verified after CR-001 (Session 9 regression gate) via a throttled (Slow
+4G, 4x CPU) Chrome DevTools trace on the built site: homepage LCP 1.3s
+(budget: <2.5s, opener photo in place), CLS 0.01 (budget: ≈0), total home-page
+JS ~9.8KB gzip (budget: <80KB). Re-run `npx astro build && npx astro preview`
+plus a Chrome DevTools MCP trace (or Lighthouse in Chrome DevTools directly)
+after any change that touches images, fonts, or the opener/video islands,
+since those are what the budgets are actually protecting.
+
+## CR-001 regression gate (Session 9)
+
+A multi-angle code-review pass (correctness × 3, cleanup × 3, altitude,
+CLAUDE.md conventions) ran against the full CR-001 diff before tagging v0.2.
+Real, confirmed issues found and fixed:
+
+- **Focus trap bypass**: the detail overlay's keydown handler skipped
+  `trapTabKey()` whenever focus was on the new volume slider, letting Tab
+  escape the modal.
+- **`#detail`'s background had drifted to a literal `#000`** instead of
+  `var(--color-bg)` during the CR-8/CR-9 rewrite — a TOKEN-GUARD violation.
+- **Work-list rows were accidentally wired to open the video modal**
+  instead of navigating to the project's detail page (a side effect of
+  adding thumbnails in Session 7) — reverted to plain navigation; only the
+  gallery's dedicated "watch full video" link opens the modal, per CR-7.
+- **Vimeo-sourced cues rendered a fully non-functional custom control
+  bar** (CR-8's transport is only wired to YouTube's IFrame API) — now
+  hidden for non-YouTube providers, leaving Vimeo's own native controls as
+  the working UI until the real Vimeo cutover.
+- **The hero header state hid the mobile hamburger menu entirely**,
+  leaving mobile visitors with no way to reach navigation until they
+  scrolled past all of cue 01 — `#navToggle` now stays reachable through
+  the hero state; only the nav links and the mobile sound toggle fade.
+- **The same `[hidden]`-attribute-vs-unconditional-`display` bug had been
+  independently patched four times** (`.feed-empty`, `.shortcut-hint`,
+  `.work-list`, `.work-gallery`) rather than fixed once — consolidated into
+  a single `[hidden] { display: none !important; }` rule in the reset
+  layer so no future component can reintroduce it.
+- Two feed-audio races: `makeAudible()` used to mark the new cue audible
+  *before* confirming its player actually unmuted, stranding the previous
+  cue's audio forever if that call threw; and both `makeAudible()`'s and
+  `detach()`'s fade-outs assumed the outgoing player was always at volume
+  100 rather than reading its actual current volume.

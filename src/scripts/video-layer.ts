@@ -82,19 +82,24 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
   function makeAudible(cue: HTMLElement) {
     const player = players.get(cue);
     if (!player || pausedForOverlay || !isSoundEnabled()) return;
-    const previousCue = audibleCue;
-    audibleCue = cue;
     try {
       player.unMute();
       player.setVolume(0);
     } catch {
+      // new player isn't actually working — leave audibleCue/the previous
+      // cue's audio untouched instead of "succeeding" into a broken state
+      // (found by code review: this used to reassign audibleCue before
+      // the try, stranding the old cue audible forever if this threw)
       return;
     }
+    const previousCue = audibleCue;
+    audibleCue = cue;
     rampVolume(player, 0, 100, CROSSFADE_MS);
     if (previousCue && previousCue !== cue) {
       const prevPlayer = players.get(previousCue);
       if (prevPlayer) {
-        rampVolume(prevPlayer, 100, 0, CROSSFADE_MS, () => {
+        const startVolume = prevPlayer.getVolume();
+        rampVolume(prevPlayer, startVolume, 0, CROSSFADE_MS, () => {
           try {
             prevPlayer.mute();
           } catch {
@@ -115,18 +120,29 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
     const player = players.get(cue);
     const wasAudible = audibleCue === cue;
     silence(cue);
-    players.delete(cue);
 
     if (player && wasAudible && isSoundEnabled()) {
-      rampVolume(player, 100, 0, CROSSFADE_MS, () => {
+      // players.delete() waits until the fade actually finishes (not
+      // synchronously here) — CR-4's debugAudioState() reads this map, and
+      // an outgoing player deleted from it mid-fade would let the
+      // "at most one unmuted" invariant go unverified during the exact
+      // window a real crossfade briefly has two audible sources (found by
+      // code review). Read the player's actual current volume as the
+      // ramp's start, not a hardcoded 100 — a detach() that interrupts an
+      // in-progress fade-in would otherwise jump volume up before ramping
+      // it back down.
+      const startVolume = player.getVolume();
+      rampVolume(player, startVolume, 0, CROSSFADE_MS, () => {
         try {
           player.mute();
         } catch {
           /* already torn down */
         }
+        players.delete(cue);
         iframe?.remove();
       });
     } else {
+      players.delete(cue);
       iframe?.remove();
     }
   }
@@ -302,6 +318,14 @@ export function initDetailOverlay(cueList: CueData[], feedAudio: FeedAudioContro
     // preference case, which the placeholder text below covers instead
     if (eyebrow) eyebrow.hidden = p.videoRef.provider !== null;
 
+    // CR-8's custom transport is only ever wired to a real player for
+    // YouTube (below) — showing it over a Vimeo embed would render a
+    // control bar that looks real but does nothing (found by code review).
+    // Vimeo's own native controls are still present on that embed (its
+    // getPlayerEmbed doesn't set controls=0), so hiding ours just leaves
+    // the video controllable through its actual working chrome.
+    detail!.classList.toggle('native-controls', p.videoRef.provider !== 'youtube');
+
     if (src) {
       if (ph) ph.style.display = 'none';
       if (skeleton) skeleton.style.display = 'flex';
@@ -382,7 +406,11 @@ export function initDetailOverlay(cueList: CueData[], feedAudio: FeedAudioContro
   // alongside the focus trap.
   addEventListener('keydown', (e) => {
     if (!detail!.classList.contains('open')) return;
-    if ((e.target as HTMLElement | null)?.tagName === 'INPUT') return;
+    // no INPUT-focus guard here (unlike player-controls.ts's Space/arrow
+    // keys, which DO collide with a focused range input's native behavior):
+    // N/P/Escape have no native meaning on #cVolume, and the focus trap
+    // below must run regardless of what's focused or Tab escapes the
+    // modal the instant the volume slider has focus — found by code review.
     if (e.key === 'Escape') {
       close();
       return;
