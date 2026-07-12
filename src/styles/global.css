@@ -140,14 +140,21 @@ header.header--hero .brand { font-size: clamp(1.6rem, 4.5vw, 2.8rem); }
   justify-self: end;
   transition: opacity 0.5s var(--ease-out);
 }
-/* CR-3/D1 hides the nav links during the hero state for the grand-logo
-   effect, but #navToggle (the mobile menu button) must stay reachable —
-   otherwise a mobile visitor has NO way to reach work/about/contacts
-   until they scroll past the entire first cue (found by code review). */
+/* CR-3/D1 de-emphasizes nav + sound during the hero state for the
+   grand-logo effect, but never fully blocks them — a visitor confirmed
+   they had NO way to reach work/about/contacts or sound on desktop until
+   scrolling past all of cue 01 (the mobile hamburger got this same fix
+   during Session 9's code review; this closes the same gap for desktop
+   nav + both sound toggles). Faded, not invisible; pointer-events stay on
+   throughout, and :focus-within snaps to full opacity so a keyboard user
+   tabbing in isn't looking at near-invisible controls. */
 header.header--hero .desktop-nav,
 header.header--hero #soundToggleMobile {
-  opacity: 0;
-  pointer-events: none;
+  opacity: 0.45;
+}
+header.header--hero .desktop-nav:focus-within,
+header.header--hero #soundToggleMobile:focus-within {
+  opacity: 1;
 }
 
 .desktop-nav {
