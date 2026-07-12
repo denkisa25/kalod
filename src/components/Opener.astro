@@ -1,6 +1,29 @@
+---
+import { getImage } from 'astro:assets';
+import openerPhotoSrc from '../assets/studio/IMG_9569.jpg';
+
+// plain <img> (not the <Image> component) so the preload link below can
+// reference the exact same generated URL — the LCP element (CR-2) must be
+// preloaded, and that only works if both tags point at the same file.
+const openerPhoto = await getImage({ src: openerPhotoSrc, width: 1920, format: 'webp', quality: 80 });
+---
+
+<link rel="preload" as="image" href={openerPhoto.src} fetchpriority="high" />
 <div id="opener">
+  <img
+    id="openerPhoto"
+    class="opener-photo"
+    src={openerPhoto.src}
+    width={openerPhoto.attributes.width}
+    height={openerPhoto.attributes.height}
+    alt=""
+    loading="eager"
+    fetchpriority="high"
+    decoding="async"
+  />
   <canvas id="fx" aria-hidden="true"></canvas>
   <div id="choice" role="dialog" aria-label="sound preference">
+    <div id="openerWordmark" class="opener-wordmark">kaloyan dimitrov</div>
     <div class="prompt">this site is meant to be heard</div>
     <div class="sub">sound design · original music · final mix</div>
     <div class="buttons">

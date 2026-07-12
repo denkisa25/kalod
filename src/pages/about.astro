@@ -1,16 +1,20 @@
 ---
+import { Image } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import HeritageBackground from '../components/HeritageBackground.astro';
+import portraitPhoto from '../assets/studio/IMG_6235.jpg';
+import secondaryPhoto from '../assets/studio/IMG_6681.jpg';
 ---
 <BaseLayout title="about | kaloyan dimitrov" description="kaloyan dimitrov is a composer, sound designer and mix engineer working across film, television and advertising.">
+  <HeritageBackground />
   <Header current="about" />
   <main id="main">
     <section class="block">
       <div id="about">
-        <div class="portrait placeholder-art">
-          <div class="init">kd</div>
-          <div class="cap">portrait / studio photo — pending</div>
+        <div class="portrait">
+          <Image src={portraitPhoto} alt="window into kaloyan's live room" widths={[340, 680]} sizes="(max-width: 760px) 100vw, 340px" />
         </div>
         <div class="bio">
           <div class="eyebrow">about</div>
@@ -18,6 +22,9 @@ import Footer from '../components/Footer.astro';
           <p>two decades of cues for audi, pepsi, nestlé, societe generale, btv and the films of miramar — composed, designed and mixed in sofia, heard everywhere.</p>
           <div class="disciplines"><span>music</span><span>mix</span><span>sound design</span></div>
         </div>
+      </div>
+      <div class="about-secondary">
+        <Image src={secondaryPhoto} alt="rhodes and keys in the studio" widths={[600, 1200]} sizes="(max-width: 760px) 100vw, 800px" />
       </div>
     </section>
   </main>

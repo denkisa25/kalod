@@ -2,12 +2,14 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
+import HeritageBackground from '../../components/HeritageBackground.astro';
 import { getProjects } from '../../lib/projects';
 import { pad, roleLine } from '../../lib/format';
 
 const projects = getProjects().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 ---
 <BaseLayout title="work | kaloyan dimitrov" description="the full index of film, tv and advertising work by kaloyan dimitrov — music, mix and sound design credits.">
+  <HeritageBackground />
   <Header current="work" />
   <main id="main">
     <div class="work-index">

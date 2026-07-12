@@ -1,11 +1,17 @@
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import rawProjects from '../../phase0/extraction/projects.json';
+import creditsBySlug from '../data/credits.json';
 import { parseVideoUrl, type VideoRef } from './video-source';
 import { ROLE_LABELS, type Role } from './format';
 
 export type { Role };
 export { ROLE_LABELS };
+
+export interface Credit {
+  role: string;
+  name: string;
+}
 
 export interface Project {
   title: string;
@@ -18,6 +24,7 @@ export interface Project {
   excerpt: string;
   featured: boolean;
   date: string;
+  credits: Credit[];
 }
 
 const postersDir = join(process.cwd(), 'public/posters');
@@ -78,6 +85,7 @@ export function getProjects(): Project[] {
         excerpt: decodeEntities((p.excerpt as string) || ''),
         featured: Boolean(p.featured),
         date: p.date as string,
+        credits: (creditsBySlug as Record<string, Credit[]>)[slug] ?? [],
       };
     });
   }

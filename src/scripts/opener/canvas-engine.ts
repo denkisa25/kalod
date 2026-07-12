@@ -34,6 +34,11 @@ export interface CanvasEngineOptions {
    *  "never invent colors"; it happens to already be pure white). */
   headingRgb: string;
   wordmarkText: string;
+  /** the static CSS wordmark on the choice screen (CR-1). Its rendered
+   *  position/size — not a hardcoded formula — are what the particle
+   *  formation targets, so the drop reads as the logo "re-forming" in
+   *  place rather than assembling somewhere else on screen. */
+  wordmarkEl: HTMLElement;
 }
 
 /** Ports the reference file's "crisp engine" verbatim: full clears every
@@ -72,21 +77,28 @@ export class OpenerCanvasEngine {
 
   /** Renders the wordmark offscreen and samples opaque pixels as particle
    *  formation targets — the same technique the reference uses to make
-   *  particles "spell out" the brand at the drop. */
+   *  particles "spell out" the brand at the drop. Position and font size
+   *  are read straight from the static CSS wordmark's own box (CR-1: the
+   *  drop must land within ~2% of it), not derived from viewport formulas
+   *  that could drift out of sync with the actual layout. */
   sampleWordmark(): void {
     const { W, H } = this;
     if (!W || !H) return;
+    const rect = this.opts.wordmarkEl.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const s = parseFloat(getComputedStyle(this.opts.wordmarkEl).fontSize);
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
     const off = document.createElement('canvas');
     off.width = W;
     off.height = H;
     const o = off.getContext('2d');
     if (!o) return;
-    const s = Math.min(W * 0.086, 96);
     o.fillStyle = '#fff';
     o.font = `bold ${s}px "Agency FB", Helvetica, Arial, sans-serif`;
     o.textAlign = 'center';
     o.textBaseline = 'middle';
-    o.fillText(this.opts.wordmarkText, W / 2, H / 2);
+    o.fillText(this.opts.wordmarkText, cx, cy);
     const img = o.getImageData(0, 0, W, H).data;
     const pts: Point[] = [];
     const stride = Math.max(3, Math.round(W / 360));

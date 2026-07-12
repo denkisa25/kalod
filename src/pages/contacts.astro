@@ -1,12 +1,22 @@
 ---
+import { Image } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import HeritageBackground from '../components/HeritageBackground.astro';
+import vuMeterPhoto from '../assets/studio/IMG_8950.jpg';
 ---
 <BaseLayout title="contacts | kaloyan dimitrov" description="get in touch with kaloyan dimitrov — email, phone and socials for music, mix and sound design work.">
+  <HeritageBackground />
   <Header current="contacts" />
   <main id="main">
-    <section class="block" id="contact">
+    <!-- D6: light inversion dropped — this page sits on the heritage
+         pattern (HeritageBackground) with the VU-meter photo as a band,
+         not the light #contact treatment the home-page teaser still uses. -->
+    <section class="block contact-page">
+      <div class="contact-photo-band">
+        <Image src={vuMeterPhoto} alt="Neve 8803 and Drawmer VU meters in the studio" widths={[700, 1400]} sizes="(max-width: 900px) 100vw, 900px" />
+      </div>
       <div class="eyebrow">contacts</div>
       <h2>let&rsquo;s talk sound</h2>
       <a class="mail" href="mailto:studio@kalodimitrov.com">studio@kalodimitrov.com</a>

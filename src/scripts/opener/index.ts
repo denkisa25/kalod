@@ -29,10 +29,11 @@ export function initOpener(): void {
   const choice = document.getElementById('choice');
   const skipnote = document.getElementById('skipnote');
   const canvas = document.getElementById('fx') as HTMLCanvasElement | null;
+  const wordmarkEl = document.getElementById('openerWordmark');
   const withSoundBtn = document.getElementById('withSound');
   const withoutSoundBtn = document.getElementById('withoutSound');
   const replayBtn = document.getElementById('replayOpener');
-  if (!opener || !choice || !skipnote || !canvas || !withSoundBtn || !withoutSoundBtn) return;
+  if (!opener || !choice || !skipnote || !canvas || !wordmarkEl || !withSoundBtn || !withoutSoundBtn) return;
 
   // reduced-motion: skip the opener entirely, straight to content (spec
   // §6/§12 — CLAUDE.md marks this non-negotiable). The reference demo only
@@ -44,6 +45,14 @@ export function initOpener(): void {
     document.body.classList.add('ready');
     return;
   }
+
+  // CR-2: the photo is meant to be the LCP element, which requires it to
+  // still be a static (non-animating) image at first paint — an element
+  // with an active transform animation is excluded from LCP candidacy in
+  // Chromium. Kick off the 20s push-in a frame after paint instead of on
+  // page load, so LCP has already been recorded against the static photo.
+  const openerPhoto = document.getElementById('openerPhoto');
+  requestAnimationFrame(() => requestAnimationFrame(() => openerPhoto?.classList.add('push')));
 
   // plays once per browser session, and never again on internal
   // navigation back to "/" within that session (spec §6). The reference
@@ -60,6 +69,7 @@ export function initOpener(): void {
     inkRgb: hexToRgb(cssVar('--color-ink')),
     headingRgb: hexToRgb(cssVar('--color-heading')),
     wordmarkText: WORDMARK,
+    wordmarkEl,
   });
 
   let state: State = alreadySeen ? 'done' : 'idle';

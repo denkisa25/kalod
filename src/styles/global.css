@@ -75,43 +75,24 @@ button:focus-visible,
   margin-bottom: var(--space-3);
 }
 
-/* placeholder gradient — used only where a real asset is still pending
-   (portrait), per docs/claude-code-kickoff.md §4 open client blockers */
-.placeholder-art {
-  position: relative;
-  overflow: hidden;
-  background:
-    radial-gradient(120% 90% at 20% 15%, color-mix(in srgb, var(--color-accent) 30%, var(--color-bg)) 0%, transparent 55%),
-    radial-gradient(110% 100% at 85% 80%, color-mix(in srgb, var(--color-accent) 18%, var(--color-bg)) 0%, transparent 60%),
-    linear-gradient(160deg, #131318 0%, #08080a 100%);
-}
-.placeholder-art::before {
-  content: "";
-  position: absolute;
-  inset: -30%;
-  background: conic-gradient(
-    from 0deg at 50% 50%,
-    transparent 0deg,
-    color-mix(in srgb, var(--color-accent) 35%, transparent) 40deg,
-    transparent 120deg,
-    color-mix(in srgb, var(--color-accent) 28%, transparent) 220deg,
-    transparent 320deg
-  );
-  animation: drift 22s linear infinite;
-  filter: blur(46px);
-}
-@keyframes drift { to { transform: rotate(1turn); } }
 
 /* ============================================================
    HEADER / FILTERS / RAIL
    ============================================================ */
+/* CR-3/D1 — header wordmark: large centered on load (.header--hero, home
+   page only), shrinks to a medium centered mark with right nav
+   (.header--compact) once scrolled past cue 01. Internal pages render
+   .header--compact permanently — no hero state, no JS needed there.
+   Grid (not flex) so the brand can sit dead-center in column 2 regardless
+   of how wide the nav in column 3 is; column 1 is an empty balancing
+   spacer of equal width. */
 header {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: var(--z-header);
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   padding: 18px clamp(20px, 4vw, 48px);
   background: linear-gradient(180deg, color-mix(in srgb, var(--color-bg) 80%, transparent), transparent);
   opacity: 0;
@@ -125,20 +106,36 @@ body.ready header { opacity: 1; transform: none; pointer-events: auto; }
    docs/design/README.md) — the wordmark itself renders uppercase; the
    tagline underneath stays lowercase like everything else */
 .brand {
+  grid-column: 2;
+  justify-self: center;
+  text-align: center;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1.02rem;
   color: var(--color-heading);
   text-transform: uppercase;
+  transition: font-size 0.6s var(--ease-out);
 }
+header.header--compact .brand { font-size: clamp(1.1rem, 2vw, 1.4rem); }
+header.header--hero .brand { font-size: clamp(1.6rem, 4.5vw, 2.8rem); }
 .brand small {
   display: block;
-  font-size: 0.53rem;
-  letter-spacing: 0.42em;
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
   color: var(--color-meta);
   font-weight: 400;
   margin-top: 2px;
   text-transform: lowercase;
+}
+
+.desktop-nav, .mobile-controls {
+  grid-column: 3;
+  justify-self: end;
+  transition: opacity 0.5s var(--ease-out);
+}
+header.header--hero .desktop-nav,
+header.header--hero .mobile-controls {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .desktop-nav {
@@ -167,11 +164,15 @@ body.ready header { opacity: 1; transform: none; pointer-events: auto; }
 
 .mobile-controls { display: none; align-items: center; gap: 18px; }
 
+/* CR-13: 44px hit area; the EQ-bars glyph itself stays its original size,
+   just centered in the larger box instead of anchored to a 16px-tall one. */
 #soundToggle, #soundToggleMobile {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
+  justify-content: center;
   gap: 2.5px;
-  height: 16px;
+  min-width: 44px;
+  min-height: 44px;
   padding: 4px 2px;
   opacity: 0.55;
 }
@@ -182,16 +183,21 @@ body.ready header { opacity: 1; transform: none; pointer-events: auto; }
   border-radius: 1px;
 }
 
-/* hamburger / close toggle */
+/* hamburger / close toggle — CR-13: 44x44 hit area, visual glyph unchanged
+   (24x18) and centered within it via flex, not stretched to fill it. */
 #navToggle {
   position: relative;
-  width: 24px;
-  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
   padding: 0;
 }
 #navToggle .bars {
   position: absolute;
-  inset: 0;
+  width: 24px;
+  height: 18px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -205,7 +211,6 @@ body.ready header { opacity: 1; transform: none; pointer-events: auto; }
 }
 #navToggle .cross {
   position: absolute;
-  inset: 0;
   display: none;
   align-items: center;
   justify-content: center;
@@ -268,15 +273,19 @@ body.nav-open { overflow: hidden; }
   backdrop-filter: blur(10px);
   border: 1px solid var(--color-line);
   opacity: 0;
-  transition: opacity 0.8s var(--ease-out) 0.6s;
+  transition: opacity 0.8s var(--ease-out) 0.6s, top 0.6s var(--ease-out);
   pointer-events: none;
 }
 body.ready #filters { opacity: 1; pointer-events: auto; }
+/* CR-3 — the hero header (home page, pre-scroll) is taller than the
+   compact one; without this the filter pill collides with the wordmark's
+   tagline. Sibling selector: header precedes #filters in index.astro. */
+header.header--hero ~ #filters { top: 150px; }
 .filter {
   display: flex;
   align-items: center;
   gap: 9px;
-  font-size: 0.66rem;
+  font-size: 0.7rem;
   letter-spacing: 0.2em;
   color: var(--color-meta);
   padding: 6px 2px;
@@ -302,6 +311,22 @@ body.ready #filters { opacity: 1; pointer-events: auto; }
 .filter[aria-pressed="true"] { color: var(--color-ink); }
 .filter[aria-pressed="true"] .fader::after { left: 60%; background: var(--color-accent); }
 
+/* CR-14 — at mobile widths the pill used to wrap onto a 2nd/3rd line
+   (measured 77px tall) and sit over the video. A single horizontally
+   scrollable row keeps it to one line, ≤44px. Placed after the base
+   #filters/.filter rules so flex-wrap:nowrap actually wins the cascade. */
+@media (max-width: 599px) {
+  #filters {
+    max-width: calc(100vw - 32px);
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  #filters::-webkit-scrollbar { display: none; }
+  .filter { flex: none; white-space: nowrap; }
+}
+
 #rail {
   position: fixed;
   right: clamp(10px, 2vw, 26px);
@@ -317,12 +342,13 @@ body.ready #filters { opacity: 1; pointer-events: auto; }
 }
 body.ready #rail { opacity: 1; pointer-events: auto; }
 #rail a {
-  font-size: 0.58rem;
+  font-size: 0.7rem;
   letter-spacing: 0.14em;
   color: var(--color-meta);
   display: flex;
   align-items: center;
   gap: 8px;
+  min-height: 44px; /* CR-13 — hit area; the visible number/line stay their designed size */
   transition: color var(--dur-2);
 }
 #rail a::before {
@@ -351,13 +377,23 @@ body.ready #rail { opacity: 1; pointer-events: auto; }
   pointer-events: none;
 }
 body.ready #mobileRail { opacity: 1; pointer-events: auto; }
+/* CR-13: the segment stays a thin 2px line visually — the <a> itself grows
+   to a 44px-tall invisible tap zone with the line centered inside it. */
 #mobileRail a {
   flex: 1;
+  height: 44px;
+  display: flex;
+  align-items: center;
+}
+#mobileRail a::after {
+  content: "";
+  display: block;
+  width: 100%;
   height: 2px;
   background: var(--color-line);
   transition: background var(--dur-2), height var(--dur-2);
 }
-#mobileRail a.active { background: var(--color-accent); height: 3px; }
+#mobileRail a.active::after { background: var(--color-accent); height: 3px; }
 @media (max-width: 767px) { #mobileRail { display: flex; } }
 
 /* ============================================================
@@ -416,10 +452,26 @@ body.ready main { opacity: 1; }
   display: flex;
   flex-direction: column;
   gap: 10px;
+  /* CR-12 — .shade's gradient is tuned against the page background, not a
+     bright video frame (Audi's snow, InvestBulgaria's daylight); measured
+     against those it falls under the 4.5:1 floor. This second, steeper
+     gradient sits directly behind the text block itself, independent of
+     scroll position or frame brightness, and stacks additively with .shade. */
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    color-mix(in srgb, var(--color-bg) 75%, transparent) 35%,
+    color-mix(in srgb, var(--color-bg) 96%, transparent) 100%
+  );
 }
 .cue .top { display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap; }
 .cue .idx { font-size: 0.7rem; letter-spacing: 0.2em; color: var(--color-accent); }
-.cue .kind { font-size: 0.62rem; letter-spacing: 0.3em; color: var(--color-meta); }
+/* meta-colored text over video is raised from the sitewide 60% alpha to
+   85% — verified against a sampled bright frame of cue 03/04 (CR-12) */
+.cue .kind, .cue .roleline, .cue .credits, .cue .desc {
+  color: color-mix(in srgb, var(--color-ink) 85%, transparent);
+}
+.cue .kind { font-size: 0.7rem; letter-spacing: 0.22em; }
 .cue h2 {
   font-family: var(--font-display);
   font-weight: 700;
@@ -439,16 +491,15 @@ body.ready main { opacity: 1; }
   max-width: 52ch;
   font-size: clamp(0.86rem, 1.5vw, 1rem);
   line-height: 1.65;
-  color: var(--color-meta);
 }
-.cue .credits { font-size: 0.64rem; letter-spacing: 0.14em; line-height: 2; color: var(--color-meta); }
+.cue .credits { font-size: 0.7rem; letter-spacing: 0.14em; line-height: 2; }
 .cue .credits em { color: var(--color-accent); font-style: normal; margin-right: 6px; }
 .cue .watch {
   display: flex;
   align-items: center;
   gap: 12px;
   font-size: 0.7rem;
-  letter-spacing: 0.24em;
+  letter-spacing: 0.22em;
   color: var(--color-ink);
   margin-top: 6px;
   width: max-content;
@@ -461,12 +512,12 @@ body.ready main { opacity: 1; }
   display: grid;
   place-items: center;
   color: var(--color-accent);
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   transition: transform var(--dur-2) var(--ease-out);
 }
 .cue .watch:hover { color: var(--color-accent); }
 .cue .watch:hover .ring { transform: scale(1.1); }
-.cue .roleline { font-size: 0.68rem; letter-spacing: 0.24em; color: var(--color-meta); }
+.cue .roleline { font-size: 0.7rem; letter-spacing: 0.22em; }
 .cue .roleline b { color: var(--color-ink); font-weight: 400; }
 
 .scrollhint {
@@ -475,8 +526,8 @@ body.ready main { opacity: 1; }
   left: 50%;
   transform: translateX(-50%);
   z-index: 3;
-  font-size: 0.56rem;
-  letter-spacing: 0.3em;
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
   color: var(--color-meta);
   opacity: 0.75;
   animation: hint 2.4s ease-in-out infinite;
@@ -519,28 +570,22 @@ section.block { padding: clamp(80px, 12vh, 140px) clamp(20px, 4vw, 48px); scroll
   max-width: 1200px;
   margin: 0 auto;
 }
-#about .portrait { aspect-ratio: 4 / 5; }
-#about .portrait .init {
-  position: absolute; inset: 0;
-  display: grid; place-items: center;
-  z-index: 2;
-  font-family: var(--font-display);
-  font-size: 3rem;
-  color: var(--color-meta);
-  font-weight: 300;
-}
-#about .portrait .cap {
-  position: absolute; bottom: 10px; left: 12px; z-index: 2;
-  font-size: 0.56rem; letter-spacing: 0.22em; color: var(--color-meta);
-}
+/* CR-10: real 4:3 studio photo, unfiltered — replaces the 4:5 gradient
+   placeholder. D4/CR-10 decision: photographs are the one place colour
+   lives, so no filter/duotone here. */
+#about .portrait { aspect-ratio: 4 / 3; overflow: hidden; }
+#about .portrait img { width: 100%; height: 100%; object-fit: cover; display: block; }
 #about .bio p { font-size: clamp(1rem, 1.9vw, 1.3rem); line-height: 1.7; max-width: 56ch; }
 #about .bio p + p { margin-top: 1.1em; }
 #about .disciplines {
   display: flex; gap: 30px; margin-top: 34px;
-  font-size: 0.7rem; letter-spacing: 0.24em; color: var(--color-meta);
+  font-size: 0.7rem; letter-spacing: 0.22em; color: var(--color-meta);
 }
 #about .disciplines span { border-top: 1px solid var(--color-accent); padding-top: 10px; }
 @media (max-width: 760px) { #about { grid-template-columns: 1fr; } }
+
+.about-secondary { max-width: 1200px; margin: var(--space-7) auto 0; }
+.about-secondary img { width: 100%; height: auto; display: block; }
 
 .about-teaser { max-width: 620px; margin: 0 auto; text-align: left; }
 .about-teaser p { font-size: var(--text-h2); line-height: 1.3; color: var(--color-heading); }
@@ -558,7 +603,7 @@ section.block { padding: clamp(80px, 12vh, 140px) clamp(20px, 4vw, 48px); scroll
 #clients .track {
   display: flex; gap: 64px; width: max-content;
   animation: marquee 36s linear infinite;
-  font-size: 0.76rem; letter-spacing: 0.34em; color: var(--color-meta);
+  font-size: 0.76rem; letter-spacing: 0.22em; color: var(--color-meta);
   white-space: nowrap;
 }
 #clients .track span::after { content: "·"; margin-left: 64px; color: var(--color-accent); }
@@ -593,13 +638,54 @@ section.block { padding: clamp(80px, 12vh, 140px) clamp(20px, 4vw, 48px); scroll
 }
 #contact .lines a:hover { color: var(--color-bg); }
 
+/* CR-16/D6 — the standalone /contacts page: light inversion dropped, sits
+   on the heritage pattern instead (the home page's #contact teaser above
+   is untouched — still "cinema", still light-inverted). */
+.contact-page { text-align: center; padding-top: var(--space-6); }
+.contact-page .eyebrow { color: var(--color-accent); }
+.contact-page h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.9rem, 6vw, 4.4rem);
+  line-height: 1.02;
+  margin-bottom: 32px;
+  color: var(--color-heading);
+}
+.contact-page .mail {
+  display: inline-block;
+  font-size: clamp(1rem, 3vw, 1.6rem);
+  color: var(--color-ink);
+  border-bottom: 2px solid var(--color-accent);
+  padding-bottom: 4px;
+  transition: color var(--dur-2);
+}
+.contact-page .mail:hover { color: var(--color-accent); }
+.contact-page .lines {
+  margin-top: 32px;
+  font-size: 0.76rem;
+  letter-spacing: 0.22em;
+  color: var(--color-meta);
+  display: flex; gap: 32px; justify-content: center; flex-wrap: wrap;
+}
+.contact-page .lines a:hover { color: var(--color-ink); }
+.contact-photo-band {
+  max-width: 900px;
+  aspect-ratio: 16 / 7;
+  overflow: hidden;
+  margin: 0 auto var(--space-6);
+}
+.contact-photo-band img {
+  width: 100%; height: 100%; object-fit: cover;
+  filter: grayscale(1);
+}
+
 footer {
   display: flex;
   justify-content: space-between;
   gap: 14px;
   flex-wrap: wrap;
   padding: 20px clamp(20px, 4vw, 48px);
-  font-size: 0.6rem;
+  font-size: 0.7rem;
   letter-spacing: 0.22em;
   color: var(--color-meta);
   border-top: 1px solid var(--color-line);
@@ -623,7 +709,7 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
 #detail.open { opacity: 1; pointer-events: auto; }
 .eyebrow-bar {
   padding: 10px clamp(20px, 4vw, 48px) 0;
-  font-size: 0.66rem;
+  font-size: 0.7rem;
   letter-spacing: 0.12em;
   color: var(--color-accent);
 }
@@ -633,7 +719,7 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
   align-items: center;
   padding: 18px clamp(20px, 4vw, 48px);
   font-size: 0.7rem;
-  letter-spacing: 0.24em;
+  letter-spacing: 0.22em;
   color: var(--color-meta);
 }
 #detail .bar button:hover { color: var(--color-accent); }
@@ -655,7 +741,7 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
 #player .ph {
   position: absolute; inset: 0;
   display: grid; place-items: center;
-  font-size: 0.62rem; letter-spacing: 0.24em; color: var(--color-meta);
+  font-size: 0.7rem; letter-spacing: 0.22em; color: var(--color-meta);
   text-align: center; padding: 0 var(--space-4);
 }
 /* loading skeleton — shown while the player iframe loads (docs/design/skeleton.png) */
@@ -704,15 +790,15 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
 }
 #dTitle small {
   display: block;
-  font-size: 0.62rem;
-  letter-spacing: 0.26em;
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
   color: var(--color-accent);
   margin-bottom: 6px;
   font-weight: 400;
 }
 .dcol { flex: 1 1 180px; font-size: 0.76rem; line-height: 1.85; color: var(--color-meta); }
 .dcol b { display: block; font-weight: 400; color: var(--color-ink); }
-.dcol .lbl { font-size: 0.58rem; letter-spacing: 0.3em; color: var(--color-accent); margin-bottom: 5px; }
+.dcol .lbl { font-size: 0.7rem; letter-spacing: 0.22em; color: var(--color-accent); margin-bottom: 5px; }
 #detail .prevnext { display: flex; gap: 24px; font-size: 0.7rem; letter-spacing: 0.22em; align-items: center; }
 #detail .prevnext button { color: var(--color-meta); transition: color var(--dur-2); }
 #detail .prevnext button:hover { color: var(--color-accent); }
@@ -750,7 +836,7 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
   font-size: clamp(1.1rem, 2.6vw, 1.7rem);
   color: var(--color-heading);
 }
-.work-row .r { font-size: 0.66rem; letter-spacing: 0.18em; color: var(--color-meta); white-space: nowrap; }
+.work-row .r { font-size: 0.7rem; letter-spacing: 0.18em; color: var(--color-meta); white-space: nowrap; }
 .work-row:hover { color: var(--color-accent); }
 .work-row:hover .t { color: var(--color-accent); }
 
@@ -762,7 +848,7 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
   max-width: 900px;
   margin: 0 auto;
 }
-.project-detail .kind { font-size: 0.66rem; letter-spacing: 0.26em; color: var(--color-accent); margin-bottom: var(--space-3); }
+.project-detail .kind { font-size: 0.7rem; letter-spacing: 0.22em; color: var(--color-accent); margin-bottom: var(--space-3); }
 .project-detail h1 {
   font-family: var(--font-display);
   font-weight: 700;
@@ -781,7 +867,7 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
 .project-detail .cols { display: flex; gap: clamp(24px, 5vw, 64px); flex-wrap: wrap; margin-bottom: var(--space-5); }
 .project-detail .col { flex: 1 1 180px; font-size: 0.76rem; line-height: 1.85; color: var(--color-meta); }
 .project-detail .col b { display: block; font-weight: 400; color: var(--color-ink); }
-.project-detail .col .lbl { font-size: 0.58rem; letter-spacing: 0.3em; color: var(--color-accent); margin-bottom: 5px; }
+.project-detail .col .lbl { font-size: 0.7rem; letter-spacing: 0.22em; color: var(--color-accent); margin-bottom: 5px; }
 .project-detail .desc { max-width: 60ch; font-size: var(--text-body); line-height: 1.7; margin-bottom: var(--space-5); }
 .project-detail .prevnext {
   display: flex; justify-content: space-between; gap: 24px;
@@ -794,6 +880,7 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
    404
    ============================================================ */
 .silence {
+  position: relative;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
@@ -803,7 +890,19 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
   gap: var(--space-3);
   padding: var(--space-4);
 }
-.silence .eyebrow { margin-bottom: 0; font-size: 0.7rem; letter-spacing: 0.3em; }
+/* CR-10 — heavily darkened, on-palette (D4: colour lives only in
+   IMG_6235/IMG_6681). Own stacking context via .silence's position:relative
+   keeps this behind the page text but above HeritageBackground. */
+.silence-photo {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(1) brightness(0.3);
+}
+.silence .eyebrow { margin-bottom: 0; font-size: 0.7rem; letter-spacing: 0.22em; }
 .silence h1 { font-family: var(--font-display); font-weight: 700; font-size: var(--text-hero); color: var(--color-heading); }
 /* a waveform gone flat — the site's audio motif reduced to a single line */
 .silence .flatline {
@@ -838,6 +937,28 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
 }
 #opener.outro { background: transparent; }
 #opener.gone { opacity: 0; pointer-events: none; }
+/* CR-2 — studio photo behind the opener: grayscale, ~30% opacity over
+   --color-bg, slow push-in. Sits behind #fx and #choice by DOM order alone
+   (no z-index needed inside #opener's own stacking context). */
+.opener-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(1);
+  opacity: 0.3;
+  transform: scale(1);
+  /* transition (not @keyframes running from paint 0) — an element with an
+     already-active transform animation is excluded from LCP candidacy in
+     Chromium, and this IS meant to be the LCP element (CR-2). The .push
+     class is added by a script tag right after this element, one frame
+     after first paint, so LCP has already been recorded against the
+     static image before the 20s push-in ever starts. */
+  transition: opacity 1s var(--ease-out), transform 20s var(--ease-out);
+}
+.opener-photo.push { transform: scale(1.06); }
+#opener.outro .opener-photo { opacity: 0; }
 #fx { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 #choice {
   position: absolute;
@@ -852,6 +973,19 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
   transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out);
 }
 #choice.gone { opacity: 0; transform: translateY(-10px); pointer-events: none; }
+/* CR-1 — opener wordmark: carries the top of the choice stack, above the
+   prompt. Font size/case must match what canvas-engine.ts samples for the
+   particle formation (bold, uppercase, "Agency FB") so the drop reads as
+   the same mark re-forming, not a different one appearing. No variation
+   settings — TOKEN-GUARD: Agency FB/Bahnschrift are not variable fonts. */
+.opener-wordmark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.2rem, 7vw, 5.5rem);
+  line-height: 1;
+  color: var(--color-heading);
+  text-transform: uppercase;
+}
 #choice .prompt {
   font-family: var(--font-display);
   font-weight: 400;
@@ -859,7 +993,7 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
   letter-spacing: 0.04em;
   color: var(--color-heading);
 }
-#choice .sub { font-size: 0.68rem; letter-spacing: 0.3em; color: var(--color-meta); margin-top: -14px; }
+#choice .sub { font-size: 0.7rem; letter-spacing: 0.22em; color: var(--color-meta); margin-top: -14px; }
 #choice .buttons { display: flex; gap: clamp(20px, 4vw, 44px); flex-wrap: wrap; justify-content: center; }
 .enter {
   position: relative;
@@ -886,8 +1020,8 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
   bottom: 26px;
   left: 0; right: 0;
   text-align: center;
-  font-size: 0.68rem;
-  letter-spacing: 0.25em;
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
   color: var(--color-meta);
   opacity: 0;
   transition: opacity 0.8s var(--ease-out);
@@ -896,13 +1030,13 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-snap-type: none; }
-  .placeholder-art::before,
   #clients .track,
   .scrollhint,
   .cue .poster,
   #player .skeleton span {
     animation: none;
   }
+  .opener-photo { transition: none; }
   /* defense in depth — initOpener() already removes #opener under
      reduced-motion; this guarantees content is never blocked even if JS
      is slow to run or fails */

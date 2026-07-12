@@ -36,7 +36,7 @@ const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
   image={projects[0].poster}
   hasOpener
 >
-  <Header />
+  <Header hero />
 
   <div id="filters" role="group" aria-label="filter by role">
     <button class="filter" data-f="all" aria-pressed="true" type="button"><span class="fader"></span>all</button>
@@ -88,6 +88,16 @@ const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
               <a class="watch" href={`/work/${p.slug}`} data-idx={i}>
                 <span class="ring">&#9654;</span><span>watch with sound</span>
               </a>
+              {p.credits.length > 0 && (
+                <div class="credits">
+                  {p.credits.map((c, ci) => (
+                    <>
+                      {ci > 0 && <>&nbsp;&nbsp;&middot;&nbsp;&nbsp;</>}
+                      <em>{c.role}</em>{c.name}
+                    </>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           {i === 0 && <div class="scrollhint">scroll — next cue</div>}

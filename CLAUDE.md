@@ -131,12 +131,6 @@ about a visual/timing decision, open this file and match it.
 - [ ] Old WP exported + archived, DNS cutover checklist written
 
 
-## 6. Active change requests
-@docs/change-requests/TOKEN-GUARD.md   ← READ FIRST; overrides literals in the CRs
-@docs/change-requests/cr-001-visual.md
-@docs/change-requests/cr-001-addendum-and-session.md
-
-
 - Superpowers: the spec and session plan already exist (docs/spec.md,
   docs/claude-code-kickoff.md §3). SKIP brainstorming — go straight to plan
   execution. Use TDD only for VideoSource, filters, and redirect generation;
@@ -144,4 +138,37 @@ about a visual/timing decision, open this file and match it.
 - After each session: record a Chrome DevTools MCP performance trace of the
   built site on localhost and report LCP / CLS / gzipped JS vs spec §11
   before declaring the session done.
+
+
+## Active change requests
+@docs/change-requests/TOKEN-GUARD.md          ← READ FIRST. Overrides every literal
+                                                colour/font value in the CR docs.
+@docs/change-requests/cr-001-visual.md
+@docs/change-requests/cr-001-addendum-and-session.md
+
+CR-001 supersedes docs/reference/site-concept-v3.html wherever they conflict.
+Do not redesign anything not listed in CR-001.
+Do not add or change any :root token without explicit sign-off.
+
+
+## CR-001 DECISIONS (authoritative — do not re-ask)
+
+- **D1 / CR-3 — header wordmark:** (c) large and centered on load, shrinks to medium a
+  center-aligned mark once the user scrolls past cue 01, right navigation
+- **D2 / CR-4 — sound control:** the new volume icon REPLACES the EQ-bars toggle.
+  One sound control for the whole site: it drives feed audio AND ui blips.
+- **D3 / CR-9 — player presentation:** letterbox the video to its true aspect and
+  fill the surround with a blurred, dimmed copy of itself. Do NOT crop the frame.
+- **D4 / CR-10 — photo colour policy:** photographs are the ONE place colour lives.
+  Use IMG_6235 and IMG_6681 unfiltered. Everything else stays on-palette.
+- **D5 / CR-16 — pattern intensity:** tinted — the pattern is a subtle ground
+  inside the dark system, never a light legacy-style backdrop. Text legibility wins.
+- **D6 / CR-16 — contact section:** DROP the light inversion. Contact sits on the
+  heritage pattern with the VU-meter photo (IMG_8950) as a band.
+- **D7 / pattern colour (see TOKEN-GUARD):** DUOTONE bgr.jpg at build time from
+  --color-bg into a low-saturation tint of --color-accent. Do not introduce steel
+  blue as a third brand colour. Do not add any new :root colour token.
+
+
+
 
