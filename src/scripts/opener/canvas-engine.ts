@@ -196,9 +196,13 @@ export class OpenerCanvasEngine {
   drawIdle(dt: number): void {
     this.idleT += dt;
     const { ctx, W, H } = this;
+    // clearRect only — no opaque fillRect here. This canvas sits directly
+    // on top of the CR-2 studio photo (.opener-photo); an opaque fill
+    // painted over it every frame, which meant the photo was never
+    // actually visible behind the choice screen despite CR-2 saying it
+    // "stays visible through the choice screen and the cue" (found while
+    // investigating a user report that the photo wasn't showing).
     ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = this.opts.bg;
-    ctx.fillRect(0, 0, W, H);
     const cy = H * 0.5 + Math.min(H * 0.18, 150);
     ctx.strokeStyle = `rgba(${this.opts.accentRgb},.45)`;
     ctx.lineWidth = 1;
@@ -222,12 +226,10 @@ export class OpenerCanvasEngine {
     onOutroStart: () => void,
   ): void {
     const { ctx, W, H } = this;
+    // same fix as drawIdle() — no opaque fillRect; the CR-2 photo sits
+    // behind this canvas for the whole cue, not just from the outro on
     ctx.clearRect(0, 0, W, H);
     const outroing = t >= T.outro;
-    if (!outroing) {
-      ctx.fillStyle = this.opts.bg;
-      ctx.fillRect(0, 0, W, H);
-    }
     const cy = H / 2;
     const e = envAt(t);
     if (analyser && tdata) analyser.getByteTimeDomainData(tdata);
