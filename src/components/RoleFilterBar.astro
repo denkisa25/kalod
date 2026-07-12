@@ -1,0 +1,23 @@
+---
+// CR-6 — the one shared filter markup for the home feed, work list, and
+// work gallery. Initial aria-pressed reads the ?role= URL param server-side
+// so a deep-linked filtered view (or a back-navigation) never flashes
+// "all" before client JS (role-filter.ts) takes over.
+const url = Astro.url.searchParams.get('role');
+const initialRole = url && ['music', 'mix', 'sound-design'].includes(url) ? url : 'all';
+
+const roles: Array<{ value: string; label: string }> = [
+  { value: 'all', label: 'all' },
+  { value: 'music', label: 'music' },
+  { value: 'mix', label: 'mix' },
+  { value: 'sound-design', label: 'sound design' },
+];
+---
+
+<div id="filters" role="group" aria-label="filter by role">
+  {roles.map((r) => (
+    <button class="filter" data-f={r.value} aria-pressed={r.value === initialRole ? 'true' : 'false'} type="button" data-blip>
+      <span class="fader"></span>{r.label}
+    </button>
+  ))}
+</div>

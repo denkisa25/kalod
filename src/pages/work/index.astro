@@ -1,31 +1,104 @@
 ---
+import { Image } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import HeritageBackground from '../../components/HeritageBackground.astro';
+import RoleFilterBar from '../../components/RoleFilterBar.astro';
+import DetailOverlay from '../../components/DetailOverlay.astro';
 import { getProjects } from '../../lib/projects';
+import { getVideoSource } from '../../lib/video-source';
 import { pad, roleLine } from '../../lib/format';
 
 const projects = getProjects().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+// CR-7: "watch full video" on every gallery tile / list row opens THE SAME
+// player component the home feed uses — same shape of data, same function
+// (initDetailOverlay), just fed the full work index instead of 10 featured cues.
+const cueData = projects.map((p, i) => ({
+  idx: i,
+  slug: p.slug,
+  title: p.title,
+  kind: roleLine(p.roles),
+  roles: p.roles,
+  client: p.client,
+  excerpt: p.excerpt,
+  videoRef: p.videoRef,
+}));
+const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
 ---
 <BaseLayout title="work | kaloyan dimitrov" description="the full index of film, tv and advertising work by kaloyan dimitrov — music, mix and sound design credits.">
   <HeritageBackground />
   <Header current="work" />
   <main id="main">
     <div class="work-index">
-      <h1>work</h1>
-      <ol class="work-list">
+      <div class="work-head">
+        <h1>work</h1>
+        <div class="view-switch" role="group" aria-label="view">
+          <button type="button" data-view="list" aria-pressed="true" data-blip>list</button>
+          <button type="button" data-view="gallery" aria-pressed="false" data-blip>gallery</button>
+        </div>
+      </div>
+    </div>
+
+    <RoleFilterBar />
+
+    <div class="work-index">
+      <ol class="work-list" id="workList">
         {projects.map((p, i) => (
           <li>
-            <a class="work-row" href={`/work/${p.slug}`}>
+            <a class="work-row watch" href={`/work/${p.slug}`} data-idx={i} data-roles={p.roles.join(',')}>
+              <span class="thumb">
+                <Image src={p.poster} alt="" width={160} height={90} />
+              </span>
               <span class="n">{pad(i + 1)}</span>
               <span class="t">{p.title}</span>
-              <span class="r">{roleLine(p.roles)}</span>
+              <span class="r">{roleLine(p.roles)}{p.client && <> &middot; {p.client}</>}</span>
+              <span class="arrow" aria-hidden="true">&rarr;</span>
             </a>
           </li>
         ))}
       </ol>
     </div>
+
+    <div class="work-gallery" id="workGallery" hidden>
+      {projects.map((p, i) => {
+        const source = getVideoSource(p.videoRef);
+        const frames = source?.getPreviewFrames(p.videoRef) ?? null;
+        return (
+          <div class="gallery-tile" data-roles={p.roles.join(',')}>
+            <div class="tile-media">
+              <Image class="frame1" src={p.poster} alt="" width={700} height={394} loading="lazy" />
+              {frames && <img class="frame2" src={frames[1]} alt="" loading="lazy" />}
+            </div>
+            <div class="tile-scrim"></div>
+            <div class="tile-info">
+              <div class="tile-title">{p.title}</div>
+              <div class="tile-roles">{roleLine(p.roles)}</div>
+              <a class="watch tile-watch" href={`/work/${p.slug}`} data-idx={i} data-blip>watch full video</a>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+
+    <div id="workEmpty" class="feed-empty" hidden>
+      <p>no cues match this filter.</p>
+      <button type="button">show all</button>
+    </div>
   </main>
+
+  <DetailOverlay />
   <Footer />
+
+  <script type="application/json" id="cue-data" set:html={cueDataJson} is:inline></script>
+  <script>
+    import { initDetailOverlay, NOOP_FEED_AUDIO, type CueData } from '../../scripts/video-layer';
+    import { initWorkPage } from '../../scripts/work-page';
+
+    const dataEl = document.getElementById('cue-data');
+    const cueList = JSON.parse(dataEl?.textContent ?? '[]') as CueData[];
+    initWorkPage();
+    initDetailOverlay(cueList, NOOP_FEED_AUDIO);
+  </script>
 </BaseLayout>

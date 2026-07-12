@@ -240,7 +240,16 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
 
 /** Detail overlay: autoplay-with-sound player, prev/next, Escape/arrow
  *  keys, focus trap while open, focus returned to the trigger on close. */
-function initDetailOverlay(cueList: CueData[], feedAudio: FeedAudioController): void {
+/** CR-7: the work page's gallery/list "watch full video" reuses this exact
+ *  function — no second player component — but has no background feed
+ *  audio of its own to pause/resume, hence this no-op stand-in. */
+export const NOOP_FEED_AUDIO: FeedAudioController = {
+  pauseForOverlay() {},
+  resumeFromOverlay() {},
+  debugAudioState: () => [],
+};
+
+export function initDetailOverlay(cueList: CueData[], feedAudio: FeedAudioController): void {
   const detail = $('#detail');
   const player = $('#player');
   if (!detail || !player) return;

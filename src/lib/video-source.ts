@@ -16,6 +16,9 @@ export interface VideoSource {
   getBackgroundEmbed(ref: VideoRef): string | null;
   /** full player, autoplay with sound — detail overlay */
   getPlayerEmbed(ref: VideoRef): string | null;
+  /** CR-7 gallery tile hover — two distinct auto-generated poster frames to
+   *  cross-fade between, a zero-video-cost stand-in for a preview loop. */
+  getPreviewFrames(ref: VideoRef): [string, string] | null;
 }
 
 /** project.video from phase0/extraction/projects.json is a full oEmbed
@@ -50,6 +53,10 @@ class YouTubeSource implements VideoSource {
     });
     return `https://www.youtube.com/embed/${ref.id}?${p}`;
   }
+  getPreviewFrames(ref: VideoRef): [string, string] | null {
+    if (!ref.id) return null;
+    return [`https://i.ytimg.com/vi/${ref.id}/hqdefault.jpg`, `https://i.ytimg.com/vi/${ref.id}/2.jpg`];
+  }
 }
 
 /** Stub — swap for Vimeo Pro progressive MP4 sources at launch (spec §11).
@@ -66,6 +73,9 @@ class VimeoSource implements VideoSource {
     if (!ref.id) return null;
     const p = new URLSearchParams({ autoplay: '1' });
     return `https://player.vimeo.com/video/${ref.id}?${p}`;
+  }
+  getPreviewFrames(): [string, string] | null {
+    return null; // no free-tier thumbnail API equivalent — falls back to the static poster
   }
 }
 
