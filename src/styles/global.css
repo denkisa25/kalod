@@ -1005,14 +1005,49 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
   color: var(--color-heading);
 }
 .work-row .r { font-size: 0.7rem; letter-spacing: 0.18em; color: var(--color-meta); white-space: nowrap; }
-.work-row .arrow { color: var(--color-meta); transition: transform var(--dur-2) var(--ease-out); flex-shrink: 0; }
+.work-row .chevron { color: var(--color-meta); transition: transform var(--dur-2) var(--ease-out), color var(--dur-2); flex-shrink: 0; }
 .work-row:hover { color: var(--color-accent); }
 .work-row:hover .t { color: var(--color-accent); }
-.work-row:hover .arrow { transform: translateX(4px); color: var(--color-accent); }
+.work-row:hover .chevron { color: var(--color-accent); }
+.work-row[aria-expanded="true"] .chevron { transform: rotate(180deg); }
 @media (max-width: 640px) {
   .work-row .thumb { width: 72px; }
   .work-row .r { display: none; } /* mobile: keeps the row single-line, per CR-5 */
 }
+
+/* inline expand (role/client/description + the shared "watch full video"
+   link, which opens the same overlay player gallery view uses via
+   video-layer.ts's existing .watch[data-idx] delegation — no new player
+   code here). Lives as a sibling of .work-row, not a child: an <a> can't
+   validly nest inside another <a>, and this panel needs its own link. */
+.work-detail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: 0 0 var(--space-4);
+}
+.work-detail .dcol { flex: 1 1 160px; font-size: 0.76rem; line-height: 1.85; color: var(--color-meta); }
+.work-detail .dcol b { display: block; font-weight: 400; color: var(--color-ink); }
+.work-detail .dcol .lbl { font-size: 0.7rem; letter-spacing: 0.22em; color: var(--color-accent); margin-bottom: 5px; }
+.work-detail .desc { flex: 2 1 320px; font-size: var(--text-body); line-height: 1.7; color: var(--color-ink); }
+.work-detail .watch {
+  flex: 1 1 100%;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  color: var(--color-accent);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  transition: color var(--dur-2);
+}
+.work-detail .watch:hover, .work-detail .watch:focus-visible { color: var(--color-heading); }
+/* CR-6's shared role-filter toggles a .hidden CLASS on .work-row when a
+   row doesn't match the active filter — it never touches .work-detail
+   directly (that module is intentionally generic across 3 surfaces, see
+   role-filter.ts). Without this rule, a row's expanded panel could stay
+   visible under a header the filter just hid. */
+.work-row.hidden + .work-detail { display: none; }
 
 /* ============================================================
    WORK GALLERY (CR-7) — full-bleed, edge to edge, no max-width

@@ -23,7 +23,10 @@ function initViewSwitch(): void {
     b.addEventListener('click', () => setView(b.dataset.view ?? 'list', true));
   });
 
-  setView(sessionStorage.getItem(VIEW_KEY) === 'gallery' ? 'gallery' : 'list', false);
+  // gallery is the default view; a session choice of "list" is the only
+  // thing that overrides it (see also the server-rendered initial state in
+  // work/index.astro, which mirrors this default for the no-JS/pre-hydration paint).
+  setView(sessionStorage.getItem(VIEW_KEY) === 'list' ? 'list' : 'gallery', false);
 }
 
 function previewsDisabled(): boolean {
@@ -77,6 +80,49 @@ function initGalleryPreviews(): void {
   }
 }
 
+/** List view rows expand inline instead of navigating to the standalone
+ *  project page. The row keeps its real href (no-JS / crawler / redirect-
+ *  map fallback — see phase0/extraction/redirect-map.csv); this listener
+ *  intercepts the click and toggles a sibling panel instead. Accordion:
+ *  opening a row closes whichever row was previously open. */
+function initListExpand(): void {
+  const rows = document.querySelectorAll<HTMLAnchorElement>('.work-row');
+  if (!rows.length) return;
+
+  let openRow: HTMLAnchorElement | null = null;
+
+  function panelFor(row: HTMLAnchorElement): HTMLElement | null {
+    const id = row.getAttribute('aria-controls');
+    return id ? document.getElementById(id) : null;
+  }
+
+  function close(row: HTMLAnchorElement): void {
+    const panel = panelFor(row);
+    if (panel) panel.hidden = true;
+    row.setAttribute('aria-expanded', 'false');
+  }
+
+  function open(row: HTMLAnchorElement): void {
+    if (openRow && openRow !== row) close(openRow);
+    const panel = panelFor(row);
+    if (panel) panel.hidden = false;
+    row.setAttribute('aria-expanded', 'true');
+    openRow = row;
+  }
+
+  rows.forEach((row) => {
+    row.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (row.getAttribute('aria-expanded') === 'true') {
+        close(row);
+        openRow = null;
+      } else {
+        open(row);
+      }
+    });
+  });
+}
+
 export function initWorkPage(): void {
   initViewSwitch();
   initRoleFilter({
@@ -84,4 +130,5 @@ export function initWorkPage(): void {
     emptyState: document.getElementById('workEmpty'),
   });
   initGalleryPreviews();
+  initListExpand();
 }

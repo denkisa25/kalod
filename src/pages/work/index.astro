@@ -35,8 +35,8 @@ const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
       <div class="work-head">
         <h1>work</h1>
         <div class="view-switch" role="group" aria-label="view">
-          <button type="button" data-view="list" aria-pressed="true" data-blip>list</button>
-          <button type="button" data-view="gallery" aria-pressed="false" data-blip>gallery</button>
+          <button type="button" data-view="list" aria-pressed="false" data-blip>list</button>
+          <button type="button" data-view="gallery" aria-pressed="true" data-blip>gallery</button>
         </div>
       </div>
     </div>
@@ -44,29 +44,41 @@ const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
     <RoleFilterBar />
 
     <div class="work-index">
-      <ol class="work-list" id="workList">
+      <ol class="work-list" id="workList" hidden>
         {projects.map((p, i) => (
           <li>
-            <a class="work-row" href={`/work/${p.slug}`} data-roles={p.roles.join(',')}>
+            <a
+              class="work-row"
+              href={`/work/${p.slug}`}
+              data-roles={p.roles.join(',')}
+              aria-expanded="false"
+              aria-controls={`workDetail-${i}`}
+            >
               <span class="thumb">
                 <Image src={p.poster} alt="" width={160} height={90} />
               </span>
               <span class="n">{pad(i + 1)}</span>
               <span class="t">{p.title}</span>
               <span class="r">{roleLine(p.roles)}{p.client && <> &middot; {p.client}</>}</span>
-              <span class="arrow" aria-hidden="true">&rarr;</span>
+              <span class="chevron" aria-hidden="true">&darr;</span>
             </a>
+            <div class="work-detail" id={`workDetail-${i}`} hidden>
+              <div class="dcol"><div class="lbl">role</div><b>{roleLine(p.roles)}</b></div>
+              {p.client && <div class="dcol"><div class="lbl">client</div><b>{p.client}</b></div>}
+              {p.excerpt && <p class="desc">{p.excerpt}</p>}
+              <a class="watch" href={`/work/${p.slug}`} data-idx={i} data-blip>watch full video</a>
+            </div>
           </li>
         ))}
       </ol>
     </div>
 
-    <div class="work-gallery" id="workGallery" hidden>
+    <div class="work-gallery" id="workGallery">
       {projects.map((p, i) => {
         const source = getVideoSource(p.videoRef);
         const frames = source?.getPreviewFrames(p.videoRef) ?? null;
         return (
-          <div class="gallery-tile" data-roles={p.roles.join(',')}>
+          <div class="gallery-tile" data-idx={i} data-roles={p.roles.join(',')}>
             <div class="tile-media">
               <Image class="frame1" src={p.poster} alt="" width={700} height={394} loading="lazy" />
               {frames && <img class="frame2" src={frames[1]} alt="" loading="lazy" />}
