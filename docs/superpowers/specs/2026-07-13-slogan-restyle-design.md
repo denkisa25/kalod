@@ -56,3 +56,23 @@ animation.
   (e.g. `/work`) at 390px and 1440px to confirm legibility and that the
   bigger/brighter text doesn't crowd the wordmark above it or the
   prompt/buttons below it (opener) or the nav (header).
+
+## Amendment (2026-07-13, same day, commit 5498ad5)
+
+Client feedback after the first pass: the opener's slogan (`.sub`) needed to
+sit directly under the wordmark, not under the prompt line. Two changes,
+opener-only (the header tagline elsewhere was already correct as shipped):
+
+- **Order:** `.sub` moved above `.prompt` in `Opener.astro`'s DOM — wordmark
+  → slogan → prompt → buttons (was wordmark → prompt → slogan → buttons).
+- **Size:** `.sub` now matches `.enter` (the button labels) exactly —
+  `clamp(0.8rem, 1.6vw, 0.95rem)`, down slightly from the `1.8vw`/`1.05rem`
+  ceiling this spec originally set.
+- **Prompt grew to compensate:** since the prompt is no longer directly
+  under the wordmark, it reads as more prominent now:
+  `clamp(1.4rem, 4.2vw, 2.3rem)`, up from `clamp(1.15rem, 3.4vw, 1.9rem)`.
+
+The header's `.brand small` (work/about/contacts/project pages, home page
+compact state) is unaffected by this amendment — still
+`clamp(0.85rem, 1.8vw, 1.05rem)` in accent colour, as this spec originally
+specified.
