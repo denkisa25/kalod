@@ -135,9 +135,9 @@ header.header--compact .brand { font-size: clamp(1.1rem, 2vw, 1.4rem); }
 header.header--hero .brand { font-size: clamp(1.6rem, 4.5vw, 2.8rem); }
 .brand small {
   display: block;
-  font-size: 0.7rem;
+  font-size: clamp(0.85rem, 1.8vw, 1.05rem);
   letter-spacing: 0.22em;
-  color: var(--color-meta);
+  color: var(--color-accent);
   font-weight: 400;
   margin-top: 2px;
   text-transform: lowercase;
@@ -1335,7 +1335,7 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
   letter-spacing: 0.04em;
   color: var(--color-heading);
 }
-#choice .sub { font-size: 0.7rem; letter-spacing: 0.22em; color: var(--color-meta); margin-top: -14px; }
+#choice .sub { font-size: clamp(0.85rem, 1.8vw, 1.05rem); letter-spacing: 0.22em; color: var(--color-accent); margin-top: -14px; }
 #choice .buttons { display: flex; gap: clamp(20px, 4vw, 44px); flex-wrap: wrap; justify-content: center; }
 .enter {
   position: relative;
