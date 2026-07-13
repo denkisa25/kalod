@@ -58,7 +58,10 @@ class YouTubeSource implements VideoSource {
   }
   getPreviewFrames(ref: VideoRef): [string, string] | null {
     if (!ref.id) return null;
-    return [`https://i.ytimg.com/vi/${ref.id}/hqdefault.jpg`, `https://i.ytimg.com/vi/${ref.id}/2.jpg`];
+    // "2.jpg" is YouTube's numbered-frame thumbnail at 120x90 — stretched
+    // across a gallery tile via object-fit: cover, that upscale reads as
+    // blurry. "hq2.jpg" is the same frame at 480x360 (matches hqdefault.jpg).
+    return [`https://i.ytimg.com/vi/${ref.id}/hqdefault.jpg`, `https://i.ytimg.com/vi/${ref.id}/hq2.jpg`];
   }
 }
 

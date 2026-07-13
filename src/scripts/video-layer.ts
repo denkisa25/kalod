@@ -400,6 +400,17 @@ export function initDetailOverlay(cueList: CueData[], feedAudio: FeedAudioContro
     });
   });
 
+  // gallery tiles open on a click anywhere on the tile, not just the "watch
+  // full video" link — that link keeps its own listener above (for a11y /
+  // right-click-open-in-new-tab), so skip here when the click originated on
+  // it to avoid opening the same cue twice in one click.
+  document.querySelectorAll<HTMLElement>('.gallery-tile[data-idx]').forEach((tile) => {
+    tile.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('.watch')) return;
+      open(Number(tile.dataset.idx), tile);
+    });
+  });
+
   // CR-8 keyboard map: Space/←→/↑↓/M/? live in player-controls.ts (they
   // target playback, not this overlay's own navigation). N/P/Esc are the
   // overlay's own concerns — cue navigation and closing — so they stay here
