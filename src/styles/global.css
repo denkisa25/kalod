@@ -21,6 +21,14 @@ body {
 }
 
 body {
+  /* establishes body's own stacking context so HeritageBackground's
+     position:fixed; z-index:-1 layer paints above body's own background
+     instead of behind it. A positioned element only gets a stacking
+     context when z-index is something other than auto — position:relative
+     alone was not enough (found via the heritage pattern being invisible
+     on every page that used it despite otherwise-correct computed styles). */
+  position: relative;
+  z-index: 0;
   font-family: var(--font-body);
   text-transform: lowercase;
   -webkit-font-smoothing: antialiased;
