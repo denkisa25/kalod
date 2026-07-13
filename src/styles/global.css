@@ -1331,11 +1331,14 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
 #choice .prompt {
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: clamp(1.15rem, 3.4vw, 1.9rem);
+  font-size: clamp(1.4rem, 4.2vw, 2.3rem);
   letter-spacing: 0.04em;
   color: var(--color-heading);
 }
-#choice .sub { font-size: clamp(0.85rem, 1.8vw, 1.05rem); letter-spacing: 0.22em; color: var(--color-accent); margin-top: -14px; }
+/* same size as the .enter button labels below (CR: "same size as enter
+   with sound label"), and moved to sit directly under the wordmark
+   instead of under the prompt — see Opener.astro's element order. */
+#choice .sub { font-size: clamp(0.8rem, 1.6vw, 0.95rem); letter-spacing: 0.22em; color: var(--color-accent); margin-top: -14px; }
 #choice .buttons { display: flex; gap: clamp(20px, 4vw, 44px); flex-wrap: wrap; justify-content: center; }
 .enter {
   position: relative;
