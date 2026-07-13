@@ -20,9 +20,14 @@ export function onSoundChange(cb: (enabled: boolean) => void): void {
 }
 
 export function setSoundEnabled(enabled: boolean): void {
+  // always persisted, even when it matches the current value — records
+  // that an explicit choice was made this session (see initAutoArmSound,
+  // which must not override "enter quietly" just because that choice
+  // happened to match the already-off default and hit this early return
+  // in the past, before the write moved above it).
+  sessionStorage.setItem(SESSION_KEY, enabled ? '1' : '0');
   if (enabled === soundEnabled) return;
   soundEnabled = enabled;
-  sessionStorage.setItem(SESSION_KEY, enabled ? '1' : '0');
   document.body.classList.toggle('sound-on', enabled);
   document.querySelectorAll<HTMLButtonElement>('#soundToggle, #soundToggleMobile').forEach((btn) => {
     btn.setAttribute('aria-pressed', String(enabled));
@@ -79,4 +84,39 @@ export function initSoundControl(): void {
     el.addEventListener('mouseenter', () => blip(1500));
     el.addEventListener('click', () => blip(900, 0.07, 0.06));
   });
+}
+
+/** Real autoplay-with-sound is blocked by every browser without a user
+ *  gesture — there's no way around that. This is the closest equivalent:
+ *  the first interaction anywhere on the home page (scroll, click, key)
+ *  arms feed sound automatically, instead of requiring the visitor to
+ *  specifically find and click the small header icon. Only when no
+ *  explicit choice exists yet this session — a returning visitor who
+ *  already muted, or who chose "enter quietly" on the opener, is left
+ *  alone; excludes gestures inside the sound toggle buttons themselves
+ *  (already have their own click handler — both firing on the same click
+ *  would toggle twice and land on the opposite state) and inside #opener
+ *  (its own "enter with sound"/"enter quietly" buttons are the explicit
+ *  choice for that gesture, not a generic arm-and-forget). */
+export function initAutoArmSound(): void {
+  const events = ['pointerdown', 'keydown', 'wheel', 'touchstart'] as const;
+  function cleanup(): void {
+    events.forEach((ev) => document.removeEventListener(ev, arm, true));
+  }
+  function arm(e: Event): void {
+    // re-checked on every gesture, not just once at attach time — the
+    // opener's "enter with sound"/"enter quietly" buttons can set an
+    // explicit choice well after this listener first attached (a scroll
+    // right after clicking "enter quietly" was silently re-enabling sound,
+    // because this check used to run only once, before the opener choice
+    // existed — found via testing the "enter quietly" path).
+    if (sessionStorage.getItem(SESSION_KEY) !== null) {
+      cleanup();
+      return;
+    }
+    if ((e.target as HTMLElement)?.closest?.('#soundToggle, #soundToggleMobile, #opener')) return;
+    setSoundEnabled(true);
+    cleanup();
+  }
+  events.forEach((ev) => document.addEventListener(ev, arm, { capture: true, passive: true }));
 }

@@ -1,6 +1,7 @@
 import { T, env } from './timeline';
 import { cssVar, hexToRgb } from './colors';
 import { OpenerCanvasEngine } from './canvas-engine';
+import { setSoundEnabled } from '../sound-control';
 import {
   buildCue,
   decodeCueFile,
@@ -117,6 +118,12 @@ export function initOpener(): void {
 
   async function start(withSound: boolean): Promise<void> {
     if (state !== 'idle') return;
+    // the opener's own choice IS the explicit gesture+decision for the
+    // feed's background-video sound too (CR-4's toggle, separate system
+    // from this cue's own Web Audio playback) — so the feed starts already
+    // in the state the visitor just chose, instead of requiring a second,
+    // separate click on the header icon after the opener finishes.
+    setSoundEnabled(withSound);
     // visual feedback is immediate (choice hides, skip note shows) but the
     // state machine stays in 'starting' — not 'playing' — until t0 and
     // cueAudio are both actually ready a few lines down. Flipping straight

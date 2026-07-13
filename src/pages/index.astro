@@ -140,7 +140,9 @@ const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
   <script>
     import { initFeedInteractions } from '../scripts/feed-interactions';
     import { initVideoLayer } from '../scripts/video-layer';
+    import { initAutoArmSound } from '../scripts/sound-control';
     initFeedInteractions();
     initVideoLayer();
+    initAutoArmSound();
   </script>
 </BaseLayout>
