@@ -10,4 +10,9 @@ source /home/kickstic/nodevenv/public_html/kalodimitrov.com/new/22/bin/activate
 
 cd "$REPO_PATH"
 npm ci
-npm run build
+
+# The build crashed with "JavaScript heap out of memory" on this shared-hosting
+# account's memory allowance (V8 grows the heap past what the host allows
+# before its own limit kicks in). Capping it below the account's ceiling makes
+# V8 garbage-collect more aggressively instead of getting killed outright.
+NODE_OPTIONS="--max-old-space-size=460" npm run build
