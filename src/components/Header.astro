@@ -3,21 +3,30 @@ import { pad } from '../lib/format';
 
 interface Props {
   current?: 'work' | 'about' | 'contacts';
-  /** CR-3/D1: only the home page starts in the large-centered-on-load
-   *  state; internal pages render permanently in the compact state (medium
-   *  centered mark, right nav) since they have no cue-01 hero to shrink
-   *  past. */
+  /** CR-3/D1: the home page starts in the large-centered-on-load state and
+   *  shrinks once scrolled past cue 01. work/about/contacts and the 48
+   *  project pages now render permanently large too (client direction,
+   *  post-CR-001) — no #cue-0 on those pages, so header-scroll.ts's
+   *  IntersectionObserver never attaches and it just stays large. */
   hero?: boolean;
+  /** CR-3/D1's nav/sound fade only makes sense for the home page's BRIEF
+   *  large-logo moment (scrolling reveals full-opacity nav a second later).
+   *  Pages that render large permanently keep nav fully visible — it's
+   *  their primary way to navigate, not a few seconds before it fades in. */
+  dimNavWhileHero?: boolean;
 }
-const { current, hero = false } = Astro.props;
+const { current, hero = false, dimNavWhileHero = false } = Astro.props;
 
 const links: Array<{ href: string; label: 'work' | 'about' | 'contacts' }> = [
   { href: '/work', label: 'work' },
   { href: '/about', label: 'about' },
   { href: '/contacts', label: 'contacts' },
 ];
+const headerClass = [hero ? 'header--hero' : 'header--compact', hero && dimNavWhileHero && 'header--dim-nav']
+  .filter(Boolean)
+  .join(' ');
 ---
-<header class={hero ? 'header--hero' : 'header--compact'}>
+<header class={headerClass}>
   <a class="brand" href="/">kaloyan dimitrov<small>music + sound post</small></a>
   <nav class="desktop-nav" aria-label="primary">
     {links.map((l) => (

@@ -148,20 +148,24 @@ header.header--hero .brand { font-size: clamp(1.6rem, 4.5vw, 2.8rem); }
   justify-self: end;
   transition: opacity 0.5s var(--ease-out);
 }
-/* CR-3/D1 de-emphasizes nav + sound during the hero state for the
-   grand-logo effect, but never fully blocks them — a visitor confirmed
+/* CR-3/D1 de-emphasizes nav + sound during the home page's hero state for
+   the grand-logo effect, but never fully blocks them — a visitor confirmed
    they had NO way to reach work/about/contacts or sound on desktop until
    scrolling past all of cue 01 (the mobile hamburger got this same fix
    during Session 9's code review; this closes the same gap for desktop
    nav + both sound toggles). Faded, not invisible; pointer-events stay on
    throughout, and :focus-within snaps to full opacity so a keyboard user
-   tabbing in isn't looking at near-invisible controls. */
-header.header--hero .desktop-nav,
-header.header--hero #soundToggleMobile {
+   tabbing in isn't looking at near-invisible controls. Scoped to
+   .header--dim-nav (home page only, via Header's dimNavWhileHero prop) —
+   work/about/contacts and the 48 project pages also render .header--hero
+   now but permanently, so nav stays fully visible there; it's their
+   primary way to navigate, not a few seconds before a fade-in. */
+header.header--hero.header--dim-nav .desktop-nav,
+header.header--hero.header--dim-nav #soundToggleMobile {
   opacity: 0.45;
 }
-header.header--hero .desktop-nav:focus-within,
-header.header--hero #soundToggleMobile:focus-within {
+header.header--hero.header--dim-nav .desktop-nav:focus-within,
+header.header--hero.header--dim-nav #soundToggleMobile:focus-within {
   opacity: 1;
 }
 
@@ -320,10 +324,15 @@ body.nav-open { overflow: hidden; }
   pointer-events: none;
 }
 body.ready #filters { opacity: 1; pointer-events: auto; }
-/* CR-3 — the hero header (home page, pre-scroll) is taller than the
-   compact one; without this the filter pill collides with the wordmark's
-   tagline. Sibling selector: header precedes #filters in index.astro. */
-header.header--hero ~ #filters { top: 150px; }
+/* CR-3 — the hero header is taller than the compact one; without this the
+   filter pill collides with the wordmark's tagline. body:has(), not a
+   plain `header.header--hero ~ #filters` sibling selector: on index.astro
+   #filters is a direct sibling of header, but on work/index.astro
+   RoleFilterBar renders inside <main>, one level deeper — a sibling
+   combinator can't reach across that, :has() can (found when work/about/
+   contacts started rendering the hero header permanently and the pill
+   silently kept the compact-header offset). */
+body:has(header.header--hero) #filters { top: 150px; }
 .filter {
   display: flex;
   align-items: center;
@@ -1003,7 +1012,11 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
   margin: 0 auto;
 }
 .work-head {
-  padding-top: clamp(120px, 16vh, 180px);
+  /* the work page now renders the hero (permanently large) header, which
+     pushes the filter pill down to a fixed top:150px (see #filters) —
+     this floor was raised from 120px so the "work" heading never collides
+     with the pill (measured overlap at 390px width before this fix). */
+  padding-top: clamp(220px, 20vh, 260px);
   padding-bottom: var(--space-5);
   display: flex;
   align-items: baseline;
