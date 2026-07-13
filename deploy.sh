@@ -11,8 +11,10 @@ source /home/kickstic/nodevenv/public_html/kalodimitrov.com/new/22/bin/activate
 cd "$REPO_PATH"
 npm ci
 
-# The build crashed with "JavaScript heap out of memory" on this shared-hosting
-# account's memory allowance (V8 grows the heap past what the host allows
-# before its own limit kicks in). Capping it below the account's ceiling makes
-# V8 garbage-collect more aggressively instead of getting killed outright.
-NODE_OPTIONS="--max-old-space-size=460" npm run build
+# The build crashed with "JavaScript heap out of memory": V8 sizes its default
+# heap off the host's total RAM (250GB), not this account's actual cPanel/LVE
+# allowance (1.4GB physical memory usage cap), so it grows past the real
+# ceiling before its own limit ever kicks in. Capping old-space at 700MB
+# leaves ~700MB headroom in the 1.4GB budget for sharp's native image buffers
+# (the studio photos are 4032x3024), Vite/Rollup, and Node's own baseline.
+NODE_OPTIONS="--max-old-space-size=700" npm run build
