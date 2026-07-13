@@ -3,26 +3,28 @@ import { Image } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import HeritageBackground from '../components/HeritageBackground.astro';
 import vuMeterPhoto from '../assets/studio/IMG_8950.jpg';
 ---
 <BaseLayout title="contacts | kaloyan dimitrov" description="get in touch with kaloyan dimitrov — email, phone and socials for music, mix and sound design work.">
-  <HeritageBackground />
   <Header current="contacts" />
   <main id="main">
-    <!-- D6: light inversion dropped — this page sits on the heritage
-         pattern (HeritageBackground) with the VU-meter photo as a band,
-         not the light #contact treatment the home-page teaser still uses. -->
-    <section class="block contact-page">
-      <div class="contact-photo-band">
-        <Image src={vuMeterPhoto} alt="Neve 8803 and Drawmer VU meters in the studio" widths={[700, 1400]} sizes="(max-width: 900px) 100vw, 900px" />
-      </div>
-      <div class="eyebrow">contacts</div>
-      <h2>let&rsquo;s talk sound</h2>
-      <a class="mail" href="mailto:studio@kalodimitrov.com" data-blip>studio@kalodimitrov.com</a>
-      <div class="lines">
-        <a href="tel:+359000000000">+359 &middot;&middot;&middot; &middot;&middot;&middot; &middot;&middot;&middot;</a>
-        <a href="#" data-blip>vimeo</a><a href="#" data-blip>imdb</a><a href="#" data-blip>linkedin</a>
+    <!-- full-bleed hero, matching the home feed's .cue treatment (see
+         docs/superpowers/specs/2026-07-13-contact-page-fullbleed-hero-design.md) —
+         supersedes CLAUDE.md's D6/CR-16 "photo as a band on the heritage
+         pattern" decision. No <HeritageBackground /> on this page anymore:
+         the photo covers the whole section, there's nothing for it to show
+         through. -->
+    <section class="contact-hero">
+      <Image class="contact-photo" src={vuMeterPhoto} alt="Neve 8803 and Drawmer VU meters in the studio" widths={[900, 1800]} sizes="100vw" />
+      <div class="contact-scrim" aria-hidden="true"></div>
+      <div class="contact-meta">
+        <div class="eyebrow">contacts</div>
+        <h2>let&rsquo;s talk sound</h2>
+        <a class="mail" href="mailto:studio@kalodimitrov.com" data-blip>studio@kalodimitrov.com</a>
+        <div class="lines">
+          <a href="tel:+359000000000">+359 &middot;&middot;&middot; &middot;&middot;&middot; &middot;&middot;&middot;</a>
+          <a href="#" data-blip>vimeo</a><a href="#" data-blip>imdb</a><a href="#" data-blip>linkedin</a>
+        </div>
       </div>
     </section>
   </main>

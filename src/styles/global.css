@@ -686,46 +686,73 @@ section.block { padding: clamp(80px, 12vh, 140px) clamp(20px, 4vw, 48px); scroll
 }
 #contact .lines a:hover { color: var(--color-bg); }
 
-/* CR-16/D6 — the standalone /contacts page: light inversion dropped, sits
-   on the heritage pattern instead (the home page's #contact teaser above
-   is untouched — still "cinema", still light-inverted). */
-.contact-page { text-align: center; padding-top: var(--space-6); }
-.contact-page .eyebrow { color: var(--color-accent); }
-.contact-page h2 {
+/* Full-bleed hero (supersedes D6/CR-16's "photo as a band on the heritage
+   pattern" — see docs/superpowers/specs/2026-07-13-contact-page-fullbleed-hero-design.md).
+   Mirrors .cue's structure exactly: positioned container, absolute photo,
+   absolute scrim, then a position:relative; z-index:2 text layer — the
+   same proven pattern .cue already uses, deliberately not the negative-
+   z-index approach .heritage-bg/.silence-photo use (see the body stacking-
+   context fix earlier in this file for why that pattern is fragile). */
+.contact-hero {
+  position: relative;
+  height: 100svh;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+}
+.contact-hero .contact-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(1);
+}
+.contact-hero .contact-scrim { position: absolute; inset: 0; background: var(--gradient-scrim); }
+.contact-hero .contact-meta {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  text-align: left;
+  padding: 0 clamp(20px, 4vw, 48px) clamp(26px, 6vh, 58px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.contact-hero .eyebrow { color: var(--color-accent); }
+.contact-hero h2 {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(1.9rem, 6vw, 4.4rem);
-  line-height: 1.02;
-  margin-bottom: 32px;
+  font-size: clamp(2rem, 7vw, 5.4rem);
+  line-height: 0.98;
   color: var(--color-heading);
 }
-.contact-page .mail {
-  display: inline-block;
+.contact-hero .mail {
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  min-height: 44px;
   font-size: clamp(1rem, 3vw, 1.6rem);
   color: var(--color-ink);
   border-bottom: 2px solid var(--color-accent);
-  padding-bottom: 4px;
   transition: color var(--dur-2);
 }
-.contact-page .mail:hover { color: var(--color-accent); }
-.contact-page .lines {
-  margin-top: 32px;
+.contact-hero .mail:hover { color: var(--color-accent); }
+.contact-hero .lines {
+  margin-top: 4px;
   font-size: 0.76rem;
   letter-spacing: 0.22em;
   color: var(--color-meta);
-  display: flex; gap: 32px; justify-content: center; flex-wrap: wrap;
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
 }
-.contact-page .lines a:hover { color: var(--color-ink); }
-.contact-photo-band {
-  max-width: 900px;
-  aspect-ratio: 16 / 7;
-  overflow: hidden;
-  margin: 0 auto var(--space-6);
+.contact-hero .lines a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
 }
-.contact-photo-band img {
-  width: 100%; height: 100%; object-fit: cover;
-  filter: grayscale(1);
-}
+.contact-hero .lines a:hover { color: var(--color-ink); }
 
 footer {
   display: flex;
