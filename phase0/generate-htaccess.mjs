@@ -38,6 +38,22 @@ ${redirectLines.join('\n')}
 # static-site fallbacks
 ErrorDocument 404 /404.html
 
+# The cPanel deploy target currently doubles as the git checkout (repo
+# internals sit alongside the built site until the checkout is moved outside
+# public_html — see deploy notes). Block web access to everything that isn't
+# part of the built output.
+RewriteEngine On
+RewriteCond %{REQUEST_URI} ^/(\\.git|\\.astro|\\.claude|\\.screenshots|node_modules|src|docs|phase0|scripts)(/|$) [NC]
+RewriteRule ^ - [F,L]
+RewriteCond %{REQUEST_URI} \\.(md|ya?ml|mjs|astro|ts|tsx)$ [NC]
+RewriteRule ^ - [F,L]
+RewriteCond %{REQUEST_URI} ^/(package(-lock)?\\.json|tsconfig\\.json|astro\\.config\\.mjs|deploy\\.sh|app\\.js|CLAUDE\\.md|README\\.md)$ [NC]
+RewriteRule ^ - [F,L]
+
+<FilesMatch "^\\.">
+  Require all denied
+</FilesMatch>
+
 <IfModule mod_deflate.c>
   AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml
 </IfModule>

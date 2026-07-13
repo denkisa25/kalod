@@ -2,5 +2,6 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/$USER/public_html/kalodimitrov.com/new/
+    - export REPO_PATH=/home/$USER/public_html/kalodimitrov.com/new
     - /bin/bash $REPO_PATH/deploy.sh
     - /bin/cp -R $REPO_PATH/dist/. $DEPLOYPATH
