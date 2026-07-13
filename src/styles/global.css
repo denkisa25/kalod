@@ -686,6 +686,18 @@ section.block { padding: clamp(80px, 12vh, 140px) clamp(20px, 4vw, 48px); scroll
 }
 #contact .lines a:hover { color: var(--color-bg); }
 
+/* .contact-shell caps main+footer at exactly 100svh so /contacts never
+   scrolls — main flexes to fill whatever's left after the footer's
+   natural height, so this stays correct even if the footer's copyright
+   line wraps to two rows on a narrow viewport. */
+.contact-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100svh;
+  overflow: hidden;
+}
+.contact-shell main { flex: 1 1 auto; min-height: 0; }
+
 /* Full-bleed hero (supersedes D6/CR-16's "photo as a band on the heritage
    pattern" — see docs/superpowers/specs/2026-07-13-contact-page-fullbleed-hero-design.md).
    Mirrors .cue's structure exactly: positioned container, absolute photo,
@@ -695,7 +707,7 @@ section.block { padding: clamp(80px, 12vh, 140px) clamp(20px, 4vw, 48px); scroll
    context fix earlier in this file for why that pattern is fragile). */
 .contact-hero {
   position: relative;
-  height: 100svh;
+  height: 100%;
   overflow: hidden;
   display: flex;
   align-items: flex-end;

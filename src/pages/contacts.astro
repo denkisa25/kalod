@@ -7,26 +7,33 @@ import vuMeterPhoto from '../assets/studio/IMG_8950.jpg';
 ---
 <BaseLayout title="contacts | kaloyan dimitrov" description="get in touch with kaloyan dimitrov — email, phone and socials for music, mix and sound design work.">
   <Header current="contacts" />
-  <main id="main">
-    <!-- full-bleed hero, matching the home feed's .cue treatment (see
-         docs/superpowers/specs/2026-07-13-contact-page-fullbleed-hero-design.md) —
-         supersedes CLAUDE.md's D6/CR-16 "photo as a band on the heritage
-         pattern" decision. No <HeritageBackground /> on this page anymore:
-         the photo covers the whole section, there's nothing for it to show
-         through. -->
-    <section class="contact-hero">
-      <Image class="contact-photo" src={vuMeterPhoto} alt="Neve 8803 and Drawmer VU meters in the studio" widths={[900, 1800]} sizes="100vw" />
-      <div class="contact-scrim" aria-hidden="true"></div>
-      <div class="contact-meta">
-        <div class="eyebrow">contacts</div>
-        <h2>let&rsquo;s talk sound</h2>
-        <a class="mail" href="mailto:studio@kalodimitrov.com" data-blip>studio@kalodimitrov.com</a>
-        <div class="lines">
-          <a href="tel:+359000000000">+359 &middot;&middot;&middot; &middot;&middot;&middot; &middot;&middot;&middot;</a>
-          <a href="#" data-blip>vimeo</a><a href="#" data-blip>imdb</a><a href="#" data-blip>linkedin</a>
+  <!-- .contact-shell caps main+footer together at exactly 100svh (flex
+       column, main flexes to fill what's left after the footer) so this
+       page never scrolls — unlike the home feed, where the footer is
+       meant to scroll in after the last cue, here the whole page is one
+       screen. -->
+  <div class="contact-shell">
+    <main id="main">
+      <!-- full-bleed hero, matching the home feed's .cue treatment (see
+           docs/superpowers/specs/2026-07-13-contact-page-fullbleed-hero-design.md) —
+           supersedes CLAUDE.md's D6/CR-16 "photo as a band on the heritage
+           pattern" decision. No <HeritageBackground /> on this page anymore:
+           the photo covers the whole section, there's nothing for it to show
+           through. -->
+      <section class="contact-hero">
+        <Image class="contact-photo" src={vuMeterPhoto} alt="Neve 8803 and Drawmer VU meters in the studio" widths={[900, 1800]} sizes="100vw" />
+        <div class="contact-scrim" aria-hidden="true"></div>
+        <div class="contact-meta">
+          <div class="eyebrow">contacts</div>
+          <h2>let&rsquo;s talk sound</h2>
+          <a class="mail" href="mailto:studio@kalodimitrov.com" data-blip>studio@kalodimitrov.com</a>
+          <div class="lines">
+            <a href="tel:+359000000000">+359 &middot;&middot;&middot; &middot;&middot;&middot; &middot;&middot;&middot;</a>
+            <a href="#" data-blip>vimeo</a><a href="#" data-blip>imdb</a><a href="#" data-blip>linkedin</a>
+          </div>
         </div>
-      </div>
-    </section>
-  </main>
-  <Footer />
+      </section>
+    </main>
+    <Footer />
+  </div>
 </BaseLayout>
