@@ -74,6 +74,13 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
   const noop: FeedAudioController = { pauseForOverlay() {}, resumeFromOverlay() {}, debugAudioState: () => [] };
   if (videoDisabled()) return noop;
 
+  // Start fetching the IFrame API immediately instead of waiting for the
+  // IntersectionObserver's first callback to fire attach() for cue 01 — by
+  // the time that callback runs (an async task, not instant), the script is
+  // already in flight. loadYouTubeAPI() caches its promise, so this is free
+  // for every cue that attaches later.
+  if (cues.length > 0 && byIdx.size > 0) loadYouTubeAPI();
+
   let activeCue: HTMLElement | null = null; // cue with a live (or fading-out) iframe
   let audibleCue: HTMLElement | null = null; // cue currently unmuted / ramping up
   let pausedForOverlay = false;

@@ -16,6 +16,12 @@ interface Props {
   image?: string;
   /** og:type — project pages pass "video.other". */
   ogType?: string;
+  /** Pages with YouTube embeds (background loops and/or the detail player)
+   *  pass this so the browser opens connections to YouTube's origins during
+   *  HTML parsing instead of only once the video-layer script runs and an
+   *  iframe's src is actually set — shaves the connection setup + iframe_api
+   *  script fetch off the time-to-first-frame for the first video. */
+  hasVideo?: boolean;
 }
 const {
   title,
@@ -23,6 +29,7 @@ const {
   hasOpener = false,
   image = '/posters/viktoria-trailer-2.jpg',
   ogType = 'website',
+  hasVideo = false,
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
@@ -37,6 +44,16 @@ const imageURL = new URL(image, Astro.site);
   <meta name="description" content={description} />
   <link rel="canonical" href={canonicalURL} />
   <link rel="icon" href="/favicon.svg" />
+
+  {hasVideo && (
+    <>
+      <link rel="preconnect" href="https://www.youtube.com" />
+      <link rel="dns-prefetch" href="https://www.youtube.com" />
+      <link rel="preconnect" href="https://i.ytimg.com" />
+      <link rel="dns-prefetch" href="https://i.ytimg.com" />
+      <link rel="preload" as="script" href="https://www.youtube.com/iframe_api" />
+    </>
+  )}
 
   <meta property="og:type" content={ogType} />
   <meta property="og:title" content={title} />
