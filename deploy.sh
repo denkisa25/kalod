@@ -19,8 +19,9 @@ npm ci
 #
 # Kept from earlier troubleshooting as harmless headroom, not the actual fix:
 # this account's cPanel "Resource Usage" memory cap is 1.4GB (host RAM is not
-# the account's real limit), and sharp/libvips decodes the 4032x3024 studio
-# photos, so both get some breathing room below that ceiling.
+# the account's real limit). VIPS_DISC_THRESHOLD was removed after it caused a
+# segfault in libvips' image step once the real (CPU) bug above was fixed —
+# forcing the disk-streaming code path for the 4032x3024 studio photos was
+# solving a memory problem that turned out not to be the actual issue.
 export VIPS_CONCURRENCY=1
-export VIPS_DISC_THRESHOLD=50m
 NODE_OPTIONS="--max-old-space-size=700" taskset -c 0,1 npm run build
