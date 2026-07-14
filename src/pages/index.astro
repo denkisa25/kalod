@@ -7,6 +7,7 @@ import Opener from '../components/Opener.astro';
 import RoleFilterBar from '../components/RoleFilterBar.astro';
 import { getFeaturedProjects } from '../lib/projects';
 import { pad, roleLine } from '../lib/format';
+import { withBase } from '../lib/url';
 
 const projects = getFeaturedProjects(10);
 
@@ -82,7 +83,7 @@ const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
             </div>
             <div class="sub">
               <div>{p.excerpt && <p class="desc">{p.excerpt}</p>}</div>
-              <a class="watch" href={`/work/${p.slug}`} data-idx={i} data-blip>
+              <a class="watch" href={withBase(`/work/${p.slug}`)} data-idx={i} data-blip>
                 <span class="ring">&#9654;</span><span>watch full video</span>
               </a>
               {p.credits.length > 0 && (
@@ -111,7 +112,7 @@ const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
       <div class="about-teaser">
         <div class="eyebrow">about</div>
         <p>two decades composing, designing and mixing sound for film, television and advertising — from sundance to primetime.</p>
-        <a href="/about">more about kaloyan &rarr;</a>
+        <a href={withBase('/about')}>more about kaloyan &rarr;</a>
       </div>
     </section>
 

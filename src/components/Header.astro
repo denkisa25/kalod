@@ -1,5 +1,6 @@
 ---
 import { pad } from '../lib/format';
+import { withBase } from '../lib/url';
 
 interface Props {
   current?: 'work' | 'about' | 'contacts';
@@ -18,16 +19,16 @@ interface Props {
 const { current, hero = false, dimNavWhileHero = false } = Astro.props;
 
 const links: Array<{ href: string; label: 'work' | 'about' | 'contacts' }> = [
-  { href: '/work', label: 'work' },
-  { href: '/about', label: 'about' },
-  { href: '/contacts', label: 'contacts' },
+  { href: withBase('/work'), label: 'work' },
+  { href: withBase('/about'), label: 'about' },
+  { href: withBase('/contacts'), label: 'contacts' },
 ];
 const headerClass = [hero ? 'header--hero' : 'header--compact', hero && dimNavWhileHero && 'header--dim-nav']
   .filter(Boolean)
   .join(' ');
 ---
 <header class={headerClass}>
-  <a class="brand" href="/">kaloyan dimitrov<small>sound design · original music · mix creative</small></a>
+  <a class="brand" href={withBase('/')}>kaloyan dimitrov<small>sound design · original music · mix creative</small></a>
   <nav class="desktop-nav" aria-label="primary">
     {links.map((l) => (
       <a href={l.href} aria-current={current === l.label ? 'page' : undefined}>{l.label}</a>

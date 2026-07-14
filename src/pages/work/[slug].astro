@@ -4,6 +4,7 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import { getProjects } from '../../lib/projects';
 import { roleLine } from '../../lib/format';
+import { withBase } from '../../lib/url';
 
 export function getStaticPaths() {
   const projects = getProjects();
@@ -61,8 +62,8 @@ const schema = {
       </div>
       {project.excerpt && <p class="desc">{project.excerpt}</p>}
       <div class="prevnext">
-        <a href={`/work/${prev.slug}`}>&larr; {prev.title}</a>
-        <a href={`/work/${next.slug}`}>{next.title} &rarr;</a>
+        <a href={withBase(`/work/${prev.slug}`)}>&larr; {prev.title}</a>
+        <a href={withBase(`/work/${next.slug}`)}>{next.title} &rarr;</a>
       </div>
     </div>
   </main>

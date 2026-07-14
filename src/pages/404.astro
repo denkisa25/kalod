@@ -3,6 +3,7 @@ import { Image } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import HeritageBackground from '../components/HeritageBackground.astro';
 import silencePhoto from '../assets/studio/IMG_6236.jpg';
+import { withBase } from '../lib/url';
 ---
 <BaseLayout title="silence. | kaloyan dimitrov" description="404 — this page doesn't exist.">
   <HeritageBackground />
@@ -12,6 +13,6 @@ import silencePhoto from '../assets/studio/IMG_6236.jpg';
     <h1>silence.</h1>
     <div class="flatline" aria-hidden="true"></div>
     <p>this cue doesn&rsquo;t exist — the signal just goes flat here.</p>
-    <a href="/work">back to work</a>
+    <a href={withBase('/work')}>back to work</a>
   </main>
 </BaseLayout>

@@ -9,6 +9,7 @@ import DetailOverlay from '../../components/DetailOverlay.astro';
 import { getProjects } from '../../lib/projects';
 import { getVideoSource } from '../../lib/video-source';
 import { pad, roleLine } from '../../lib/format';
+import { withBase } from '../../lib/url';
 
 const projects = getProjects().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -49,7 +50,7 @@ const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
           <li>
             <a
               class="work-row"
-              href={`/work/${p.slug}`}
+              href={withBase(`/work/${p.slug}`)}
               data-roles={p.roles.join(',')}
               aria-expanded="false"
               aria-controls={`workDetail-${i}`}
@@ -66,7 +67,7 @@ const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
               <div class="dcol"><div class="lbl">role</div><b>{roleLine(p.roles)}</b></div>
               {p.client && <div class="dcol"><div class="lbl">client</div><b>{p.client}</b></div>}
               {p.excerpt && <p class="desc">{p.excerpt}</p>}
-              <a class="watch" href={`/work/${p.slug}`} data-idx={i} data-blip>watch full video</a>
+              <a class="watch" href={withBase(`/work/${p.slug}`)} data-idx={i} data-blip>watch full video</a>
             </div>
           </li>
         ))}
@@ -87,7 +88,7 @@ const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
             <div class="tile-info">
               <div class="tile-title">{p.title}</div>
               <div class="tile-roles">{roleLine(p.roles)}</div>
-              <a class="watch tile-watch" href={`/work/${p.slug}`} data-idx={i} data-blip>watch full video</a>
+              <a class="watch tile-watch" href={withBase(`/work/${p.slug}`)} data-idx={i} data-blip>watch full video</a>
             </div>
           </div>
         );
