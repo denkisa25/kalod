@@ -11,14 +11,16 @@ source /home/kickstic/nodevenv/public_html/kalodimitrov.com/new/22/bin/activate
 cd "$REPO_PATH"
 npm ci
 
-# First crash was a V8 heap-size guess (host reports 250GB total RAM, but this
-# account's real cPanel/LVE ceiling is 1.4GB) — capping old-space didn't fix a
-# second crash that showed no GC trace at all, meaning it isn't V8's JS heap.
-# That signature points to sharp/libvips: decoding/encoding the 4032x3024
-# studio photos (AVIF encoding especially) allocates large native buffers
-# outside V8's heap entirely, so no --max-old-space-size value helps. Force
-# libvips to work on one image at a time and stream large images from disk
-# instead of holding them fully in RAM.
+# Root cause (confirmed with hosting support): Astro/Vite 8's Rolldown bundler
+# is a multi-threaded Rust binary that sizes its thread pool off the host's
+# full CPU count, not this account's much smaller actual LVE CPU entitlement —
+# it silently SIGABRTs trying to spin up far more threads than the account can
+# really use. Pinning the build to the account's real core allowance fixes it.
+#
+# Kept from earlier troubleshooting as harmless headroom, not the actual fix:
+# this account's cPanel "Resource Usage" memory cap is 1.4GB (host RAM is not
+# the account's real limit), and sharp/libvips decodes the 4032x3024 studio
+# photos, so both get some breathing room below that ceiling.
 export VIPS_CONCURRENCY=1
 export VIPS_DISC_THRESHOLD=50m
-NODE_OPTIONS="--max-old-space-size=700" npm run build
+NODE_OPTIONS="--max-old-space-size=700" taskset -c 0,1 npm run build
