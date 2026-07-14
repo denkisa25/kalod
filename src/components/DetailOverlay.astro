@@ -16,6 +16,12 @@
     <div id="player">
       <div class="skeleton" aria-hidden="true"><span></span><span></span></div>
       <div class="ph">video pending — client to supply link</div>
+      <!-- Tap/click anywhere on the video to play/pause — mirrors common
+           video-player convention. Not in the tab order / not announced:
+           #cPlay in the control bar (and Space) remains the one
+           keyboard/screen-reader-accessible play/pause control; this is a
+           pointer-only convenience layer on top of the same toggle. -->
+      <div class="clickzone" id="playerClickzone" aria-hidden="true"></div>
     </div>
   </div>
 

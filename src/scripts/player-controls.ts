@@ -24,6 +24,7 @@ export function initPlayerControls(): PlayerControls {
   const detail = document.getElementById('detail');
   const chrome = detail?.querySelector<HTMLElement>('.chrome') ?? null;
   const playBtn = document.getElementById('cPlay');
+  const clickzone = document.getElementById('playerClickzone');
   const backBtn = document.getElementById('cBack');
   const fwdBtn = document.getElementById('cFwd');
   const muteBtn = document.getElementById('cMute');
@@ -95,11 +96,18 @@ export function initPlayerControls(): PlayerControls {
     addEventListener('pointerup', up);
   });
 
-  playBtn?.addEventListener('click', () => {
+  function togglePlay(): void {
     if (!player) return;
     if (player.getPlayerState() === YT_PLAYING) player.pauseVideo();
     else player.playVideo();
-  });
+  }
+  playBtn?.addEventListener('click', togglePlay);
+  // click/tap anywhere on the video toggles play/pause, same as #cPlay —
+  // showChrome() still fires from this element's pointerdown bubbling up
+  // to #detail's own listener, so tapping the video also briefly reveals
+  // the (otherwise auto-hidden) control bar rather than only toggling
+  // playback silently underneath it.
+  clickzone?.addEventListener('click', togglePlay);
   backBtn?.addEventListener('click', () => {
     if (player) player.seekTo(Math.max(0, player.getCurrentTime() - 10), true);
   });
