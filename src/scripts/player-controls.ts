@@ -107,7 +107,17 @@ export function initPlayerControls(): PlayerControls {
   // to #detail's own listener, so tapping the video also briefly reveals
   // the (otherwise auto-hidden) control bar rather than only toggling
   // playback silently underneath it.
-  clickzone?.addEventListener('click', togglePlay);
+  //
+  // 'click' alone here was reported not to respond on mobile Safari — using
+  // pointerup instead (fires on both touch and mouse) plus suppressing the
+  // click that follows it (some WebKit versions are unreliable synthesizing
+  // 'click' for a plain div overlaying a cross-origin iframe; pointerup is
+  // not).
+  clickzone?.addEventListener('pointerup', (e) => {
+    e.preventDefault();
+    togglePlay();
+  });
+  clickzone?.addEventListener('click', (e) => e.preventDefault());
   backBtn?.addEventListener('click', () => {
     if (player) player.seekTo(Math.max(0, player.getCurrentTime() - 10), true);
   });

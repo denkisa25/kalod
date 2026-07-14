@@ -393,7 +393,25 @@ export function initDetailOverlay(cueList: CueData[], feedAudio: FeedAudioContro
       if (p.videoRef.provider === 'youtube') {
         loadYouTubeAPI().then((YT) => {
           if (token !== renderToken || player!.querySelector('iframe') !== f) return;
-          new YT.Player(f, { events: { onReady: (e) => controls.bindPlayer(e.target) } });
+          new YT.Player(f, {
+            events: {
+              onReady: (e) => {
+                controls.bindPlayer(e.target);
+                // Reinforces the embed URL's own autoplay=1 with an explicit
+                // API call, in case the iframe's internal autoplay didn't
+                // fire (e.g. it was still loading/navigating when this
+                // resolved). Not a guaranteed fix for iOS's stricter
+                // unmuted-autoplay policy — see cr-002-mobile-playback-qa.md
+                // — but the standards-recommended way to maximize the odds,
+                // and harmless if the video is already playing.
+                try {
+                  e.target.playVideo();
+                } catch {
+                  /* player not actually ready despite onReady — ignore */
+                }
+              },
+            },
+          });
         });
       }
     } else {
