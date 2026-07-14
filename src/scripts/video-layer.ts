@@ -1,5 +1,6 @@
 import { getVideoSource, type VideoRef } from '../lib/video-source';
 import { loadYouTubeAPI, type YTPlayer } from '../lib/youtube-api';
+import { adaptVideoElement, onVideoReady } from '../lib/native-video-player';
 import { isSoundEnabled, onSoundChange } from './sound-control';
 import { initPlayerControls } from './player-controls';
 import { pad, roleLine, CUE_ACTIVE_THRESHOLD, type Role } from '../lib/format';
@@ -27,22 +28,6 @@ function videoDisabled(): boolean {
     matchMedia('(prefers-reduced-data: reduce)').matches ||
     location.protocol === 'file:'
   );
-}
-
-/** Background-loop-only exclusion (on top of videoDisabled() above, which
- *  also gates the detail overlay's full player — that stays available on
- *  touch devices). YouTube's iframe autoplay is specifically unreliable on
- *  touch/iOS when triggered by a scroll rather than a direct tap (not fixable
- *  while on YouTube — see docs/change-requests/cr-002-mobile-playback-qa.md);
- *  every attempt just shows YouTube's own paused/play-button state instead
- *  of the ambient loop. Rather than show that broken-looking fallback, don't
- *  attempt it at all — the poster (already ken-burns animated) plus the
- *  enlarged .watch CTA (CSS-gated to pointer:coarse) becomes the deliberate
- *  mobile experience, and tapping it opens the detail overlay with a fresh,
- *  direct gesture — the one condition that reliably does get autoplay-with-
- *  sound working, matching the opener's "enter with sound" cue 01 behavior. */
-function skipBackgroundVideo(): boolean {
-  return videoDisabled() || matchMedia('(pointer: coarse)').matches;
 }
 
 export interface FeedAudioController {
@@ -150,7 +135,7 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
   }
 
   function detach(cue: HTMLElement) {
-    const iframe = cue.querySelector('iframe');
+    const media = cue.querySelector('iframe, video');
     if (cue === activeCue) activeCue = null;
     const player = players.get(cue);
     const wasAudible = audibleCue === cue;
@@ -174,20 +159,20 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
           /* already torn down */
         }
         players.delete(cue);
-        iframe?.remove();
+        media?.remove();
       });
     } else {
       players.delete(cue);
-      iframe?.remove();
+      media?.remove();
     }
   }
 
   function attach(cue: HTMLElement) {
-    if (cue.querySelector('iframe')) return;
+    if (cue.querySelector('iframe, video')) return;
 
     // whichever cue crosses the activation threshold stops the previous
     // one's stream regardless of whether the new cue has video of its own
-    // — bailing out below (no src) must not skip this, or a video-less cue
+    // — bailing out below (no spec) must not skip this, or a video-less cue
     // scrolling into place would leave the old cue streaming until its own
     // ratio independently drops to 0, past the point spec §11 intends
     // ("pause loops outside viewport")
@@ -201,17 +186,44 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
 
     const data = byIdx.get(Number(cue.dataset.idx));
     const source = data && getVideoSource(data.videoRef);
-    const src = source?.getBackgroundEmbed(data!.videoRef);
-    if (!src) return;
+    const spec = source?.getBackgroundEmbed(data!.videoRef);
+    if (!spec) return;
     hasAttemptedOnce = true;
 
+    const bgwrap = cue.querySelector('.bgwrap');
+    activeCue = cue;
+
+    // Cloudflare Stream (migrated projects, docs/video-migration-guide.md):
+    // a real <video> element — no iframe, so none of the cross-origin
+    // autoplay unreliability from cr-002-mobile-playback-qa.md applies.
+    // adaptVideoElement() lets this share every bit of makeAudible()/
+    // rampVolume()/debugAudioState() above unchanged.
+    if (spec.kind === 'video') {
+      const v = document.createElement('video');
+      v.src = spec.src;
+      v.muted = true;
+      v.loop = true;
+      v.playsInline = true;
+      v.autoplay = true;
+      v.setAttribute('aria-hidden', 'true');
+      v.addEventListener('loadeddata', () => setTimeout(() => v.classList.add('on'), 350));
+      bgwrap?.appendChild(v);
+      onVideoReady(v, () => {
+        // the cue may have scrolled back out (and its <video> replaced or
+        // removed) by the time metadata finishes loading
+        if (cue.querySelector('video') !== v) return;
+        players.set(cue, adaptVideoElement(v));
+        if (cue === activeCue) makeAudible(cue);
+      });
+      return;
+    }
+
     const f = document.createElement('iframe');
-    f.src = src;
+    f.src = spec.src;
     f.allow = 'autoplay; encrypted-media';
     f.title = `${data!.title} — background`;
     f.addEventListener('load', () => setTimeout(() => f.classList.add('on'), 350));
-    cue.querySelector('.bgwrap')?.appendChild(f);
-    activeCue = cue;
+    bgwrap?.appendChild(f);
 
     if (data!.videoRef.provider === 'youtube') {
       loadYouTubeAPI().then((YT) => {
@@ -345,30 +357,66 @@ export function initDetailOverlay(cueList: CueData[], feedAudio: FeedAudioContro
     dClient.textContent = p.client;
     dNote.textContent = p.excerpt;
 
-    player!.querySelectorAll('iframe').forEach((f) => f.remove());
-    ambient?.querySelectorAll('iframe').forEach((f) => f.remove());
+    player!.querySelectorAll('iframe, video').forEach((f) => f.remove());
+    ambient?.querySelectorAll('iframe, video').forEach((f) => f.remove());
     controls.bindPlayer(null);
     const source = getVideoSource(p.videoRef);
-    const src = !noVideo ? source?.getPlayerEmbed(p.videoRef) : null;
+    const spec = !noVideo ? source?.getPlayerEmbed(p.videoRef) : null;
 
     // eyebrow communicates a missing video specifically (VideoSource has no
     // provider for this project) — distinct from the reduced-motion/data
     // preference case, which the placeholder text below covers instead
     if (eyebrow) eyebrow.hidden = p.videoRef.provider !== null;
 
-    // CR-8's custom transport is only ever wired to a real player for
-    // YouTube (below) — showing it over a Vimeo embed would render a
-    // control bar that looks real but does nothing (found by code review).
-    // Vimeo's own native controls are still present on that embed (its
-    // getPlayerEmbed doesn't set controls=0), so hiding ours just leaves
-    // the video controllable through its actual working chrome.
-    detail!.classList.toggle('native-controls', p.videoRef.provider !== 'youtube');
+    // CR-8's custom transport is wired to a real player for YouTube and
+    // Cloudflare (both drivable — see below); only Vimeo has no player
+    // object behind it. Showing our controls over Vimeo's embed would
+    // render a control bar that looks real but does nothing (found by code
+    // review) — its own native controls are still present on that embed
+    // (getPlayerEmbed doesn't set controls=0), so hiding ours just leaves
+    // it controllable through its actual working chrome.
+    detail!.classList.toggle('native-controls', p.videoRef.provider === 'vimeo');
 
-    if (src) {
+    if (spec?.kind === 'video') {
+      if (ph) ph.style.display = 'none';
+      if (skeleton) skeleton.style.display = 'flex';
+      const v = document.createElement('video');
+      v.src = spec.src;
+      v.playsInline = true;
+      v.autoplay = true;
+      v.title = p.title;
+      v.addEventListener('loadeddata', () => {
+        if (skeleton) skeleton.style.display = 'none';
+      });
+      player!.appendChild(v);
+
+      const ambientSpec = source?.getBackgroundEmbed(p.videoRef);
+      if (ambient && ambientSpec?.kind === 'video') {
+        const bg = document.createElement('video');
+        bg.src = ambientSpec.src;
+        bg.muted = true;
+        bg.loop = true;
+        bg.playsInline = true;
+        bg.autoplay = true;
+        bg.setAttribute('aria-hidden', 'true');
+        bg.tabIndex = -1;
+        ambient.appendChild(bg);
+      }
+
+      onVideoReady(v, () => {
+        if (token !== renderToken || player!.querySelector('video') !== v) return;
+        controls.bindPlayer(adaptVideoElement(v));
+        try {
+          v.play();
+        } catch {
+          /* autoplay blocked — same browser policy as YouTube, not an error */
+        }
+      });
+    } else if (spec?.kind === 'iframe') {
       if (ph) ph.style.display = 'none';
       if (skeleton) skeleton.style.display = 'flex';
       const f = document.createElement('iframe');
-      f.src = src;
+      f.src = spec.src;
       f.allow = 'autoplay; fullscreen; encrypted-media';
       f.title = p.title;
       f.addEventListener('load', () => {
@@ -379,10 +427,10 @@ export function initDetailOverlay(cueList: CueData[], feedAudio: FeedAudioContro
       // CR-9 — a muted, looping, chromeless copy of the same video for the
       // blurred ambient surround (getBackgroundEmbed, not getPlayerEmbed —
       // it must never carry a second audio source)
-      const ambientSrc = source?.getBackgroundEmbed(p.videoRef);
-      if (ambient && ambientSrc) {
+      const ambientSpec = source?.getBackgroundEmbed(p.videoRef);
+      if (ambient && ambientSpec?.kind === 'iframe') {
         const bg = document.createElement('iframe');
-        bg.src = ambientSrc;
+        bg.src = ambientSpec.src;
         bg.allow = 'autoplay';
         bg.title = '';
         bg.setAttribute('aria-hidden', 'true');
@@ -438,8 +486,8 @@ export function initDetailOverlay(cueList: CueData[], feedAudio: FeedAudioContro
     renderToken++; // any in-flight loadYouTubeAPI().then() for this cue is now stale
     detail!.classList.remove('open');
     document.body.style.overflow = '';
-    player!.querySelectorAll('iframe').forEach((f) => f.remove());
-    ambient?.querySelectorAll('iframe').forEach((f) => f.remove());
+    player!.querySelectorAll('iframe, video').forEach((f) => f.remove());
+    ambient?.querySelectorAll('iframe, video').forEach((f) => f.remove());
     controls.bindPlayer(null);
     feedAudio.resumeFromOverlay(); // CR-4: closing it restores the prior state
     lastFocus?.focus();

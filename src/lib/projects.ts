@@ -2,6 +2,7 @@ import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import rawProjects from '../../phase0/extraction/projects.json';
 import creditsBySlug from '../data/credits.json';
+import cloudflareStreamMap from '../data/cloudflare-stream-map.json';
 import { parseVideoUrl, type VideoRef } from './video-source';
 import { ROLE_LABELS, type Role } from './format';
 
@@ -34,6 +35,21 @@ function resolvePoster(slug: string): string {
   const file = posterFiles.find((f) => f.replace(/\.(jpg|jpeg|png|webp)$/i, '') === slug);
   if (!file) throw new Error(`No poster found for project slug "${slug}"`);
   return `/posters/${file}`;
+}
+
+/** Cloudflare Stream override (docs/video-migration-guide.md) — a slug
+ *  present in cloudflare-stream-map.json (populated by
+ *  scripts/upload-to-cloudflare-stream.mjs) takes over from whatever
+ *  provider phase0/extraction/projects.json's original video URL points
+ *  at, non-destructively: the source data never needs editing, and a slug
+ *  reverts to its original provider automatically if ever removed from the
+ *  map. */
+function resolveVideoRef(slug: string, video: string | null): VideoRef {
+  const migrated = (cloudflareStreamMap as Record<string, { uid: string; mp4Url: string; thumbnailUrl: string }>)[slug];
+  if (migrated) {
+    return { provider: 'cloudflare', id: migrated.uid, cloudflare: migrated };
+  }
+  return parseVideoUrl(video);
 }
 
 /** "Viktoria /Trailer/" -> "viktoria /trailer/" (lowercase brand voice, spec §4) */
@@ -79,7 +95,7 @@ export function getProjects(): Project[] {
         slug,
         roles: p.roles as Role[],
         video,
-        videoRef: parseVideoUrl(video),
+        videoRef: resolveVideoRef(slug, video),
         poster: resolvePoster(slug),
         client: deriveClient(slug),
         excerpt: decodeEntities((p.excerpt as string) || ''),

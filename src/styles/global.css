@@ -499,7 +499,20 @@ body.ready main { opacity: 1; }
   opacity: 0;
   transition: opacity var(--dur-4) var(--ease-out);
 }
-.cue .bgwrap iframe.on { opacity: 1; }
+/* Cloudflare Stream (docs/video-migration-guide.md) — a real <video>, not
+   an iframe, so it can use object-fit: cover directly instead of the
+   scale/translate trick iframes need to fake a "cover" crop. */
+.cue .bgwrap video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-4) var(--ease-out);
+}
+.cue .bgwrap iframe.on, .cue .bgwrap video.on { opacity: 1; }
 .cue .shade { position: absolute; inset: 0; background: var(--gradient-scrim); }
 .cue .meta {
   position: relative;
@@ -608,7 +621,7 @@ body.ready main { opacity: 1; }
     place-items: center;
     margin: 0;
   }
-  .cue .bgwrap:has(iframe.on) .cue-play-cta {
+  .cue .bgwrap:has(iframe.on, video.on) .cue-play-cta {
     display: none;
   }
   .cue .cue-play-cta .ring-lg {
@@ -890,6 +903,18 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
   pointer-events: none;
   filter: blur(40px) brightness(0.35);
 }
+/* Cloudflare Stream — object-fit: cover replaces the manual oversize+scale
+   trick iframes need; a <video> can crop to fill directly. */
+.stage-ambient video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 0;
+  pointer-events: none;
+  filter: blur(40px) brightness(0.35);
+}
 #player {
   position: relative;
   z-index: 1;
@@ -901,6 +926,11 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
   background: #000;
 }
 #player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+/* Cloudflare Stream — object-fit: contain (not cover) matches CR-9's "no
+   cropping" requirement: #player's box is already aspect-ratio: 16/9
+   letterboxed against the viewport; contain guards only against the
+   source file's actual aspect not matching that exactly. */
+#player video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; border: 0; background: #000; }
 /* z-index above the iframe (which has none, i.e. auto) regardless of DOM
    order — the iframe is appended dynamically by video-layer.ts, after this
    element's static markup, so relying on paint order alone isn't safe. */
