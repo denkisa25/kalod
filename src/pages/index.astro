@@ -62,7 +62,7 @@ const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
           <div class="bgwrap">
             <img
               class="poster"
-              src={p.poster}
+              src={withBase(p.poster)}
               alt={p.title}
               width="1920"
               height="1080"

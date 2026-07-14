@@ -9,9 +9,15 @@
 // not a guessed literal — it's scoped to this component, not :root, per
 // TOKEN-GUARD/D7 (no new brand colour token without sign-off).
 import patternColor from '../data/pattern-color.json';
+import { withBase } from '../lib/url';
+
+const patternUrl = withBase('/patterns/bgr-duotone.webp');
 ---
 
-<div class="heritage-bg" style={`--pattern-bottom: ${patternColor.bottomColor}`}></div>
+<div
+  class="heritage-bg"
+  style={`--pattern-bottom: ${patternColor.bottomColor}; --pattern-url: url('${patternUrl}')`}
+></div>
 
 <style>
   .heritage-bg {
@@ -19,7 +25,7 @@ import patternColor from '../data/pattern-color.json';
     inset: 0;
     z-index: -1;
     background-color: var(--pattern-bottom);
-    background-image: url('/patterns/bgr-duotone.webp');
+    background-image: var(--pattern-url);
     background-repeat: repeat-x;
     background-position: top center;
   }

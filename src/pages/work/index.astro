@@ -56,7 +56,7 @@ const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
               aria-controls={`workDetail-${i}`}
             >
               <span class="thumb">
-                <Image src={p.poster} alt="" width={160} height={90} />
+                <Image src={withBase(p.poster)} alt="" width={160} height={90} />
               </span>
               <span class="n">{pad(i + 1)}</span>
               <span class="t">{p.title}</span>
@@ -81,7 +81,7 @@ const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
         return (
           <div class="gallery-tile" data-idx={i} data-roles={p.roles.join(',')}>
             <div class="tile-media">
-              <Image class="frame1" src={p.poster} alt="" width={700} height={394} loading="lazy" />
+              <Image class="frame1" src={withBase(p.poster)} alt="" width={700} height={394} loading="lazy" />
               {frames && <img class="frame2" src={frames[1]} alt="" loading="lazy" />}
             </div>
             <div class="tile-scrim"></div>

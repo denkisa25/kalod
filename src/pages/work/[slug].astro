@@ -55,7 +55,7 @@ const schema = {
     <div class="project-detail">
       <div class="kind">{roleLine(project.roles)}</div>
       <h1>{project.title}</h1>
-      <img class="poster-still" src={project.poster} alt={project.title} width="1600" height="900" />
+      <img class="poster-still" src={withBase(project.poster)} alt={project.title} width="1600" height="900" />
       <div class="cols">
         <div class="col"><div class="lbl">role</div><b>{roleLine(project.roles)}</b></div>
         {project.client && <div class="col"><div class="lbl">client</div><b>{project.client}</b></div>}

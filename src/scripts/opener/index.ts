@@ -2,6 +2,7 @@ import { T, env } from './timeline';
 import { cssVar, hexToRgb } from './colors';
 import { OpenerCanvasEngine } from './canvas-engine';
 import { setSoundEnabled } from '../sound-control';
+import { withBase } from '../../lib/url';
 import {
   buildCue,
   decodeCueFile,
@@ -13,7 +14,7 @@ import {
 } from './audio-engine';
 
 const SESSION_KEY = 'kd-opener-seen';
-const CUE_FILE_URL = '/audio/opener-cue.mp3';
+const CUE_FILE_URL = withBase('/audio/opener-cue.mp3');
 // uppercase — logo-specific exception to the site's lowercase body-copy
 // rule (v3 rebrand, docs/design/README.md), matches the header wordmark
 const WORDMARK = 'KALOYAN DIMITROV';
