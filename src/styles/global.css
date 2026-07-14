@@ -572,14 +572,30 @@ body.ready main { opacity: 1; }
   font-size: 0.7rem;
   transition: transform var(--dur-2) var(--ease-out);
 }
+/* CSS-drawn triangle, not a Unicode glyph (&#9654;) — the glyph depends on
+   the active font having that character, and --font-display (Agency FB /
+   Bahnschrift) doesn't reliably render it, showing a missing-glyph box that
+   reads as a broken image on some devices (found in mobile QA). A border
+   triangle always renders. */
+.cue .watch .ring::after {
+  content: '';
+  width: 0; height: 0;
+  margin-left: 3px; /* optical centering */
+  border-style: solid;
+  border-width: 6px 0 6px 10px;
+  border-color: transparent transparent transparent var(--color-accent);
+}
 .cue .watch:hover { color: var(--color-accent); }
 .cue .watch:hover .ring { transform: scale(1.1); }
 
 /* Mobile-only "tap to watch" — hidden by default (desktop has the ambient
    background loop instead); shown centered over the poster only on touch
-   devices, where the background loop is deliberately skipped entirely
-   (skipBackgroundVideo(), video-layer.ts) rather than show YouTube's own
-   broken-looking paused state on a failed autoplay attempt. */
+   devices. Only the very first cue attached gets a real autoplay attempt
+   there (video-layer.ts) — this stays visible for every other cue instead
+   of showing YouTube's own broken-looking paused state on a failed attempt,
+   and auto-hides via :has() the moment a cue's iframe actually starts
+   playing (its "on" class), so it doesn't sit on top of a video that IS
+   playing (e.g. cue 1, which usually succeeds). */
 .cue .cue-play-cta {
   display: none;
 }
@@ -592,6 +608,9 @@ body.ready main { opacity: 1; }
     place-items: center;
     margin: 0;
   }
+  .cue .bgwrap:has(iframe.on) .cue-play-cta {
+    display: none;
+  }
   .cue .cue-play-cta .ring-lg {
     width: 84px;
     height: 84px;
@@ -600,10 +619,15 @@ body.ready main { opacity: 1; }
     border-radius: 50%;
     border: 1px solid var(--color-accent);
     background: color-mix(in srgb, var(--color-bg) 55%, transparent);
-    color: var(--color-accent);
-    font-size: 1.1rem;
-    padding-left: 6px; /* optically center the triangle glyph */
     animation: cta-pulse 2.6s ease-in-out infinite;
+  }
+  .cue .cue-play-cta .ring-lg::after {
+    content: '';
+    width: 0; height: 0;
+    margin-left: 6px; /* optical centering */
+    border-style: solid;
+    border-width: 11px 0 11px 18px;
+    border-color: transparent transparent transparent var(--color-accent);
   }
   .cue .cue-play-cta:active .ring-lg { transform: scale(0.94); animation: none; }
 }

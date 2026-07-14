@@ -84,7 +84,7 @@ const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
               aria-label={`watch ${p.title}`}
               data-blip
             >
-              <span class="ring-lg">&#9654;</span>
+              <span class="ring-lg"></span>
             </a>
           </div>
           <div class="shade"></div>
@@ -101,7 +101,7 @@ const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
             <div class="sub">
               <div>{p.excerpt && <p class="desc">{p.excerpt}</p>}</div>
               <a class="watch" href={withBase(`/work/${p.slug}`)} data-idx={i} data-blip>
-                <span class="ring">&#9654;</span><span>watch full video</span>
+                <span class="ring"></span><span>watch full video</span>
               </a>
               {p.credits.length > 0 && (
                 <div class="credits">

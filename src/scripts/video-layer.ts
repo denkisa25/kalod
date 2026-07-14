@@ -88,7 +88,7 @@ function rampVolume(player: YTPlayer, from: number, to: number, ms: number, onDo
  *  than mid-transition. */
 function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, CueData>): FeedAudioController {
   const noop: FeedAudioController = { pauseForOverlay() {}, resumeFromOverlay() {}, debugAudioState: () => [] };
-  if (skipBackgroundVideo()) return noop;
+  if (videoDisabled()) return noop;
 
   // Start fetching the IFrame API immediately instead of waiting for the
   // IntersectionObserver's first callback to fire attach() for cue 01 — by
@@ -96,6 +96,18 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
   // already in flight. loadYouTubeAPI() caches its promise, so this is free
   // for every cue that attaches later.
   if (cues.length > 0 && byIdx.size > 0) loadYouTubeAPI();
+
+  // On touch devices, only the very FIRST cue attached gets a real attempt.
+  // That one is tied closely enough to the opener's "enter with sound" tap
+  // (a fresh, direct gesture) that iOS actually allows it — confirmed
+  // working live. Every cue after that is triggered by a scroll, which iOS
+  // does not treat as a qualifying gesture for a brand-new cross-origin
+  // iframe's audio, and reliably fails, showing YouTube's own paused/play-
+  // button state instead (see cr-002-mobile-playback-qa.md). Skipping only
+  // those later attempts — not the first — avoids that broken-looking
+  // fallback without also killing the one case that does work.
+  const touchOnlyFirstAttempt = matchMedia('(pointer: coarse)').matches;
+  let hasAttemptedOnce = false;
 
   let activeCue: HTMLElement | null = null; // cue with a live (or fading-out) iframe
   let audibleCue: HTMLElement | null = null; // cue currently unmuted / ramping up
@@ -185,10 +197,13 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
       detach(previous);
     }
 
+    if (touchOnlyFirstAttempt && hasAttemptedOnce) return;
+
     const data = byIdx.get(Number(cue.dataset.idx));
     const source = data && getVideoSource(data.videoRef);
     const src = source?.getBackgroundEmbed(data!.videoRef);
     if (!src) return;
+    hasAttemptedOnce = true;
 
     const f = document.createElement('iframe');
     f.src = src;
