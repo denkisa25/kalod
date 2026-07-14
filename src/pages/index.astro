@@ -69,6 +69,23 @@ const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
               loading={i === 0 ? 'eager' : 'lazy'}
               fetchpriority={i === 0 ? 'high' : 'auto'}
             />
+            <!-- Touch devices skip the background loop entirely
+                 (skipBackgroundVideo() in video-layer.ts — YouTube's iframe
+                 autoplay is unreliable there, see CR-002) rather than show
+                 YouTube's own broken-looking paused state. This becomes the
+                 deliberate primary interaction instead: hidden on desktop,
+                 shown centered over the poster via @media (pointer: coarse).
+                 Reuses .watch's existing click wiring (video-layer.ts) — no
+                 new JS needed, just the extra class for its own CSS. -->
+            <a
+              class="watch cue-play-cta"
+              href={withBase(`/work/${p.slug}`)}
+              data-idx={i}
+              aria-label={`watch ${p.title}`}
+              data-blip
+            >
+              <span class="ring-lg">&#9654;</span>
+            </a>
           </div>
           <div class="shade"></div>
           <div class="meta">

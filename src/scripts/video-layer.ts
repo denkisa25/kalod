@@ -29,6 +29,22 @@ function videoDisabled(): boolean {
   );
 }
 
+/** Background-loop-only exclusion (on top of videoDisabled() above, which
+ *  also gates the detail overlay's full player — that stays available on
+ *  touch devices). YouTube's iframe autoplay is specifically unreliable on
+ *  touch/iOS when triggered by a scroll rather than a direct tap (not fixable
+ *  while on YouTube — see docs/change-requests/cr-002-mobile-playback-qa.md);
+ *  every attempt just shows YouTube's own paused/play-button state instead
+ *  of the ambient loop. Rather than show that broken-looking fallback, don't
+ *  attempt it at all — the poster (already ken-burns animated) plus the
+ *  enlarged .watch CTA (CSS-gated to pointer:coarse) becomes the deliberate
+ *  mobile experience, and tapping it opens the detail overlay with a fresh,
+ *  direct gesture — the one condition that reliably does get autoplay-with-
+ *  sound working, matching the opener's "enter with sound" cue 01 behavior. */
+function skipBackgroundVideo(): boolean {
+  return videoDisabled() || matchMedia('(pointer: coarse)').matches;
+}
+
 export interface FeedAudioController {
   pauseForOverlay(): void;
   resumeFromOverlay(): void;
@@ -72,7 +88,7 @@ function rampVolume(player: YTPlayer, from: number, to: number, ms: number, onDo
  *  than mid-transition. */
 function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, CueData>): FeedAudioController {
   const noop: FeedAudioController = { pauseForOverlay() {}, resumeFromOverlay() {}, debugAudioState: () => [] };
-  if (videoDisabled()) return noop;
+  if (skipBackgroundVideo()) return noop;
 
   // Start fetching the IFrame API immediately instead of waiting for the
   // IntersectionObserver's first callback to fire attach() for cue 01 — by

@@ -574,6 +574,46 @@ body.ready main { opacity: 1; }
 }
 .cue .watch:hover { color: var(--color-accent); }
 .cue .watch:hover .ring { transform: scale(1.1); }
+
+/* Mobile-only "tap to watch" — hidden by default (desktop has the ambient
+   background loop instead); shown centered over the poster only on touch
+   devices, where the background loop is deliberately skipped entirely
+   (skipBackgroundVideo(), video-layer.ts) rather than show YouTube's own
+   broken-looking paused state on a failed autoplay attempt. */
+.cue .cue-play-cta {
+  display: none;
+}
+@media (pointer: coarse) {
+  .cue .cue-play-cta {
+    position: absolute;
+    z-index: 2;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    margin: 0;
+  }
+  .cue .cue-play-cta .ring-lg {
+    width: 84px;
+    height: 84px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid var(--color-accent);
+    background: color-mix(in srgb, var(--color-bg) 55%, transparent);
+    color: var(--color-accent);
+    font-size: 1.1rem;
+    padding-left: 6px; /* optically center the triangle glyph */
+    animation: cta-pulse 2.6s ease-in-out infinite;
+  }
+  .cue .cue-play-cta:active .ring-lg { transform: scale(0.94); animation: none; }
+}
+@keyframes cta-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent) 35%, transparent); }
+  50% { box-shadow: 0 0 0 14px color-mix(in srgb, var(--color-accent) 0%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cue .cue-play-cta .ring-lg { animation: none; }
+}
 .cue .roleline { font-size: 0.7rem; letter-spacing: 0.22em; }
 .cue .roleline b { color: var(--color-ink); font-weight: 400; }
 
