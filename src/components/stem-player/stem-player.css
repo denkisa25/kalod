@@ -1,0 +1,231 @@
+/* CR-002 §3.1 — TOKEN-GUARD values only. Every colour, font, space and
+   duration below resolves through a token from src/styles/tokens.css. No
+   literal hex, no new :root entry. */
+
+stem-player {
+  display: block;
+}
+
+/* An author `display` declaration beats the UA sheet's `[hidden]{display:none}`
+   regardless of specificity, so .sp-loader{display:flex} silently un-hid
+   itself and stayed in the accessibility tree. Restore the attribute's
+   meaning for everything inside the player. */
+.sp [hidden] {
+  display: none !important;
+}
+
+.sp {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.sp-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.sp-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--text-h2);
+  letter-spacing: 0.04em;
+  color: var(--color-heading);
+  margin: 0;
+}
+
+/* §3.3 — placeholder audio is labelled as placeholder audio, visibly. */
+.sp-badge {
+  margin: 0;
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-meta-size);
+  letter-spacing: var(--text-meta-tracking);
+}
+
+.sp-note,
+.sp-hint {
+  margin: 0;
+  max-width: 62ch;
+  font-size: var(--text-meta-size);
+  letter-spacing: var(--text-meta-tracking);
+  line-height: 1.6;
+  color: var(--color-meta);
+}
+
+.sp-picture {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--color-bg);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+}
+
+/* ------------------------------------------------------------------ loader */
+
+.sp-loader {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.sp-bar {
+  height: 2px;
+  background: var(--color-line);
+}
+.sp-bar > i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--color-accent);
+  transition: width var(--dur-1) linear;
+}
+.sp-loadmsg {
+  margin: 0;
+  font-size: var(--text-meta-size);
+  letter-spacing: var(--text-meta-tracking);
+  color: var(--color-meta);
+}
+
+.sp-error {
+  margin: 0;
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
+  padding: var(--space-3);
+  font-size: var(--text-meta-size);
+  letter-spacing: var(--text-meta-tracking);
+}
+
+/* --------------------------------------------------------------- transport */
+
+.sp-transport {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.sp button {
+  font-family: var(--font-body);
+  font-size: var(--text-meta-size);
+  letter-spacing: var(--text-meta-tracking);
+  text-transform: lowercase;
+  color: var(--color-ink);
+  background: transparent;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  padding: 0 var(--space-3);
+  /* CR-11/CR-13 hold here too: never below 44px, never below 11px */
+  min-height: 44px;
+  min-width: 44px;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-1) var(--ease-out),
+    color var(--dur-1) var(--ease-out);
+}
+.sp button:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+.sp button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.sp button[aria-pressed='true'] {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+.sp button[aria-pressed='false'] {
+  color: var(--color-meta);
+}
+
+/* §3.3 — visible focus ring, never removed */
+.sp :is(button, input, audio):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.sp input[type='range'] {
+  accent-color: var(--color-accent);
+  min-height: 44px;
+  flex: 1 1 240px;
+  min-width: 160px;
+}
+
+.sp-time,
+.sp-volval {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-meta-size);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  color: var(--color-heading);
+}
+
+.sp-label {
+  font-size: var(--text-meta-size);
+  letter-spacing: var(--text-meta-tracking);
+  color: var(--color-meta);
+}
+
+/* ------------------------------------------------------------------- stems */
+
+.sp-stems {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-2);
+}
+
+.sp-stem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.sp-toggle {
+  width: 100%;
+}
+
+.sp-meter {
+  height: 2px;
+  background: var(--color-line);
+  overflow: hidden;
+}
+.sp-meter > i {
+  display: block;
+  height: 100%;
+  background: var(--color-accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.sp-master {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* ---------------------------------------------------------------- fallback */
+
+.sp-audio {
+  width: 100%;
+  max-width: 42rem;
+}
+
+/* §3.3 — reduced motion stops the meter animation and the loader's width
+   transition. The toggles, the transport and the picture all keep working:
+   the picture is the content, not decoration. */
+@media (prefers-reduced-motion: reduce) {
+  .sp-meter > i {
+    transition: none;
+  }
+  .sp-bar > i {
+    transition: none;
+  }
+  .sp button {
+    transition: none;
+  }
+}

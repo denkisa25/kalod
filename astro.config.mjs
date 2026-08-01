@@ -10,5 +10,8 @@ export default defineConfig({
   // propagation for the staging subdomain. MUST be removed before the real
   // domain-root launch — production is served from "/", not "/new".
   base: '/new',
-  integrations: [sitemap()],
+  // CR-002 §0.4 / §3.3 — the stem-player lab route is noindex, unlinked from
+  // nav, and must not appear in the sitemap either. Any future /lab/* route
+  // is covered by the same filter.
+  integrations: [sitemap({ filter: (page) => !/\/lab\//.test(page) })],
 });

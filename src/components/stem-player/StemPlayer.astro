@@ -1,0 +1,43 @@
+---
+/** CR-002 §3.1 — wrapper for the <stem-player> custom element.
+ *
+ *  Asset URLs are resolved here through withBase() rather than inside the
+ *  element, because astro.config.mjs sets a non-root `base` ("/new") and only
+ *  Astro-generated URLs get prefixed automatically. Resolving here means the
+ *  TypeScript never has to know what the base is.
+ */
+import { withBase } from '../../lib/url';
+import './stem-player.css';
+
+interface Stem {
+  id: string;
+  label: string;
+  src: string;
+}
+export interface Piece {
+  slug: string;
+  title: string;
+  note?: string;
+  picture: { type: 'canvas'; duration: number };
+  offsetMs: number;
+  fallback: string;
+  stems: Stem[];
+}
+
+interface Props {
+  piece: Piece;
+}
+const { piece } = Astro.props;
+
+const resolved = {
+  ...piece,
+  fallback: withBase(piece.fallback),
+  stems: piece.stems.map((s) => ({ ...s, src: withBase(s.src) })),
+};
+---
+
+<stem-player data-config={JSON.stringify(resolved)}></stem-player>
+
+<script>
+  import './stem-player';
+</script>

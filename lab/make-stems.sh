@@ -35,6 +35,15 @@ $SYNC,adelay=1000|1000,apad=whole_dur=$D[s];\
 [a][s]amix=inputs=2:normalize=0,volume=0.14,\
 aformat=channel_layouts=stereo[out]" melody.m4a
 
+# Summed mixdown — the CR-002 §3.3 fallback asset. When AudioContext is
+# unavailable or a decode fails, the page plays this single file through a
+# plain <audio> element instead of showing a dead mixer. normalize=0 so it is
+# the true sum of the four stems at mix position, i.e. the all-faders-up state.
+ffmpeg -y -hide_banner -loglevel error \
+  -i pad.m4a -i pulse.m4a -i ambience.m4a -i melody.m4a \
+  -filter_complex "[0][1][2][3]amix=inputs=4:normalize=0[out]" -map "[out]" \
+  -ac 2 -ar $R -c:a aac -b:a 128k -movflags +faststart summed.m4a
+
 for f in *.m4a; do
   printf "%-14s %s\n" "$f" "$(ffprobe -v error -show_entries \
     format=duration -of csv=p=0 "$f")"

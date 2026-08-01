@@ -1,0 +1,101 @@
+---
+/** CR-002 §3 — the stem-player lab route.
+ *
+ *  Served at {base}/lab/stems, i.e. /new/lab/stems while astro.config.mjs
+ *  carries the temporary base. NOTE: §3.1 writes this path as
+ *  src/pages/new/lab/stems.astro, which was authored before the temporary
+ *  base existed — that file would resolve to /new/new/lab/stems.
+ *
+ *  §0.4 / §3.3: noindex, absent from the sitemap (see the filter in
+ *  astro.config.mjs), and linked from nowhere. Deliberately does NOT use
+ *  BaseLayout: the lab is isolated, and pulling in the site header would put
+ *  its sound toggle on the page competing for the same AudioContext.
+ */
+import '../../styles/tokens.css';
+import '../../styles/fonts.css';
+import StemPlayer, { type Piece } from '../../components/stem-player/StemPlayer.astro';
+import pieces from '../../data/stems.json';
+
+// JSON imports widen string literals, so picture.type arrives as `string`.
+const piece = pieces[0] as Piece;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>stem player lab — kaloyan dimitrov</title>
+    <meta
+      name="description"
+      content="internal prototype. not part of the published site."
+    />
+  </head>
+  <body>
+    <main class="lab">
+      <header class="lab-head">
+        <p class="lab-kicker">cr-002 · stage 2 · internal prototype</p>
+        <h1 class="lab-title">stem player</h1>
+        <p class="lab-intro">
+          four stems, one clock. the audio context is the clock master; the picture
+          follows it and is rate-corrected, never seeked. toggle any stem to hear the
+          mix without it.
+        </p>
+      </header>
+
+      <StemPlayer piece={piece} />
+    </main>
+
+    <style>
+      :global(html),
+      :global(body) {
+        margin: 0;
+        background: var(--color-bg);
+        color: var(--color-ink);
+        font-family: var(--font-body);
+        text-transform: lowercase;
+      }
+
+      .lab {
+        max-width: 68rem;
+        margin: 0 auto;
+        padding: var(--space-5) var(--space-4) var(--space-7);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-5);
+      }
+
+      .lab-head {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+      }
+
+      .lab-kicker {
+        margin: 0;
+        font-size: var(--text-meta-size);
+        letter-spacing: var(--text-meta-tracking);
+        color: var(--color-accent);
+      }
+
+      .lab-title {
+        margin: 0;
+        font-family: var(--font-display);
+        font-weight: 400;
+        font-size: var(--text-hero);
+        line-height: 0.9;
+        letter-spacing: 0.02em;
+        color: var(--color-heading);
+      }
+
+      .lab-intro {
+        margin: 0;
+        max-width: 62ch;
+        font-size: var(--text-body);
+        line-height: 1.6;
+        color: var(--color-ink);
+      }
+    </style>
+  </body>
+</html>
