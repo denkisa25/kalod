@@ -4,9 +4,14 @@
  *  blip() synth). One button, one mental model — this REPLACES the old
  *  disabled EQ-bars "coming soon" toggle, it isn't a second control beside it. */
 
+import { getAudioContext } from './audio-context';
+
 const SESSION_KEY = 'kd-feed-sound';
 
 let soundEnabled = sessionStorage.getItem(SESSION_KEY) === '1';
+/* CR-002 §0.2 — the blips share the site's one AudioContext rather than
+ * constructing their own, so the stem player and this toggle can never end up
+ * driving two output devices at once. */
 let uiCtx: AudioContext | null = null;
 let lastBlip = 0;
 const listeners = new Set<(enabled: boolean) => void>();
@@ -34,13 +39,7 @@ export function setSoundEnabled(enabled: boolean): void {
     btn.setAttribute('aria-label', enabled ? 'sound on — mute' : 'sound off — unmute');
     btn.title = btn.getAttribute('aria-label')!;
   });
-  if (enabled && !uiCtx) {
-    try {
-      uiCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    } catch {
-      uiCtx = null;
-    }
-  }
+  if (enabled && !uiCtx) uiCtx = getAudioContext();
   listeners.forEach((cb) => cb(enabled));
 }
 
@@ -72,13 +71,7 @@ export function initSoundControl(): void {
     btn.addEventListener('click', () => setSoundEnabled(!soundEnabled));
   });
 
-  if (soundEnabled) {
-    try {
-      uiCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    } catch {
-      uiCtx = null;
-    }
-  }
+  if (soundEnabled) uiCtx = getAudioContext();
 
   document.querySelectorAll<HTMLElement>('[data-blip]').forEach((el) => {
     el.addEventListener('mouseenter', () => blip(1500));

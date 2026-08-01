@@ -1,0 +1,953 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>stem lab — cr-002 stage 1</title>
+<style>
+/* ---------------------------------------------------------------------------
+   TOKEN-GUARD.md — these are the authoritative extracted brand values, copied
+   verbatim from src/styles/tokens.css. The lab is standalone and cannot import
+   that file. No new colour or font is introduced here; the HUD's
+   out-of-tolerance state uses --color-accent rather than inventing a red.
+--------------------------------------------------------------------------- */
+:root {
+  --color-bg: #0e0f10;
+  --color-ink: #c9c9cb;
+  --color-heading: #ffffff;
+  --color-accent: #c99a55;
+  --focus-ring: var(--color-accent);
+  --color-line: color-mix(in srgb, var(--color-ink) 20%, transparent);
+  --color-meta: color-mix(in srgb, var(--color-ink) 60%, transparent);
+
+  --font-display: 'Agency FB', 'Bahnschrift', 'Arial Narrow', sans-serif;
+  --font-body: Verdana, Geneva, sans-serif;
+  --text-meta-size: 0.75rem;
+  --text-meta-tracking: 0.08em;
+
+  --space-1: 4px;  --space-2: 8px;  --space-3: 16px; --space-4: 24px;
+  --space-5: 40px; --space-6: 64px;
+
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --dur-1: 150ms;
+  --radius: 0;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 14px;
+  text-transform: lowercase;
+}
+
+body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  min-height: 100vh;
+  align-content: start;
+}
+@media (max-width: 900px) {
+  body { grid-template-columns: minmax(0, 1fr); }
+}
+
+h1 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.6rem;
+  letter-spacing: .06em;
+  color: var(--color-heading);
+  margin: 0 0 var(--space-1);
+}
+
+.meta {
+  font-size: var(--text-meta-size);
+  letter-spacing: var(--text-meta-tracking);
+  color: var(--color-meta);
+}
+
+.badge {
+  display: inline-block;
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
+  padding: 2px var(--space-2);
+  font-size: var(--text-meta-size);
+  letter-spacing: var(--text-meta-tracking);
+}
+
+/* --- picture ------------------------------------------------------------ */
+#picture {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border: 1px solid var(--color-line);
+  margin: var(--space-3) 0;
+}
+
+/* --- transport ---------------------------------------------------------- */
+.row { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.row + .row { margin-top: var(--space-3); }
+
+button {
+  font-family: var(--font-body);
+  font-size: var(--text-meta-size);
+  letter-spacing: var(--text-meta-tracking);
+  text-transform: lowercase;
+  color: var(--color-ink);
+  background: transparent;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  padding: 0 var(--space-3);
+  min-height: 44px;
+  min-width: 44px;
+  cursor: pointer;
+  transition: border-color var(--dur-1) var(--ease-out),
+              color var(--dur-1) var(--ease-out);
+}
+button:hover:not(:disabled) { border-color: var(--color-accent); }
+button:disabled { opacity: .4; cursor: default; }
+button[aria-pressed="true"] {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+button[aria-pressed="false"] { color: var(--color-meta); }
+
+:where(button, input, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+input[type="range"] { accent-color: var(--color-accent); height: 44px; }
+#scrub { flex: 1 1 240px; min-width: 160px; }
+#master { width: 140px; }
+
+input[type="number"] {
+  font-family: var(--font-body);
+  font-size: var(--text-meta-size);
+  color: var(--color-ink);
+  background: transparent;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  padding: var(--space-2);
+  width: 84px;
+}
+
+label { font-size: var(--text-meta-size); letter-spacing: var(--text-meta-tracking); color: var(--color-meta); }
+
+.time {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-heading);
+  letter-spacing: .04em;
+}
+
+/* --- loader ------------------------------------------------------------- */
+#loader { margin: var(--space-3) 0; }
+#bar { height: 2px; background: var(--color-line); }
+#bar > i { display: block; height: 100%; width: 0; background: var(--color-accent); }
+#loadmsg { display: block; margin-top: var(--space-2); }
+#error {
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
+  padding: var(--space-3);
+  margin: var(--space-3) 0;
+  white-space: pre-wrap;
+  text-transform: none;
+}
+[hidden] { display: none !important; }
+
+/* --- hud ---------------------------------------------------------------- */
+#hud {
+  border: 1px solid var(--color-line);
+  padding: var(--space-3);
+  align-self: start;
+  position: sticky;
+  top: var(--space-4);
+  font-size: var(--text-meta-size);
+}
+#hud h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: .8rem;
+  letter-spacing: .14em;
+  color: var(--color-accent);
+  margin: var(--space-4) 0 var(--space-2);
+  padding-bottom: var(--space-1);
+  border-bottom: 1px solid var(--color-line);
+}
+#hud h2:first-child { margin-top: 0; }
+dl {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px var(--space-3);
+  margin: 0;
+}
+dt { color: var(--color-meta); letter-spacing: .04em; }
+dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
+}
+dd.warn { color: var(--color-accent); }
+#trace { display: block; width: 100%; height: 48px; margin-top: var(--space-2); border: 1px solid var(--color-line); }
+</style>
+</head>
+<body>
+
+<main>
+  <h1>stem lab</h1>
+  <p class="meta">cr-002 stage 1 · canvas picture stand-in · <span class="badge">placeholder audio</span></p>
+
+  <div id="error" hidden></div>
+
+  <div id="loader">
+    <div id="bar"><i></i></div>
+    <span id="loadmsg" class="meta">loading stems…</span>
+  </div>
+
+  <canvas id="picture"></canvas>
+
+  <div class="row">
+    <button id="playpause" disabled>play</button>
+    <button id="rewind" disabled>to start</button>
+    <input id="scrub" type="range" min="0" max="1" step="0.001" value="0" disabled aria-label="scrub position">
+    <span class="time"><span id="pos">00:00.000</span> / <span id="dur">00:00.000</span></span>
+  </div>
+
+  <div class="row" id="stems" role="group" aria-label="stems"></div>
+
+  <div class="row">
+    <label for="master">master (ceiling 0.50)</label>
+    <input id="master" type="range" min="0" max="1" step="0.01" value="1">
+    <span class="time" id="mastergain">0.500</span>
+
+    <label for="offset" style="margin-left:var(--space-4)">a/v offset ms</label>
+    <input id="offset" type="number" value="0" step="1" min="-500" max="500">
+  </div>
+
+  <p class="meta" style="margin-top:var(--space-4)">
+    sync check: a 1&nbsp;khz burst sits at t=1.000s in all four stems and the picture
+    flashes white for 2 picture frames at the same instant. nudge a/v offset until
+    they coincide. space toggles play.
+  </p>
+</main>
+
+<aside id="hud" aria-label="debug hud">
+  <h2>clock</h2>
+  <dl>
+    <dt>context state</dt><dd id="h-state">–</dd>
+    <dt>ctx.currentTime</dt><dd id="h-ctx">–</dd>
+    <dt>t0</dt><dd id="h-t0">–</dd>
+    <dt>start offset</dt><dd id="h-startoff">–</dd>
+    <dt>expected pos</dt><dd id="h-expected">–</dd>
+    <dt>picture pos</dt><dd id="h-picture">–</dd>
+    <dt>latency comp</dt><dd id="h-latency">–</dd>
+    <dt>raf fps</dt><dd id="h-fps">–</dd>
+  </dl>
+
+  <h2>correction</h2>
+  <dl>
+    <dt>drift</dt><dd id="h-drift">–</dd>
+    <dt>zone</dt><dd id="h-zone">–</dd>
+    <dt>playback rate</dt><dd id="h-rate">–</dd>
+    <dt>drift min / max</dt><dd id="h-minmax">–</dd>
+    <dt>|drift| max</dt><dd id="h-absmax">–</dd>
+    <dt>rate range</dt><dd id="h-raterange">–</dd>
+    <dt>locked / correcting</dt><dd id="h-zonetime">–</dd>
+    <dt>hard resyncs</dt><dd id="h-resyncs">–</dd>
+    <dt>over 40 ms budget</dt><dd id="h-breaches">–</dd>
+  </dl>
+  <canvas id="trace" aria-label="drift trace, last 60 seconds"></canvas>
+
+  <h2>graph</h2>
+  <dl>
+    <dt>live sources</dt><dd id="h-sources">–</dd>
+    <dt>master gain</dt><dd id="h-master">–</dd>
+    <dt>limiter reduction</dt><dd id="h-reduction">–</dd>
+    <dt id="h-gains-label">stem gains</dt><dd id="h-gains">–</dd>
+  </dl>
+
+  <h2>buffers</h2>
+  <dl id="h-buffers">
+    <dt>decoded total</dt><dd id="h-mb">–</dd>
+  </dl>
+</aside>
+
+<script type="module">
+'use strict';
+
+/* ===========================================================================
+   cr-002 §2 — stage 1 standalone lab.
+   single file, no build step, no framework. iterates on hard refresh.
+   =========================================================================== */
+
+const STEMS = [
+  { id: 'pad',      label: 'pad',      file: 'assets/stems/pad.m4a' },
+  { id: 'pulse',    label: 'pulse',    file: 'assets/stems/pulse.m4a' },
+  { id: 'ambience', label: 'ambience', file: 'assets/stems/ambience.m4a' },
+  { id: 'melody',   label: 'melody',   file: 'assets/stems/melody.m4a' },
+];
+
+const MASTER_CEILING    = 0.5;    // §0.1 — hard ceiling, never exceeded
+const LEAD              = 0.15;   // §2.4 — shared scheduling lead
+const RAMP              = 0.05;   // §2.4 — toggle ramp
+const DRIFT_INTERVAL_MS = 500;    // §2.4
+
+/* correction zones. NOTE: the correction deadband and the acceptance budget
+   are different numbers and must not be conflated — the original §2.4 used
+   one value for both, which let the corrector park at the edge of the budget
+   and call it a pass. see the §2.4/§2.7 amendment in CR-002. */
+const LOCK_S       = 0.010;  // < 10 ms  → locked, rate = 1
+const RESYNC_S     = 0.400;  // > 400 ms → not drift; log and hard-resync
+/* aim to close the error over ~CORRECT_TAU seconds. measured recovery from a
+   150 ms disturbance: tau 2.0 → 6.0 s (one re-entry into correction after
+   locking); tau 1.0 → 4.0 s, no overshoot, no re-entry; tau 0.75 → 3.5 s but
+   it overshoots past zero and re-enters. 1.0 is the fastest setting that
+   still lands cleanly. each 500 ms tick closes 0.5/tau of the error, so tau
+   must stay well above the 0.5 s sample interval or the loop rings. */
+const CORRECT_TAU  = 1.0;
+const MAX_RATE_DEV = 0.05;   // ±5% clamp on the proportional term
+const BUDGET_S     = 0.040;  // §2.7 acceptance budget — reporting only
+
+const PICTURE_FPS       = 25;     // picture frame counter / flash width
+const FLASH_AT          = 1.0;    // §2.3 — matches the 1 kHz burst
+const FLASH_FRAMES      = 2;
+const TRACE_SECONDS     = 60;
+
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+function tc(t) {
+  const s = Math.max(0, t);
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  const ms = Math.floor((s - Math.floor(s)) * 1000);
+  return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}.${String(ms).padStart(3, '0')}`;
+}
+
+/* --- context singleton (§0.2) ---------------------------------------------
+   no HMR in the lab, but written the way stage 2 needs it so the port is a
+   copy rather than a rewrite. one AudioContext, ever.                       */
+function getCtx() {
+  const w = window;
+  w.__stemCtx ??= new AudioContext();
+  return w.__stemCtx;
+}
+
+/* --- audio graph (§0.1) ---------------------------------------------------
+   source ×4 → stemGain → master (≤0.5) → limiter → destination.
+   built once; nothing here is ever torn down, and no code path routes a
+   source straight at ctx.destination.                                       */
+class Graph {
+  constructor(ctx) {
+    this.ctx = ctx;
+    // knee left at its default: the spec enumerates four parameters and a
+    // softer knee only ever limits earlier, i.e. in the safe direction.
+    this.limiter = new DynamicsCompressorNode(ctx, {
+      threshold: -6, ratio: 20, attack: 0.003, release: 0.1,
+    });
+    this.limiter.connect(ctx.destination);
+
+    this.master = new GainNode(ctx, { gain: MASTER_CEILING });
+    this.master.connect(this.limiter);
+
+    this.stemGains = new Map();
+    for (const s of STEMS) {
+      const g = new GainNode(ctx, { gain: 1 });
+      g.connect(this.master);
+      this.stemGains.set(s.id, g);
+    }
+  }
+
+  /* §2.4 — never assign .value. cancel + setValueAtTime anchors the ramp to
+     *now* instead of to the last scheduled event; without the anchor a second
+     toggle inside 50 ms steps audibly instead of fading. */
+  ramp(param, target, dur = RAMP) {
+    const now = this.ctx.currentTime;
+    param.cancelScheduledValues(now);
+    param.setValueAtTime(param.value, now);
+    param.linearRampToValueAtTime(target, now + dur);
+  }
+
+  setStem(id, on)   { this.ramp(this.stemGains.get(id).gain, on ? 1 : 0); }
+  setMaster(v)      { this.ramp(this.master.gain, clamp(v, 0, MASTER_CEILING)); }
+}
+
+/* --- PictureSource (§1) ---------------------------------------------------
+   CanvasPicture now; VideoPicture (hls.js) later behind the same interface.  */
+class CanvasPicture {
+  #t = 0;
+  #rate = 1;
+  #running = false;
+  #last = 0;
+  #raf = 0;
+  #fps = 0;
+  #frames = 0;
+  #fpsAt = 0;
+
+  constructor(canvas, duration) {
+    this.canvas = canvas;
+    this.duration = duration;
+    this.g = canvas.getContext('2d');
+    this.#last = performance.now();
+    this.#fpsAt = this.#last;
+    this.#raf = requestAnimationFrame(this.#tick);
+  }
+
+  get currentTime() { return this.#t; }
+  get rate()        { return this.#rate; }
+  get fps()         { return this.#fps; }
+
+  play()      { this.#running = true; this.#last = performance.now(); return Promise.resolve(); }
+  pause()     { this.#running = false; }
+  seek(t)     { this.#t = clamp(t, 0, this.duration); }
+  setRate(r)  { this.#rate = r; }
+  dispose()   { cancelAnimationFrame(this.#raf); this.#running = false; }
+
+  /* advances on performance.now deltas — deliberately NOT the audio clock
+     (§2.3), so the drift loop has something real to correct against.
+     a bound field, not a method: private methods are not writable, so the
+     usual constructor .bind() throws. */
+  #tick = (now) => {
+    this.#raf = requestAnimationFrame(this.#tick);
+    const dt = (now - this.#last) / 1000;
+    this.#last = now;
+    if (this.#running) this.#t = clamp(this.#t + dt * this.#rate, 0, this.duration);
+
+    this.#frames++;
+    if (now - this.#fpsAt >= 500) {
+      this.#fps = Math.round((this.#frames * 1000) / (now - this.#fpsAt));
+      this.#frames = 0;
+      this.#fpsAt = now;
+    }
+    this.#draw();
+  };
+
+  #draw() {
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = this.canvas.clientWidth, h = this.canvas.clientHeight;
+    if (this.canvas.width !== Math.round(w * dpr) || this.canvas.height !== Math.round(h * dpr)) {
+      this.canvas.width = Math.round(w * dpr);
+      this.canvas.height = Math.round(h * dpr);
+    }
+    const g = this.g;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const t = this.#t;
+    const flashing = t >= FLASH_AT && t < FLASH_AT + FLASH_FRAMES / PICTURE_FPS;
+
+    g.fillStyle = flashing ? '#ffffff' : '#000000';
+    g.fillRect(0, 0, w, h);
+
+    const fg = flashing ? '#0e0f10' : '#ffffff';
+    const dim = flashing ? '#0e0f10' : '#c99a55';
+
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillStyle = fg;
+    g.font = `${Math.round(h * 0.22)}px 'Agency FB', 'Bahnschrift', 'Arial Narrow', sans-serif`;
+    g.fillText(tc(t), w / 2, h * 0.44);
+
+    g.fillStyle = dim;
+    g.font = `${Math.round(h * 0.07)}px Verdana, Geneva, sans-serif`;
+    g.fillText(`frame ${String(Math.floor(t * PICTURE_FPS)).padStart(5, '0')} @ ${PICTURE_FPS}fps`, w / 2, h * 0.66);
+
+    // sync marker + playhead — motion here is what makes drift visible by eye
+    const pad = w * 0.06, span = w - pad * 2, y = h * 0.86;
+    g.strokeStyle = flashing ? '#0e0f10' : 'rgba(201,201,203,.25)';
+    g.lineWidth = 1;
+    g.beginPath(); g.moveTo(pad, y); g.lineTo(pad + span, y); g.stroke();
+
+    const syncX = pad + span * (FLASH_AT / this.duration);
+    g.strokeStyle = dim;
+    g.beginPath(); g.moveTo(syncX, y - h * 0.03); g.lineTo(syncX, y + h * 0.03); g.stroke();
+
+    const headX = pad + span * clamp(t / this.duration, 0, 1);
+    g.strokeStyle = flashing ? '#0e0f10' : '#c99a55';
+    g.lineWidth = 2;
+    g.beginPath(); g.moveTo(headX, y - h * 0.06); g.lineTo(headX, y + h * 0.06); g.stroke();
+  }
+}
+
+/* --- drift statistics -----------------------------------------------------
+   §2.7 asks whether the rate settles or oscillates. instrumented so the
+   answer is measured, not eyeballed.                                        */
+class DriftStats {
+  constructor() { this.reset(); }
+  reset() {
+    this.samples = 0;
+    this.min = Infinity; this.max = -Infinity; this.absMax = 0;
+    this.lockedS = 0; this.correctingS = 0;
+    this.resyncs = 0; this.budgetBreaches = 0;
+    this.rateMin = 1; this.rateMax = 1;
+    this.trace = [];
+  }
+  record(drift, rate, zone) {
+    this.samples++;
+    this.min = Math.min(this.min, drift);
+    this.max = Math.max(this.max, drift);
+    this.absMax = Math.max(this.absMax, Math.abs(drift));
+    if (Math.abs(drift) > BUDGET_S) this.budgetBreaches++;
+    if (zone === 'resync') this.resyncs++;
+    else if (zone === 'lock') this.lockedS += DRIFT_INTERVAL_MS / 1000;
+    else this.correctingS += DRIFT_INTERVAL_MS / 1000;
+    this.rateMin = Math.min(this.rateMin, rate);
+    this.rateMax = Math.max(this.rateMax, rate);
+    this.trace.push(drift);
+    const cap = (TRACE_SECONDS * 1000) / DRIFT_INTERVAL_MS;
+    while (this.trace.length > cap) this.trace.shift();
+  }
+}
+
+/* --- transport ------------------------------------------------------------
+   AudioBufferSourceNode is single-use, so NO state lives inside the sources.
+   everything derives from (t0, startOffset) against ctx.currentTime.        */
+class Transport {
+  constructor(ctx, graph, picture, buffers) {
+    this.ctx = ctx;
+    this.graph = graph;
+    this.picture = picture;
+    this.buffers = buffers;            // Map<id, AudioBuffer>
+    this.sources = [];
+    this.playing = false;
+    this.t0 = 0;
+    this.startOffset = 0;
+    this.offsetMs = 0;
+    this.gen = 0;                      // invalidates in-flight async work
+    this.driftTimer = 0;
+    this.pictureStartTimer = 0;
+    this.rate = 1;
+    this.drift = 0;
+    this.zone = 'lock';
+    this.stats = new DriftStats();
+    this.duration = buffers.get(STEMS[0].id).duration;
+  }
+
+  get position() {
+    if (!this.playing) return this.startOffset;
+    const elapsed = this.ctx.currentTime - this.t0;   // negative during pre-roll
+    return clamp(this.startOffset + Math.max(0, elapsed), 0, this.duration);
+  }
+
+  /* device output latency, read live rather than baked: audio scheduled at
+     ctx.currentTime is not AUDIBLE until baseLatency + outputLatency later,
+     while the canvas paints immediately. measured 45.3 ms on this machine
+     (outputLatency 40 + baseLatency 5.33), and it matched the uncompensated
+     opening drift of 44.4 ms to within a millisecond. left in the loop it is
+     a constant the corrector cannot remove — with a 10 ms lock zone it would
+     fight this device constant forever. it also changes when the user
+     switches output device, so it must not be a baked build-time number.
+     kept SEPARATE from offsetMs, which is the content-side AAC priming
+     constant from §6: one is the device, one is the asset. */
+  get latencyComp() {
+    return (this.ctx.baseLatency || 0) + (this.ctx.outputLatency || 0);
+  }
+
+  /* audio-side position the picture should be showing. §2.4 writes this as
+     `ctx.currentTime - t0 + offsetMs/1000`, which is the startOffset === 0,
+     zero-latency case; stage 1 has a seek control and a real output device,
+     so both terms are required. */
+  get expected() {
+    return (this.ctx.currentTime - this.latencyComp - this.t0)
+         + this.startOffset + this.offsetMs / 1000;
+  }
+
+  async play(atOffset = this.position) {
+    const myGen = ++this.gen;
+    this.disposeSources();
+
+    if (this.ctx.state !== 'running') await this.ctx.resume();
+    if (this.gen !== myGen) return;                   // superseded while resuming
+
+    let offset = clamp(atOffset, 0, this.duration);
+    if (this.duration - offset < 0.05) offset = 0;    // at the tail → from the top
+
+    const t0 = this.ctx.currentTime + LEAD;
+    for (const s of STEMS) {
+      const src = new AudioBufferSourceNode(this.ctx, { buffer: this.buffers.get(s.id) });
+      src.connect(this.graph.stemGains.get(s.id));
+      src.start(t0, offset);                          // one shared t0 → sample-locked
+      this.sources.push(src);
+    }
+
+    this.t0 = t0;
+    this.startOffset = offset;
+    this.playing = true;
+    this.stats.reset();
+
+    this.picture.seek(offset);
+    this.picture.setRate(1);
+    this.rate = 1;
+    // the picture must not start before t0. the generation check keeps a
+    // pause inside the 150 ms lead from being undone by this timer.
+    this.pictureStartTimer = setTimeout(() => {
+      if (this.gen === myGen) this.picture.play();
+    }, Math.max(0, (t0 - this.ctx.currentTime) * 1000));
+
+    this.startDriftLoop();
+  }
+
+  pause() {
+    if (!this.playing) return;
+    const pos = this.position;          // capture BEFORE teardown
+    this.gen++;
+    this.disposeSources();
+    this.stopDriftLoop();
+    this.picture.pause();
+    this.picture.setRate(1);
+    this.rate = 1;
+    this.playing = false;
+    this.startOffset = pos;
+  }
+
+  seek(t) {
+    const wasPlaying = this.playing;
+    this.gen++;
+    this.disposeSources();
+    this.stopDriftLoop();
+    this.playing = false;
+    this.startOffset = clamp(t, 0, this.duration);
+    this.picture.pause();
+    this.picture.seek(this.startOffset);
+    this.picture.setRate(1);            // correction state is meaningless across a cut
+    this.rate = 1;
+    this.drift = 0;
+    if (wasPlaying) this.play(this.startOffset);
+  }
+
+  /* teardown order matters. onended is nulled BEFORE stop() because stop()
+     fires onended — a handler that reads that as "the piece finished" resets
+     the transport on every pause and seek, and it presents as a sync bug.
+     for the same reason end-of-media is detected in the raf tick instead.
+     src.buffer is deliberately not nulled: it cannot be reassigned once set,
+     and disconnect + dropping the reference is enough. the four decoded
+     AudioBuffers are held once, outside the sources, and reused on rebuild —
+     so a seek allocates four small nodes, not 76 MB of audio. */
+  disposeSources() {
+    clearTimeout(this.pictureStartTimer);
+    this.pictureStartTimer = 0;
+    for (const src of this.sources) {
+      src.onended = null;
+      try { src.stop(); } catch { /* already stopped or never started */ }
+      src.disconnect();
+    }
+    this.sources.length = 0;
+  }
+
+  startDriftLoop() {
+    this.stopDriftLoop();
+    this.driftTimer = setInterval(() => this.correct(), DRIFT_INTERVAL_MS);
+  }
+  stopDriftLoop() {
+    clearInterval(this.driftTimer);
+    this.driftTimer = 0;
+  }
+
+  /* three-zone corrector.
+       |drift| < 10 ms    → locked, rate = 1.
+       10–400 ms          → proportional: close the error over ~CORRECT_TAU
+                            seconds, clamped to ±5%. the original flat ±2%
+                            needed 7.5 s to close a 150 ms disturbance, which
+                            is 7.5 s of visible desync.
+       > 400 ms           → not drift. a rate nudge cannot recover it in any
+                            reasonable time, so log it and hard-resync.
+
+     the first two zones correct by RATE only and never seek — that is what
+     keeps working when VideoPicture/HLS replaces CanvasPicture, where a seek
+     costs a rebuffer. the third zone deliberately does seek: above 400 ms
+     something discontinuous has happened (a stall, a device switch, a
+     backgrounded tab) and a rebuffer is the cheaper of the two evils. it is
+     counted so that a player resyncing repeatedly is visible, not silent. */
+  correct() {
+    if (!this.playing) return;
+    if (this.ctx.currentTime < this.t0) return;                 // pre-roll
+    if (this.position > this.duration - 0.5) return;            // tail
+
+    const drift = this.picture.currentTime - this.expected;
+    const mag = Math.abs(drift);
+    let rate = 1;
+    let zone = 'lock';
+
+    if (mag >= RESYNC_S) {
+      zone = 'resync';
+      const target = clamp(this.expected, 0, this.duration);
+      console.warn(`[stem-lab] hard resync: drift ${(drift * 1000).toFixed(0)} ms ` +
+                   `exceeds ${RESYNC_S * 1000} ms — seeking picture to ${target.toFixed(3)}s`);
+      this.picture.seek(target);
+      this.picture.setRate(1);
+    } else if (mag >= LOCK_S) {
+      zone = 'correct';
+      rate = clamp(1 - drift / CORRECT_TAU, 1 - MAX_RATE_DEV, 1 + MAX_RATE_DEV);
+      this.picture.setRate(rate);
+    } else {
+      this.picture.setRate(1);
+    }
+
+    this.drift = drift;
+    this.rate = rate;
+    this.zone = zone;
+    this.stats.record(drift, rate, zone);
+  }
+}
+
+/* --- loading (§2.4) — real per-byte progress, not a spinner --------------- */
+async function fetchWithProgress(url, onBytes) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${url} → http ${res.status}`);
+  const total = Number(res.headers.get('content-length')) || 0;
+  const reader = res.body.getReader();
+  const chunks = [];
+  let received = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    received += value.length;
+    onBytes(received, total);
+  }
+  const out = new Uint8Array(received);
+  let o = 0;
+  for (const c of chunks) { out.set(c, o); o += c.length; }
+  return out.buffer;
+}
+
+/* --- ui wiring ------------------------------------------------------------ */
+const $ = (id) => document.getElementById(id);
+const el = {
+  err: $('error'), loader: $('loader'), bar: $('bar').firstElementChild, loadmsg: $('loadmsg'),
+  picture: $('picture'), playpause: $('playpause'), rewind: $('rewind'), scrub: $('scrub'),
+  pos: $('pos'), dur: $('dur'), stems: $('stems'), master: $('master'),
+  mastergain: $('mastergain'), offset: $('offset'), trace: $('trace'),
+};
+
+function fail(e) {
+  el.err.hidden = false;
+  el.err.textContent = String(e && e.stack ? e.stack : e);
+  el.loadmsg.textContent = 'load failed';
+  console.error(e);
+}
+
+const state = { scrubbing: false, on: new Map(STEMS.map((s) => [s.id, true])) };
+
+async function boot() {
+  const ctx = getCtx();
+  const graph = new Graph(ctx);
+
+  // ---- load ----------------------------------------------------------------
+  const prog = STEMS.map(() => ({ received: 0, total: 0 }));
+  const renderProgress = () => {
+    const got = prog.reduce((a, p) => a + p.received, 0);
+    const all = prog.reduce((a, p) => a + p.total, 0);
+    el.bar.style.width = all ? `${(got / all) * 100}%` : '0%';
+    el.loadmsg.textContent =
+      `${(got / 1048576).toFixed(2)} mb / ${(all / 1048576).toFixed(2)} mb across ${STEMS.length} stems`;
+  };
+
+  const arrays = await Promise.all(STEMS.map((s, i) =>
+    fetchWithProgress(s.file, (r, t) => { prog[i] = { received: r, total: t }; renderProgress(); })));
+
+  el.loadmsg.textContent = 'decoding…';
+  const decoded = await Promise.all(arrays.map((a) => ctx.decodeAudioData(a)));
+
+  // ---- equal-length assertion (§2.4) --------------------------------------
+  const lengths = new Set(decoded.map((b) => b.length));
+  const rates = new Set(decoded.map((b) => b.sampleRate));
+  if (lengths.size !== 1 || rates.size !== 1) {
+    throw new Error(
+      'buffer mismatch — stems are not sample-locked:\n' +
+      decoded.map((b, i) => `  ${STEMS[i].id}: ${b.length} samples @ ${b.sampleRate} hz (${b.duration.toFixed(6)}s)`).join('\n') +
+      '\nregenerate with lab/make-stems.sh; do not proceed with unequal buffers.');
+  }
+
+  const buffers = new Map(STEMS.map((s, i) => [s.id, decoded[i]]));
+  const totalBytes = decoded.reduce((a, b) => a + b.length * b.numberOfChannels * 4, 0);
+
+  el.loader.hidden = true;
+
+  // ---- transport + picture -------------------------------------------------
+  const duration = decoded[0].duration;
+  const picture = new CanvasPicture(el.picture, duration);
+  const transport = new Transport(ctx, graph, picture, buffers);
+
+  el.dur.textContent = tc(duration);
+  el.scrub.max = String(duration);
+  el.scrub.disabled = false;
+  el.playpause.disabled = false;
+  el.rewind.disabled = false;
+
+  // ---- stem toggles --------------------------------------------------------
+  const gainCells = new Map();
+  for (const s of STEMS) {
+    const b = document.createElement('button');
+    b.textContent = s.label;
+    b.setAttribute('aria-pressed', 'true');
+    b.addEventListener('click', () => {
+      const on = !state.on.get(s.id);
+      state.on.set(s.id, on);
+      b.setAttribute('aria-pressed', String(on));
+      graph.setStem(s.id, on);
+    });
+    el.stems.appendChild(b);
+    gainCells.set(s.id, graph.stemGains.get(s.id));
+  }
+
+  // ---- per-buffer rows in the hud -----------------------------------------
+  const hb = $('h-buffers');
+  for (const s of STEMS) {
+    const b = buffers.get(s.id);
+    const dt = document.createElement('dt'); dt.textContent = s.id;
+    const dd = document.createElement('dd'); dd.textContent = `${b.length} sm`;
+    hb.append(dt, dd);
+  }
+  $('h-mb').textContent = `${(totalBytes / 1048576).toFixed(1)} mb`;
+
+  // ---- transport controls --------------------------------------------------
+  const togglePlay = () => { transport.playing ? transport.pause() : transport.play(); };
+  el.playpause.addEventListener('click', togglePlay);
+  el.rewind.addEventListener('click', () => transport.seek(0));
+
+  // scrubbing commits on `change`, not `input`: every seek rebuilds all four
+  // sources, and doing that per pointermove makes the transport feel broken.
+  el.scrub.addEventListener('input', () => {
+    state.scrubbing = true;
+    el.pos.textContent = tc(Number(el.scrub.value));
+  });
+  el.scrub.addEventListener('change', () => {
+    state.scrubbing = false;
+    transport.seek(Number(el.scrub.value));
+  });
+
+  el.master.addEventListener('input', () => {
+    const v = Number(el.master.value) * MASTER_CEILING;
+    graph.setMaster(v);
+    el.mastergain.textContent = v.toFixed(3);
+  });
+  el.offset.addEventListener('input', () => {
+    transport.offsetMs = Number(el.offset.value) || 0;
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && !(e.target instanceof HTMLInputElement)) {
+      e.preventDefault();
+      togglePlay();
+    }
+  });
+
+  // ---- hud + end-of-media tick --------------------------------------------
+  const traceCtx = el.trace.getContext('2d');
+  const set = (id, text, warn = false) => {
+    const node = $(id);
+    node.textContent = text;
+    node.classList.toggle('warn', warn);
+  };
+
+  function drawTrace() {
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = el.trace.clientWidth, h = el.trace.clientHeight;
+    if (el.trace.width !== Math.round(w * dpr)) {
+      el.trace.width = Math.round(w * dpr);
+      el.trace.height = Math.round(h * dpr);
+    }
+    traceCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    traceCtx.clearRect(0, 0, w, h);
+
+    const SCALE = 0.12;                          // ±120 ms full height
+    const y = (d) => h / 2 - (clamp(d, -SCALE, SCALE) / SCALE) * (h / 2 - 2);
+
+    traceCtx.strokeStyle = 'rgba(201,201,203,.2)';
+    traceCtx.lineWidth = 1;
+    traceCtx.beginPath(); traceCtx.moveTo(0, y(0)); traceCtx.lineTo(w, y(0)); traceCtx.stroke();
+
+    // solid = ±10 ms lock zone, dashed = ±40 ms acceptance budget
+    traceCtx.strokeStyle = 'rgba(201,154,85,.5)';
+    for (const d of [LOCK_S, -LOCK_S]) {
+      traceCtx.beginPath(); traceCtx.moveTo(0, y(d)); traceCtx.lineTo(w, y(d)); traceCtx.stroke();
+    }
+    traceCtx.strokeStyle = 'rgba(201,154,85,.3)';
+    traceCtx.setLineDash([2, 3]);
+    for (const d of [BUDGET_S, -BUDGET_S]) {
+      traceCtx.beginPath(); traceCtx.moveTo(0, y(d)); traceCtx.lineTo(w, y(d)); traceCtx.stroke();
+    }
+    traceCtx.setLineDash([]);
+
+    const pts = transport.stats.trace;
+    if (pts.length > 1) {
+      const cap = (TRACE_SECONDS * 1000) / DRIFT_INTERVAL_MS;
+      traceCtx.strokeStyle = '#c99a55';
+      traceCtx.lineWidth = 1.5;
+      traceCtx.beginPath();
+      pts.forEach((d, i) => {
+        const x = (i / (cap - 1)) * w;
+        i ? traceCtx.lineTo(x, y(d)) : traceCtx.moveTo(x, y(d));
+      });
+      traceCtx.stroke();
+    }
+  }
+
+  function tick() {
+    requestAnimationFrame(tick);
+
+    // end of media — detected here rather than via onended, which also fires
+    // on every teardown (see disposeSources).
+    if (transport.playing && transport.position >= duration - 0.001) transport.pause();
+
+    const pos = transport.position;
+    el.playpause.textContent = transport.playing ? 'pause' : 'play';
+    if (!state.scrubbing) {
+      el.scrub.value = String(pos);
+      el.pos.textContent = tc(pos);
+    }
+
+    set('h-state', ctx.state, ctx.state !== 'running');
+    set('h-ctx', ctx.currentTime.toFixed(3));
+    set('h-t0', transport.playing ? transport.t0.toFixed(3) : '–');
+    set('h-startoff', transport.startOffset.toFixed(3));
+    set('h-expected', transport.playing ? transport.expected.toFixed(3) : '–');
+    set('h-picture', picture.currentTime.toFixed(3));
+    set('h-fps', String(picture.fps));
+
+    set('h-latency', `${(transport.latencyComp * 1000).toFixed(1)} ms`);
+
+    const st = transport.stats;
+    const dms = transport.drift * 1000;
+    set('h-drift', `${dms >= 0 ? '+' : ''}${dms.toFixed(1)} ms`, Math.abs(transport.drift) > BUDGET_S);
+    set('h-zone', transport.zone, transport.zone === 'resync');
+    set('h-rate', picture.rate.toFixed(4), picture.rate !== 1);
+    set('h-minmax', st.samples
+      ? `${(st.min * 1000).toFixed(1)} / ${(st.max * 1000).toFixed(1)} ms` : '–');
+    set('h-absmax', st.samples ? `${(st.absMax * 1000).toFixed(1)} ms` : '–',
+      st.absMax > BUDGET_S);
+    set('h-raterange', st.samples
+      ? `${st.rateMin.toFixed(3)} – ${st.rateMax.toFixed(3)}` : '–');
+    set('h-zonetime', `${st.lockedS.toFixed(1)} / ${st.correctingS.toFixed(1)} s`);
+    set('h-resyncs', String(st.resyncs), st.resyncs > 0);
+    const breachPct = st.samples ? Math.round((st.budgetBreaches / st.samples) * 100) : 0;
+    set('h-breaches', `${breachPct}% (${st.budgetBreaches})`, st.budgetBreaches > 0);
+
+    // 0 when stopped, 4 when playing — anything else is a teardown leak
+    const n = transport.sources.length;
+    set('h-sources', String(n), n !== 0 && n !== 4);
+    set('h-master', graph.master.gain.value.toFixed(3), graph.master.gain.value > MASTER_CEILING);
+    set('h-reduction', `${graph.limiter.reduction.toFixed(1)} db`);
+    set('h-gains', STEMS.map((s) => gainCells.get(s.id).gain.value.toFixed(2)).join(' · '));
+
+    drawTrace();
+  }
+
+  $('h-gains-label').textContent = `gains ${STEMS.map((s) => s.id.slice(0, 2)).join('·')}`;
+  el.mastergain.textContent = MASTER_CEILING.toFixed(3);
+  tick();
+
+  window.__lab = { ctx, graph, picture, transport };   // for devtools assertions
+}
+
+boot().catch(fail);
+</script>
+</body>
+</html>
