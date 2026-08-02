@@ -36,19 +36,19 @@ const {
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const imageURL = new URL(withBase(image), Astro.site);
 
-/** While the site is served from the temporary /new preview subpath it is
- *  work in progress and must not be indexed.
+/** Every build is noindex unless it explicitly opts in via INDEXABLE=true
+ *  (see astro.config.mjs). Defaulting to noindex means a forgotten flag
+ *  hides a finished site rather than exposing an unfinished one.
  *
- *  Derived from BASE_URL rather than hardcoded, so it disappears by itself
- *  the moment `base` returns to "/" in astro.config.mjs. A comment saying
- *  "remember to remove this before launch" is precisely what was already
- *  missed once with `base` itself — this cannot be forgotten because there is
- *  nothing to remember.
+ *  This is deliberately NOT derived from the base path. An earlier version
+ *  tied the two together, which would have silently un-noindexed the
+ *  Cloudflare client preview the moment it was built to serve at the root —
+ *  "where is it served" and "is it ready to be found" are different questions.
  *
  *  robots.txt is NOT an option here: it is only honoured at the domain root,
- *  and everything deploys under /new, so kalodimitrov.com/new/robots.txt
+ *  and the cPanel build deploys under /new, so kalodimitrov.com/new/robots.txt
  *  would be ignored by crawlers. A meta tag works at any path. */
-const isPreviewSubpath = import.meta.env.BASE_URL.replace(/\/$/, '') !== '';
+const indexable: boolean = import.meta.env.SITE_INDEXABLE === true;
 ---
 <!doctype html>
 <html lang="en">
@@ -57,7 +57,7 @@ const isPreviewSubpath = import.meta.env.BASE_URL.replace(/\/$/, '') !== '';
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{title}</title>
   <meta name="description" content={description} />
-  {isPreviewSubpath && <meta name="robots" content="noindex, nofollow" />}
+  {!indexable && <meta name="robots" content="noindex, nofollow" />}
   <link rel="canonical" href={canonicalURL} />
   <link rel="icon" href={withBase('/favicon.svg')} />
 
