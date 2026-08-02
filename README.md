@@ -241,6 +241,15 @@ signature cue:
 Carried over from `docs/claude-code-kickoff.md` §4 and the spec's open
 questions (§15) — things this build can't resolve on its own:
 
+- [ ] **Flip `BASE` to `'/'` in `astro.config.mjs`.** One edit, three effects:
+      the site serves from the domain root instead of `/new`, the site-wide
+      `noindex, nofollow` disappears, and the sitemap starts being published
+      again. All three are derived from that one constant precisely so launch
+      cannot half-happen — do not hardcode any of them separately. Verify
+      after: every page loses `noindex` **except** `/lab/stems`, which keeps
+      its own permanently, and `sitemap-index.xml` exists without listing
+      `/lab/`.
+
 - [ ] **Brand palette sign-off.** The accent moved from the phase0-extracted
       blue (`#1982d1`) to a gold (`#c99a55`) per `docs/design/README.md`
       (v3 pass) — that gold is a design judgment call, not a live-site
