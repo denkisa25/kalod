@@ -30,3 +30,7 @@ lab/assets/stems/
 
 # jetbrains setting folder
 .idea/
+
+# CR-002: raw source media for the demo asset — kept on disk, never committed
+# or deployed. demo-50s.mp4 in public/ is generated from it.
+lab/raw/

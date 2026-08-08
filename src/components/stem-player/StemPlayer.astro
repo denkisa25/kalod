@@ -18,7 +18,7 @@ export interface Piece {
   slug: string;
   title: string;
   note?: string;
-  picture: { type: 'canvas'; duration: number };
+  picture: { type: 'canvas' | 'video'; duration: number; src?: string };
   offsetMs: number;
   fallback: string;
   stems: Stem[];
@@ -33,6 +33,11 @@ const resolved = {
   ...piece,
   fallback: withBase(piece.fallback),
   stems: piece.stems.map((s) => ({ ...s, src: withBase(s.src) })),
+  // picture.src is optional (absent for type: 'canvas') and must go through
+  // withBase too, or the video 404s under the temporary /new base
+  picture: piece.picture.src
+    ? { ...piece.picture, src: withBase(piece.picture.src) }
+    : piece.picture,
 };
 ---
 

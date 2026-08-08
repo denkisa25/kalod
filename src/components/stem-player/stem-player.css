@@ -56,13 +56,29 @@ stem-player {
   color: var(--color-meta);
 }
 
+/* Host for the picture surface. createPicture() injects either a <canvas> or
+   a <video> as .sp-surface, so the aspect box and border live here and the
+   two implementations need no styling of their own. */
 .sp-picture {
   display: block;
+  position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
   background: var(--color-bg);
   border: 1px solid var(--color-line);
   border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.sp-surface {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* contain, not cover: this is the director's frame, and CR-9's rule that
+     the player never crops applies here too. Letterboxing against the black
+     host is correct. */
+  object-fit: contain;
+  background: #000;
 }
 
 /* ------------------------------------------------------------------ loader */

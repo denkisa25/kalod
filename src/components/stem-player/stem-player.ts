@@ -8,7 +8,13 @@
  *  never has to guess the configured base path.
  */
 import { getAudioContext, isAudioSupported, resumeAudio } from '../../scripts/audio-context';
-import { CanvasPicture, timecode, type PictureSource } from './picture-source';
+import {
+  createPicture,
+  timecode,
+  VideoPicture,
+  type PictureConfig,
+  type PictureSource,
+} from './picture-source';
 import {
   BUDGET_S,
   LOCK_S,
@@ -25,13 +31,22 @@ interface PieceConfig {
   slug: string;
   title: string;
   note?: string;
-  picture: { type: 'canvas'; duration: number };
+  picture: PictureConfig;
   offsetMs: number;
   fallback: string;
   stems: StemDef[];
 }
 
 const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
+
+/** `?picture=canvas` / `?picture=video` overrides stems.json for the run.
+ *  The point is A/B-ing the same transport against a synthetic clock and a
+ *  real decoder without editing config between attempts — the canvas is the
+ *  control, since its behaviour is already characterised. */
+function pictureOverride(): 'canvas' | 'video' | null {
+  const v = new URLSearchParams(location.search).get('picture');
+  return v === 'canvas' || v === 'video' ? v : null;
+}
 
 class StemPlayerElement extends HTMLElement {
   #cfg!: PieceConfig;
@@ -96,7 +111,8 @@ class StemPlayerElement extends HTMLElement {
         </div>
         ${note ? `<p class="sp-note">${note}</p>` : ''}
 
-        <canvas class="sp-picture" part="picture"></canvas>
+        <!-- host only: createPicture() injects the canvas or video surface -->
+        <div class="sp-picture" part="picture"></div>
 
         <div class="sp-loader" hidden>
           <div class="sp-bar"><i></i></div>
@@ -303,10 +319,16 @@ class StemPlayerElement extends HTMLElement {
       this.#buffers = await decodeStems(ctx, stems, arrays);
 
       this.#graph = new StemGraph(ctx, stems);
-      this.#picture = new CanvasPicture(
-        els.picture as HTMLCanvasElement,
-        this.#buffers.get(stems[0].id)!.duration,
-      );
+
+      // Duration comes from the decoded buffers, never from the picture —
+      // the audio is the clock master, so its length is the piece's length.
+      const pictureCfg: PictureConfig = {
+        ...this.#cfg.picture,
+        type: pictureOverride() ?? this.#cfg.picture.type,
+        duration: this.#buffers.get(stems[0].id)!.duration,
+      };
+      this.#picture = createPicture(pictureCfg, els.picture);
+      this.dataset.picture = pictureCfg.type;
       this.#transport = new Transport(
         ctx,
         this.#graph,
@@ -380,7 +402,15 @@ class StemPlayerElement extends HTMLElement {
      asserting on rendered text. */
   get debug() {
     const tr = this.#transport;
+    const pic = this.#picture;
+    const vid = pic instanceof VideoPicture ? pic : null;
     return {
+      pictureType: this.dataset.picture ?? null,
+      pictureTime: pic?.currentTime ?? null,
+      // readyState < 3 (HAVE_FUTURE_DATA) mid-playback means the element is
+      // starving — drift about to grow for a reason that is not the corrector
+      videoReadyState: vid?.readyState ?? null,
+      videoRate: vid?.rate ?? null,
       playing: tr?.playing ?? false,
       sources: tr?.sources.length ?? 0,
       position: tr?.position ?? 0,

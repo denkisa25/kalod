@@ -106,7 +106,13 @@ export class StemGraph {
   }
 }
 
-export type Zone = 'lock' | 'correct' | 'resync';
+export type Zone = 'lock' | 'correct' | 'resync' | 'stall';
+
+/** Minimum gap between hard resyncs. On HLS every resync costs a rebuffer, so
+ *  a corrector allowed to fire one per tick turns a recoverable stall into a
+ *  permanently broken player. Observed for real: a throttled background tab
+ *  produced 38 consecutive resyncs and never recovered. */
+const RESYNC_COOLDOWN_S = 2.0;
 
 /** §2.7 asks whether the rate settles or oscillates. Instrumented so the
  *  answer is measured rather than eyeballed. */
@@ -117,6 +123,7 @@ export class DriftStats {
   absMax = 0;
   lockedS = 0;
   correctingS = 0;
+  stalledS = 0;
   resyncs = 0;
   budgetBreaches = 0;
   rateMin = 1;
@@ -132,6 +139,7 @@ export class DriftStats {
     this.absMax = 0;
     this.lockedS = 0;
     this.correctingS = 0;
+    this.stalledS = 0;
     this.resyncs = 0;
     this.budgetBreaches = 0;
     this.rateMin = 1;
@@ -146,6 +154,7 @@ export class DriftStats {
     this.absMax = Math.max(this.absMax, Math.abs(drift));
     if (Math.abs(drift) > BUDGET_S) this.budgetBreaches++;
     if (zone === 'resync') this.resyncs++;
+    else if (zone === 'stall') this.stalledS += DRIFT_INTERVAL_MS / 1000;
     else if (zone === 'lock') this.lockedS += DRIFT_INTERVAL_MS / 1000;
     else this.correctingS += DRIFT_INTERVAL_MS / 1000;
     this.rateMin = Math.min(this.rateMin, rate);
@@ -173,6 +182,9 @@ export class Transport {
   #gen = 0;
   #driftTimer = 0;
   #pictureStartTimer = 0;
+  #lastPictureTime = -1;
+  #lastResyncAt = -Infinity;
+  #stalling = false;
 
   constructor(
     private ctx: AudioContext,
@@ -223,6 +235,18 @@ export class Transport {
     let offset = clamp(atOffset, 0, this.duration);
     if (this.duration - offset < 0.05) offset = 0; // at the tail → from the top
 
+    /* Park the picture on the target frame and wait for it to be playable
+       BEFORE t0 is taken. Ordering matters: t0 is a promise to the audio
+       clock, and anything slow happening after it is committed shows up as
+       startup drift. A canvas resolves instantly, so this costs nothing
+       there; a video may take hundreds of milliseconds to seek and decode,
+       and that used to land entirely on the corrector. */
+    this.picture.pause();
+    this.picture.seek(offset);
+    this.picture.setRate(1);
+    await this.picture.ready();
+    if (this.#gen !== myGen) return; // superseded while the picture buffered
+
     const t0 = this.ctx.currentTime + LEAD;
     for (const s of this.stems) {
       const src = new AudioBufferSourceNode(this.ctx, { buffer: this.buffers.get(s.id)! });
@@ -235,12 +259,15 @@ export class Transport {
     this.startOffset = offset;
     this.playing = true;
     this.stats.reset();
+    // stall/resync bookkeeping is per-run, not per-lifetime
+    this.#lastPictureTime = -1;
+    this.#lastResyncAt = -Infinity;
+    this.#stalling = false;
 
-    this.picture.seek(offset);
-    this.picture.setRate(1);
     this.rate = 1;
     // The picture must not start before t0. The generation check stops a
     // pause issued inside the 150 ms lead from being undone by this timer.
+    // (seek/ready already happened above, before t0 was taken.)
     this.#pictureStartTimer = window.setTimeout(
       () => {
         if (this.#gen === myGen) void this.picture.play();
@@ -341,16 +368,40 @@ export class Transport {
     let rate = 1;
     let zone: Zone = 'lock';
 
+    // Has the picture moved at all since the previous tick? A picture that is
+    // not advancing is stalled — a rebuffer, a dead decoder, a throttled
+    // background tab. Seeking it cannot help, and on HLS each attempt costs
+    // another rebuffer, so the correct response is to wait, not to try harder.
+    const pic = this.picture.currentTime;
+    const advanced = Math.abs(pic - this.#lastPictureTime) > 1e-3;
+    this.#lastPictureTime = pic;
+
     if (mag >= RESYNC_S) {
-      zone = 'resync';
-      const target = clamp(this.expected, 0, this.duration);
-      console.warn(
-        `[stem-player] hard resync: drift ${(drift * 1000).toFixed(0)} ms exceeds ` +
-          `${RESYNC_S * 1000} ms — seeking picture to ${target.toFixed(3)}s`,
-      );
-      this.picture.seek(target);
-      this.picture.setRate(1);
+      const cooledDown = this.ctx.currentTime - this.#lastResyncAt >= RESYNC_COOLDOWN_S;
+      if (!advanced || !cooledDown) {
+        zone = 'stall';
+        if (!this.#stalling) {
+          this.#stalling = true;
+          console.warn(
+            `[stem-player] picture stalled at ${pic.toFixed(3)}s (drift ` +
+              `${(drift * 1000).toFixed(0)} ms) — holding off resync until it moves again`,
+          );
+        }
+      } else {
+        zone = 'resync';
+        this.#stalling = false;
+        const target = clamp(this.expected, 0, this.duration);
+        console.warn(
+          `[stem-player] hard resync: drift ${(drift * 1000).toFixed(0)} ms exceeds ` +
+            `${RESYNC_S * 1000} ms — seeking picture to ${target.toFixed(3)}s`,
+        );
+        this.picture.seek(target);
+        this.picture.setRate(1);
+        this.#lastResyncAt = this.ctx.currentTime;
+        this.#lastPictureTime = target;
+      }
     } else if (mag >= LOCK_S) {
+      this.#stalling = false;
       zone = 'correct';
       rate = clamp(1 - drift / CORRECT_TAU, 1 - MAX_RATE_DEV, 1 + MAX_RATE_DEV);
       this.picture.setRate(rate);

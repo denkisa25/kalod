@@ -5,18 +5,52 @@
  *  stem-engine.ts may reference CanvasPicture or any canvas concept.
  *
  *  Note what is deliberately NOT on this interface: duration, and any notion
- *  of readiness or buffering. The transport owns duration (it comes from the
+ *  of MID-PLAYBACK buffering. The transport owns duration (it comes from the
  *  decoded buffers, which are the clock master), and a VideoPicture that
- *  stalls is handled by the drift loop's resync zone rather than by the
- *  engine asking the picture how it feels.
+ *  stalls while running is handled by the drift loop's resync zone rather
+ *  than by the engine asking the picture how it feels.
+ *
+ *  `ready()` is the one exception, and only covers startup — see the note on
+ *  it below for why a canvas never needed it and a video does.
  */
 export interface PictureSource {
   readonly currentTime: number;
+  /** Resolves when the picture can start from its current position without
+   *  immediately stalling.
+   *
+   *  DEVIATION from CR-002 §1, which does not list this. §1's interface was
+   *  written when the only implementation was a canvas, which is always ready,
+   *  so the gap never surfaced. A real video element is not: scheduling audio
+   *  against an unbuffered video makes the picture start late by however long
+   *  it takes to decode the first frames, and the corrector then has to claw
+   *  that back at the top of every playback.
+   *
+   *  Deliberately still no readiness signal for MID-playback stalls — those
+   *  stay the drift loop's problem via the resync zone, so the engine never
+   *  has to ask the picture how it feels once running. */
+  ready(): Promise<void>;
   play(): Promise<void>;
   pause(): void;
   seek(t: number): void;
   setRate(r: number): void; // no-op for canvas-with-no-media; real for video
   dispose(): void;
+}
+
+export interface PictureConfig {
+  type: 'canvas' | 'video';
+  duration: number;
+  src?: string;
+}
+
+/** CR-002 §1 — the one call that changes when Cloudflare Stream arrives.
+ *  A `VideoPicture` fed an HLS manifest through hls.js slots in here; nothing
+ *  in stem-engine.ts is touched. */
+export function createPicture(cfg: PictureConfig, host: HTMLElement): PictureSource {
+  if (cfg.type === 'video') {
+    if (!cfg.src) throw new Error('picture.type "video" requires picture.src');
+    return new VideoPicture(host, cfg.src, cfg.duration);
+  }
+  return new CanvasPicture(host, cfg.duration);
 }
 
 const PICTURE_FPS = 25; // picture frame counter / flash width
@@ -62,10 +96,14 @@ export class CanvasPicture implements PictureSource {
   static readonly FLASH = '#fff';
   #tok = { accent: '#fff', heading: '#fff', ink: '#fff' };
 
-  constructor(
-    private canvas: HTMLCanvasElement,
-    public readonly duration: number,
-  ) {
+  private canvas: HTMLCanvasElement;
+
+  constructor(host: HTMLElement, public readonly duration: number) {
+    const canvas = document.createElement('canvas');
+    canvas.className = 'sp-surface';
+    host.replaceChildren(canvas);
+    this.canvas = canvas;
+
     this.#g = canvas.getContext('2d');
     const cs = getComputedStyle(canvas);
     const tok = (name: string, fallback: string) =>
@@ -88,6 +126,11 @@ export class CanvasPicture implements PictureSource {
   }
   get fps(): number {
     return this.#fps;
+  }
+
+  /** Always ready — a canvas has nothing to buffer. */
+  ready(): Promise<void> {
+    return Promise.resolve();
   }
 
   play(): Promise<void> {
@@ -201,5 +244,114 @@ export class CanvasPicture implements PictureSource {
     g.moveTo(headX, y - h * 0.06);
     g.lineTo(headX, y + h * 0.06);
     g.stroke();
+  }
+}
+
+/** Real picture, driven by a muted <video> element.
+ *
+ *  Muted is not a preference — it is what keeps CR-002 §5 cheap. No
+ *  createMediaElementSource means no CORS tainting of the element, and it
+ *  means iOS can fall back to native HLS at no cost. The audio graph is the
+ *  clock master; this element never contributes a sample.
+ *
+ *  The Cloudflare Stream swap replaces the `src` assignment with an hls.js
+ *  attach. Nothing else in this class, and nothing at all in stem-engine.ts,
+ *  needs to change.
+ */
+export class VideoPicture implements PictureSource {
+  #video: HTMLVideoElement;
+  #readyTimeoutMs = 8000;
+
+  constructor(host: HTMLElement, src: string, public readonly duration: number) {
+    const v = document.createElement('video');
+    v.className = 'sp-surface';
+    v.muted = true;
+    v.defaultMuted = true;
+    v.playsInline = true; // iOS: play in place rather than taking over fullscreen
+    v.preload = 'auto';
+    v.controls = false;
+    v.disablePictureInPicture = true;
+    v.src = src;
+    host.replaceChildren(v);
+    this.#video = v;
+  }
+
+  get currentTime(): number {
+    return this.#video.currentTime;
+  }
+  get rate(): number {
+    return this.#video.playbackRate;
+  }
+  /** Exposed so the HUD can show that a stall is the picture's fault, not the
+   *  corrector's. readyState < HAVE_FUTURE_DATA during playback means the
+   *  element is starving and drift is about to grow. */
+  get readyState(): number {
+    return this.#video.readyState;
+  }
+  get element(): HTMLVideoElement {
+    return this.#video;
+  }
+
+  /** Resolves once the element can play forward from where it is sitting.
+   *
+   *  Times out rather than hanging: a picture that never becomes ready must
+   *  not deadlock the transport. Starting late and letting the corrector pull
+   *  it in is strictly better than a play button that does nothing. */
+  ready(): Promise<void> {
+    const v = this.#video;
+    if (v.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) return Promise.resolve();
+
+    return new Promise<void>((resolve) => {
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        v.removeEventListener('canplay', finish);
+        v.removeEventListener('error', finish);
+        resolve();
+      };
+      const timer = setTimeout(() => {
+        console.warn(
+          `[stem-player] picture not ready after ${this.#readyTimeoutMs} ms ` +
+            `(readyState ${v.readyState}) — starting anyway; the drift loop will correct.`,
+        );
+        finish();
+      }, this.#readyTimeoutMs);
+      v.addEventListener('canplay', finish);
+      v.addEventListener('error', finish);
+    });
+  }
+
+  async play(): Promise<void> {
+    try {
+      await this.#video.play();
+    } catch (err) {
+      // A muted, playsinline element is not subject to the autoplay gate, so
+      // this is a real failure (decode error, source gone) rather than policy.
+      console.error('[stem-player] picture failed to start', err);
+    }
+  }
+
+  pause(): void {
+    this.#video.pause();
+  }
+
+  seek(t: number): void {
+    this.#video.currentTime = Math.min(Math.max(t, 0), this.duration);
+  }
+
+  /** The corrector's only lever. Range is well inside what every engine
+   *  supports, and with the element muted there is no pitch artefact to
+   *  worry about. */
+  setRate(r: number): void {
+    this.#video.playbackRate = r;
+  }
+
+  dispose(): void {
+    this.#video.pause();
+    this.#video.removeAttribute('src');
+    this.#video.load(); // releases the decoder and any buffered data
+    this.#video.remove();
   }
 }
