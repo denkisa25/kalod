@@ -28,7 +28,9 @@ const {
   title,
   description = 'kaloyan dimitrov — music + sound post. composer, sound designer, mix engineer.',
   hasOpener = false,
-  image = '/posters/viktoria-trailer-2.jpg',
+  // CR-003 — points at the generated 1280px fallback (scripts/optimize-posters.mjs);
+  // the pre-optimization path this used to be no longer exists.
+  image = '/posters/opt/viktoria-trailer-2-1280.jpg',
   ogType = 'website',
   hasVideo = false,
 } = Astro.props;

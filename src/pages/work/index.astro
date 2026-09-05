@@ -1,5 +1,4 @@
 ---
-import { Image } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
@@ -8,6 +7,7 @@ import RoleFilterBar from '../../components/RoleFilterBar.astro';
 import DetailOverlay from '../../components/DetailOverlay.astro';
 import { getProjects } from '../../lib/projects';
 import { getVideoSource } from '../../lib/video-source';
+import { posterSources } from '../../lib/posters';
 import { pad, roleLine } from '../../lib/format';
 import { withBase } from '../../lib/url';
 
@@ -56,7 +56,16 @@ const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
               aria-controls={`workDetail-${i}`}
             >
               <span class="thumb">
-                <Image src={withBase(p.poster)} alt="" width={160} height={90} />
+                <img
+                  src={posterSources(p.slug).jpeg}
+                  srcset={posterSources(p.slug).avif}
+                  sizes="160px"
+                  alt=""
+                  width={160}
+                  height={90}
+                  loading="lazy"
+                  decoding="async"
+                />
               </span>
               <span class="n">{pad(i + 1)}</span>
               <span class="t">{p.title}</span>
@@ -81,7 +90,17 @@ const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
         return (
           <div class="gallery-tile" data-idx={i} data-roles={p.roles.join(',')}>
             <div class="tile-media">
-              <Image class="frame1" src={withBase(p.poster)} alt="" width={700} height={394} loading="lazy" />
+              <img
+                class="frame1"
+                src={posterSources(p.slug).jpeg}
+                srcset={posterSources(p.slug).avif}
+                sizes="(min-width: 900px) 33vw, (min-width: 600px) 50vw, 100vw"
+                alt=""
+                width={700}
+                height={394}
+                loading="lazy"
+                decoding="async"
+              />
               {frames && <img class="frame2" src={frames[1]} alt="" loading="lazy" />}
             </div>
             <div class="tile-scrim"></div>

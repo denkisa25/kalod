@@ -1,9 +1,8 @@
-import { readdirSync } from 'node:fs';
-import { join } from 'node:path';
 import rawProjects from '../../phase0/extraction/projects.json';
 import creditsBySlug from '../data/credits.json';
 import cloudflareStreamMap from '../data/cloudflare-stream-map.json';
 import featuredConfig from '../data/featured.json';
+import posterManifest from '../data/poster-manifest.json' with { type: 'json' };
 import { parseVideoUrl, type VideoRef } from './video-source';
 import { pickFeatured } from './featured';
 import { ROLE_LABELS, type Role } from './format';
@@ -30,13 +29,19 @@ export interface Project {
   credits: Credit[];
 }
 
-const postersDir = join(process.cwd(), 'public/posters');
-const posterFiles = readdirSync(postersDir);
-
+/** CR-003 — Project.poster stays a plain path string (og:image and schema.org
+ *  thumbnailUrl both need one) and now points at the generated 1280px JPEG
+ *  fallback. Anything rendering an actual <picture> calls posterSources(slug)
+ *  from ./posters instead. Throwing here keeps a missing variant a build
+ *  failure rather than a broken image in production. */
 function resolvePoster(slug: string): string {
-  const file = posterFiles.find((f) => f.replace(/\.(jpg|jpeg|png|webp)$/i, '') === slug);
-  if (!file) throw new Error(`No poster found for project slug "${slug}"`);
-  return `/posters/${file}`;
+  if (!(posterManifest as Record<string, unknown>)[slug]) {
+    throw new Error(
+      `No poster variants for project slug "${slug}" — add the source to ` +
+        `src/assets/posters/ and run: npm run optimize:posters`,
+    );
+  }
+  return `/posters/opt/${slug}-1280.jpg`;
 }
 
 /** Cloudflare Stream override (docs/video-migration-guide.md) — a slug

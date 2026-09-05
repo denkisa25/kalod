@@ -6,6 +6,7 @@ import DetailOverlay from '../components/DetailOverlay.astro';
 import Opener from '../components/Opener.astro';
 import RoleFilterBar from '../components/RoleFilterBar.astro';
 import { getFeaturedProjects } from '../lib/projects';
+import { posterSources } from '../lib/posters';
 import { pad, roleLine } from '../lib/format';
 import { withBase } from '../lib/url';
 
@@ -36,6 +37,12 @@ const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
  *  things that depend on it (body.ready, the island itself, the footer replay
  *  button) can never disagree with each other. */
 const showOpener: boolean = import.meta.env.SITE_OPENER === true;
+
+// CR-003 — built once here rather than calling posterSources() from inside the
+// template: it throws on a missing slug, and doing that in a frontmatter loop
+// makes a missing poster a build error with a clear stack, not a mid-render
+// failure buried in JSX.
+const posters = Object.fromEntries(projects.map((p) => [p.slug, posterSources(p.slug)]));
 ---
 <BaseLayout
   title="kaloyan dimitrov | music + sound post"
@@ -65,15 +72,19 @@ const showOpener: boolean = import.meta.env.SITE_OPENER === true;
       {projects.map((p, i) => (
         <section class="cue" id={`cue-${i}`} data-idx={i} data-roles={p.roles.join(',')}>
           <div class="bgwrap">
-            <img
-              class="poster"
-              src={withBase(p.poster)}
-              alt={p.title}
-              width="1920"
-              height="1080"
-              loading={i === 0 ? 'eager' : 'lazy'}
-              fetchpriority={i === 0 ? 'high' : 'auto'}
-            />
+            <picture>
+              <source type="image/avif" srcset={posters[p.slug].avif} sizes="100vw" />
+              <img
+                class="poster"
+                src={posters[p.slug].jpeg}
+                alt={p.title}
+                width="1920"
+                height="1080"
+                loading={i === 0 ? 'eager' : 'lazy'}
+                fetchpriority={i === 0 ? 'high' : 'auto'}
+                decoding={i === 0 ? 'sync' : 'async'}
+              />
+            </picture>
             <!-- Touch devices skip the background loop entirely
                  (skipBackgroundVideo() in video-layer.ts — YouTube's iframe
                  autoplay is unreliable there, see CR-002) rather than show

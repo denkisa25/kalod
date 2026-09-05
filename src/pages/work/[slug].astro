@@ -3,6 +3,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import { getProjects } from '../../lib/projects';
+import { posterSources } from '../../lib/posters';
 import { roleLine } from '../../lib/format';
 import { withBase } from '../../lib/url';
 
@@ -55,7 +56,17 @@ const schema = {
     <div class="project-detail">
       <div class="kind">{roleLine(project.roles)}</div>
       <h1>{project.title}</h1>
-      <img class="poster-still" src={withBase(project.poster)} alt={project.title} width="1600" height="900" />
+      <img
+        class="poster-still"
+        src={posterSources(project.slug).jpeg}
+        srcset={posterSources(project.slug).avif}
+        sizes="(min-width: 1000px) 1000px, 100vw"
+        alt={project.title}
+        width="1600"
+        height="900"
+        loading="lazy"
+        decoding="async"
+      />
       <div class="cols">
         <div class="col"><div class="lbl">role</div><b>{roleLine(project.roles)}</b></div>
         {project.client && <div class="col"><div class="lbl">client</div><b>{project.client}</b></div>}

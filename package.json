@@ -11,7 +11,8 @@
     "preview": "astro preview",
     "astro": "astro",
     "test": "node --test --experimental-strip-types \"src/**/*.test.ts\"",
-    "check:featured": "node scripts/check-featured.mjs"
+    "check:featured": "node scripts/check-featured.mjs",
+    "optimize:posters": "node scripts/optimize-posters.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",

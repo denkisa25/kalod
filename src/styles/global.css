@@ -473,6 +473,11 @@ body.ready main { opacity: 1; }
    even though the class is applied correctly. */
 .work-row.hidden, .gallery-tile.hidden { display: none; }
 .cue .bgwrap { position: absolute; inset: 0; background: #000; }
+/* CR-003 — <picture> is an inline box that would otherwise sit between
+   .bgwrap and the absolutely-positioned .poster and break its containing
+   block. display:contents removes it from layout while keeping the source
+   selection it exists for. */
+.bgwrap picture { display: contents; }
 .cue .poster {
   position: absolute;
   top: -4%;
