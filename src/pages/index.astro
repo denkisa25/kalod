@@ -31,12 +31,17 @@ const cueData = projects.map((p, i) => ({
 }));
 // guard against a stray "</script>" in extracted content prematurely closing the tag
 const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
+
+/** CR-003 — off by default; see astro.config.mjs. Read once here so the three
+ *  things that depend on it (body.ready, the island itself, the footer replay
+ *  button) can never disagree with each other. */
+const showOpener: boolean = import.meta.env.SITE_OPENER === true;
 ---
 <BaseLayout
   title="kaloyan dimitrov | music + sound post"
   description="composer, sound designer and mix engineer working across film, television and advertising. music, mix and sound design for sundance-selected features, tv branding and international campaigns."
   image={projects[0].poster}
-  hasOpener
+  hasOpener={showOpener}
   hasVideo
 >
   <Header hero dimNavWhileHero />
@@ -152,8 +157,8 @@ const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
   </main>
 
   <DetailOverlay />
-  <Footer showReplay />
-  <Opener />
+  <Footer showReplay={showOpener} />
+  {showOpener && <Opener />}
 
   <script type="application/json" id="cue-data" set:html={cueDataJson} is:inline></script>
   <script>
@@ -162,6 +167,11 @@ const cueDataJson = JSON.stringify(cueData).replace(/</g, '\\u003c');
     import { initAutoArmSound } from '../scripts/sound-control';
     initFeedInteractions();
     initVideoLayer();
-    initAutoArmSound();
+    // CR-003: auto-arm belongs to the opener flow only. It existed to soften
+    // the opener's explicit "enter with sound"/"enter quietly" choice; without
+    // that choice it would turn audio on during an ordinary scroll, and the
+    // header affordance would stop nudging without ever being clicked. This is
+    // a build-time literal, so the call is tree-shaken out of the default build.
+    if (import.meta.env.SITE_OPENER === true) initAutoArmSound();
   </script>
 </BaseLayout>

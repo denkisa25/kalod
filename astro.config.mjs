@@ -30,6 +30,22 @@ const BASE = process.env.SITE_BASE || '/new';
 // default, which is the safe direction to fail in.
 const INDEXABLE = process.env.INDEXABLE === 'true';
 
+// WHETHER THIS BUILD SHOWS THE OPENER.
+//
+// Off by default. The launch direction (CR-003) is that the site opens
+// straight onto the cue feed: no choice screen, no sound gate, one unmute
+// affordance in the header instead. The opener island is NOT deleted — it is
+// CR-001-approved work (choice screen, Web Audio cue, analyser-driven canvas,
+// outro into cue 01) and this flag is how it comes back:
+//
+//   OPENER=on npm run build
+//
+// Same shape as SITE_BASE/INDEXABLE above, and same reason: one constant that
+// several derived behaviours read, so a build can never half-happen. Tag
+// v0.2.1-opener is the belt-and-braces restore point if this flag ever isn't
+// enough.
+const OPENER = process.env.OPENER === 'on';
+
 // https://astro.build/config
 export default defineConfig({
   output: 'static',
@@ -49,6 +65,7 @@ export default defineConfig({
   vite: {
     define: {
       'import.meta.env.SITE_INDEXABLE': JSON.stringify(INDEXABLE),
+      'import.meta.env.SITE_OPENER': JSON.stringify(OPENER),
     },
   },
 });

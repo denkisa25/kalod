@@ -35,6 +35,15 @@ const openerPhoto = await getImage({ src: openerPhotoSrc, width: 1920, format: '
 </div>
 
 <script>
-  import { initOpener } from '../scripts/opener/index';
-  initOpener();
+  /* CR-003 — the opener is build-flagged off by default. This guard is NOT
+     belt-and-braces for the `{showOpener && <Opener />}` check in index.astro:
+     Astro hoists a component's script into the page bundle based on the static
+     import, not on whether the component actually rendered, so without this the
+     whole engine (canvas, Web Audio cue, timeline, colors — ~12KB) shipped to
+     every visitor as dead code. SITE_OPENER is a build-time literal, so when it
+     is false Rollup eliminates this branch and the dynamic import with it. */
+  if (import.meta.env.SITE_OPENER === true) {
+    const { initOpener } = await import('../scripts/opener/index');
+    initOpener();
+  }
 </script>
