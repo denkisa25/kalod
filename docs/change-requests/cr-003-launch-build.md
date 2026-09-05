@@ -65,7 +65,7 @@ Every task's requirements implicitly include this section.
   Chrome DevTools trace of the built site:** LCP < 2.5s, CLS ≈ 0, initial JS
   < 80 KB gzip. Baseline before this plan: LCP 1.3s, CLS 0.01, JS ~9.8 KB gzip.
 - **Build must pass at the end of every task:** `SITE_BASE=/ npm run build`,
-  expected `54 page(s) built`.
+  expected `53 page(s) built` (54 on the stem-player branch, which adds /lab/stems).
 - **Commit after every task.** Never commit to `main` directly; this plan runs
   on a `launch-build` branch.
 
@@ -203,6 +203,32 @@ Replace the `<Footer showReplay />` and `<Opener />` lines with:
   {showOpener && <Opener />}
 ```
 
+**This conditional render is necessary but NOT sufficient**, which was only
+found by running Step 6 properly. Astro hoists a component's `<script>` into the
+page bundle from the **static import**, not from whether the component rendered
+— so the markup disappears while the entire opener engine still ships as dead
+code. `src/components/Opener.astro` must also guard its own script:
+
+```astro
+<script>
+  /* CR-003 — the opener is build-flagged off by default. This guard is NOT
+     belt-and-braces for the `{showOpener && <Opener />}` check in index.astro:
+     Astro hoists a component's script into the page bundle based on the static
+     import, not on whether the component actually rendered, so without this the
+     whole engine (canvas, Web Audio cue, timeline, colors) shipped to every
+     visitor as dead code. SITE_OPENER is a build-time literal, so when it is
+     false Rollup eliminates this branch and the dynamic import with it. */
+  if (import.meta.env.SITE_OPENER === true) {
+    const { initOpener } = await import('../scripts/opener/index');
+    initOpener();
+  }
+</script>
+```
+
+The dynamic `await import()` matters: a static top-level import inside a dead
+branch is only removed if Rollup can prove the module is side-effect free, which
+is not guaranteed. A dynamic import in an eliminated branch always goes.
+
 And change the client script block's auto-arm call to be conditional — with the
 opener gone there is no "enter with sound" / "enter quietly" choice, so arming
 sound on the first stray scroll would put audio on a page the visitor never
@@ -253,13 +279,27 @@ SITE_BASE=/ npm run build
 
 - [ ] **Step 6: Confirm the opener JS actually left the bundle**
 
+**Do not grep for a class or function name** — `OpenerCanvasEngine` and
+`buildCue` are minified away and match nothing in *either* build, so that check
+passes for the wrong reason. Grep for a string literal that survives
+minification, and measure the bundle:
+
 ```bash
-grep -rl "OpenerCanvasEngine\|buildCue" dist/_astro/ || echo "PASS: opener engine not bundled"
-du -sh dist/_astro/
+SITE_BASE=/ npm run build >/dev/null 2>&1
+echo -n "opener code in default bundle: "; grep -rl 'kd-opener-seen' dist/_astro/ 2>/dev/null | wc -l
+find dist/_astro -name '*.js' -exec sh -c 'gzip -c "$1" | wc -c' _ {} \; | awk '{s+=$1} END {print "  JS gzip: " s " bytes"}'
+
+OPENER=on SITE_BASE=/ npm run build >/dev/null 2>&1
+echo -n "opener code in OPENER=on bundle: "; grep -rl 'kd-opener-seen' dist/_astro/ 2>/dev/null | wc -l
+find dist/_astro -name '*.js' -exec sh -c 'gzip -c "$1" | wc -c' _ {} \; | awk '{s+=$1} END {print "  JS gzip: " s " bytes"}'
+
+SITE_BASE=/ npm run build >/dev/null 2>&1   # leave dist in the default state
 ```
 
-Expected: `PASS`. If the engine is still bundled, the `{showOpener && ...}`
-guard was written as a runtime `hidden` instead of conditional rendering.
+**Measured result:** 0 files in the default build, 1 with `OPENER=on`; raw JS
+30,647 -> 18,375 bytes, gzip **7.03 KB with the opener off against 12.60 KB with
+it on**. If the default build still reports 1, the `Opener.astro` script guard
+in Step 3 is missing and the engine is shipping dead.
 
 - [ ] **Step 7: Commit**
 
@@ -720,7 +760,7 @@ node -e "const m=require('fs').readFileSync('dist/index.html','utf8');console.lo
 ```
 
 Expected: 5 tests pass; `check:featured` reports 10 cues, 0 on Stream, the
-advisory line, exit 0; build reports `54 page(s) built`; the 10 titles printed
+advisory line, exit 0; build reports `53 page(s) built`; the 10 titles printed
 match the order in `featured.json`, starting with `viktoria /trailer/`.
 
 - [ ] **Step 10: Verify the guard actually guards**
@@ -1255,7 +1295,7 @@ git diff --stat -- src/styles/tokens.css
 grep -rInE '#[0-9a-fA-F]{3,8}\b' src --include=*.astro --include=*.ts --include=*.css | grep -v 'tokens.css'
 ```
 
-Expected: 8 tests pass; check-featured exits 0 with its advisory; `54 page(s) built`;
+Expected: 8 tests pass; check-featured exits 0 with its advisory; `53 page(s) built`;
 both token-guard commands print nothing.
 
 - [ ] **Step 2: Performance trace against the built site**
@@ -1640,7 +1680,7 @@ grep -rInE '#[0-9a-fA-F]{3,8}\b' src --include=*.astro --include=*.ts --include=
 ```
 
 Expected: all tests pass; `PASS: every home cue is served from cloudflare stream.`;
-`54 page(s) built`; both guard commands silent.
+`53 page(s) built`; both guard commands silent.
 
 - [ ] **Step 2: Performance trace, throttled**
 
@@ -1780,6 +1820,20 @@ MSG
   Untouched by this plan; `/lab/stems` keeps its permanent noindex through launch.
 - **Cloudflare Access on the live domain.** Still blocked on moving DNS to
   Cloudflare. Not required for launch, since launch is deliberately indexable.
+- **Adaptive bitrate on Stream.** `scripts/upload-to-cloudflare-stream.mjs`
+  records `/downloads/default.mp4` — one progressive file, no ABR ladder, so a
+  visitor on a weak connection waits for the same bytes as one on fibre. Stream
+  serves an HLS manifest for the same asset; switching to it means hls.js on
+  non-Safari (Safari and iOS play HLS natively) behind the existing
+  `CloudflareStreamSource`, which is a provider-level change and touches no
+  layout. The custom CR-8 transport keeps working either way, since
+  `native-video-player.ts` adapts the same `<video>` element. Worth doing once
+  the ten are live and there is real playback data to justify it — not before.
+- **Pre-existing TOKEN-GUARD violations, not introduced by CR-003.**
+  `src/styles/global.css` lines 475, 926 and 933 use a literal `#000` (on
+  `.cue .bgwrap` and `#player video`) and `src/scripts/opener/canvas-engine.ts:97`
+  uses `#fff`. Session 9 fixed the same class of drift on `#detail` and missed
+  these. They belong in a cleanup pass, not in a launch task.
 - **`viktoria-trailer-2`'s poster is portrait (841×1200)** and leads the home
   feed full-bleed. Needs a landscape still from the trailer; see Task 4.
 - **Real bio, portrait, phone, socials; brand palette sign-off; captions/VTT.**
