@@ -3,7 +3,9 @@ import { join } from 'node:path';
 import rawProjects from '../../phase0/extraction/projects.json';
 import creditsBySlug from '../data/credits.json';
 import cloudflareStreamMap from '../data/cloudflare-stream-map.json';
+import featuredConfig from '../data/featured.json';
 import { parseVideoUrl, type VideoRef } from './video-source';
+import { pickFeatured } from './featured';
 import { ROLE_LABELS, type Role } from './format';
 
 export type { Role };
@@ -113,8 +115,21 @@ export function getProjects(): Project[] {
   return [...projectsCache];
 }
 
+/** CR-003 — an explicit ordered list from src/data/featured.json when one is
+ *  configured, otherwise the historical "10 most recent featured: true". The
+ *  fallback is kept deliberately: emptying order[] restores the old behaviour
+ *  without a code change, which is the cheap way to A/B the feed with the
+ *  client. */
 export function getFeaturedProjects(limit = 10): Project[] {
-  return getProjects()
+  const all = getProjects();
+  const order = (featuredConfig as { order: string[] }).order;
+
+  if (order.length > 0) {
+    const bySlug = new Map(all.map((p) => [p.slug, p]));
+    return pickFeatured(order, new Set(bySlug.keys()), limit).map((slug) => bySlug.get(slug)!);
+  }
+
+  return all
     .filter((p) => p.featured)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, limit);

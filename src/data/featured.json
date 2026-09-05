@@ -1,0 +1,15 @@
+{
+  "note": "CR-003 — the home cue feed, in order. Every slug MUST be one of the client's own-channel uploads (see the 29-video table in docs/video-migration-guide.md) so it can be served from Cloudflare Stream as a native <video>. A third-party-channel slug here would silently keep the iOS autoplay failure from cr-002-mobile-playback-qa.md. Run `npm run check:featured` after editing. An empty order[] falls back to the old date sort. This file is the intended data source for a future admin panel.",
+  "order": [
+    "viktoria-trailer-2",
+    "btv-tv-talent-show",
+    "btv-action-id-car",
+    "btv-comedy",
+    "btv-action-robot",
+    "btv-comedy-the-cool-cre",
+    "so-independent-ii-2013-promo-trailer",
+    "tikves",
+    "devin-transparency-tvc",
+    "boss-explosion"
+  ]
+}
