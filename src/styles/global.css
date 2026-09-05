@@ -1485,3 +1485,55 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
      is slow to run or fails */
   #opener { display: none; }
 }
+
+/* ── CR-003 — the unmute nudge ────────────────────────────────────────────
+   With the opener build-flagged off there is no "enter with sound" screen, so
+   the header control is the only place the site can ask to be heard. It is
+   allowed to be conspicuous for exactly as long as the question is unanswered.
+
+   The state is body.sound-unset — "no choice made this session" — NOT "sound is
+   off". Someone who deliberately muted has answered; re-nudging them would be
+   nagging. sound-control.ts clears the class on either answer. */
+@keyframes sound-nudge {
+  0%, 100% { transform: scale(1);    opacity: 0.55; }
+  50%      { transform: scale(1.16); opacity: 1; }
+}
+body.sound-unset #soundToggle,
+body.sound-unset #soundToggleMobile {
+  animation: sound-nudge 2.4s var(--ease-out) infinite;
+}
+body.sound-unset #soundToggle span,
+body.sound-unset #soundToggleMobile span {
+  background: var(--color-accent);
+}
+
+.sound-hint {
+  font-family: var(--font-body);
+  font-size: var(--text-meta-size);
+  letter-spacing: var(--text-meta-tracking);
+  color: var(--color-accent);
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(var(--space-2));
+  transition: opacity var(--dur-3) var(--ease-out), transform var(--dur-3) var(--ease-out);
+  pointer-events: none;
+}
+body.sound-unset .sound-hint {
+  opacity: 1;
+  transform: none;
+}
+
+/* CLAUDE.md: reduced motion kills the animation, never the affordance. The
+   accent-coloured bars and the label still mark the control as the thing to
+   click — they just hold still. */
+@media (prefers-reduced-motion: reduce) {
+  body.sound-unset #soundToggle,
+  body.sound-unset #soundToggleMobile { animation: none; }
+  .sound-hint { transition: none; }
+}
+
+/* the label costs horizontal room the mobile header does not have; the mobile
+   toggle carries the pulse and the accent bars on its own */
+@media (max-width: 767px) {
+  .sound-hint { display: none; }
+}

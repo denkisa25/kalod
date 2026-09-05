@@ -33,6 +33,10 @@ const headerClass = [hero ? 'header--hero' : 'header--compact', hero && dimNavWh
     {links.map((l) => (
       <a href={l.href} aria-current={current === l.label ? 'page' : undefined}>{l.label}</a>
     ))}
+    {/* CR-003 — the nudge label. aria-hidden because the button's own
+        aria-label already announces the action; a screen reader user gains
+        nothing from a duplicate, and this is a visual invitation. */}
+    <span id="soundHint" class="sound-hint" aria-hidden="true">sound</span>
     <button id="soundToggle" type="button" aria-pressed="false" aria-label="sound off — unmute" title="sound off — unmute" disabled>
       <span></span><span></span><span></span><span></span><span></span>
     </button>

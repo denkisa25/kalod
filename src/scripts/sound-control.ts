@@ -19,6 +19,15 @@ export function onSoundChange(cb: (enabled: boolean) => void): void {
   listeners.add(cb);
 }
 
+/** CR-003 — has the visitor answered the sound question at all this session?
+ *  Deliberately distinct from isSoundEnabled(): someone who chose to mute HAS
+ *  answered, and nudging them again would be nagging. Without the opener there
+ *  is no "enter with sound"/"enter quietly" screen, so the header affordance is
+ *  the only place that question ever gets asked. */
+export function hasExplicitSoundChoice(): boolean {
+  return sessionStorage.getItem(SESSION_KEY) !== null;
+}
+
 export function setSoundEnabled(enabled: boolean): void {
   // always persisted, even when it matches the current value — records
   // that an explicit choice was made this session (see initAutoArmSound,
@@ -26,6 +35,10 @@ export function setSoundEnabled(enabled: boolean): void {
   // happened to match the already-off default and hit this early return
   // in the past, before the write moved above it).
   sessionStorage.setItem(SESSION_KEY, enabled ? '1' : '0');
+  // CR-003 — cleared BEFORE the early return below, for the same reason the
+  // setItem above sits there: choosing the value that happened to already be
+  // set is still answering the question, and must still stop the nudge.
+  document.body.classList.remove('sound-unset');
   if (enabled === soundEnabled) return;
   soundEnabled = enabled;
   document.body.classList.toggle('sound-on', enabled);
@@ -64,6 +77,7 @@ function blip(freq = 1500, dur = 0.045, gain = 0.05): void {
 
 export function initSoundControl(): void {
   document.body.classList.toggle('sound-on', soundEnabled);
+  document.body.classList.toggle('sound-unset', !hasExplicitSoundChoice());
   document.querySelectorAll<HTMLButtonElement>('#soundToggle, #soundToggleMobile').forEach((btn) => {
     btn.disabled = false;
     btn.setAttribute('aria-pressed', String(soundEnabled));
