@@ -1,11 +1,11 @@
 ---
-import { getImage } from 'astro:assets';
-import openerPhotoSrc from '../assets/studio/IMG_9569.jpg';
+import { studioSources } from '../lib/studio';
 
-// plain <img> (not the <Image> component) so the preload link below can
-// reference the exact same generated URL — the LCP element (CR-2) must be
-// preloaded, and that only works if both tags point at the same file.
-const openerPhoto = await getImage({ src: openerPhotoSrc, width: 1920, format: 'webp', quality: 80 });
+// CR-003 — pre-generated offline (scripts/optimize-studio.mjs) rather than
+// through astro:assets, which segfaults libvips on the cPanel host. Still a
+// plain <img> so the preload below can reference the exact same URL — the LCP
+// element (CR-2) must be preloaded, and that only works if both tags agree.
+const openerPhoto = studioSources('IMG_9569');
 ---
 
 <link rel="preload" as="image" href={openerPhoto.src} fetchpriority="high" />
@@ -14,8 +14,8 @@ const openerPhoto = await getImage({ src: openerPhotoSrc, width: 1920, format: '
     id="openerPhoto"
     class="opener-photo"
     src={openerPhoto.src}
-    width={openerPhoto.attributes.width}
-    height={openerPhoto.attributes.height}
+    width={openerPhoto.width}
+    height={openerPhoto.height}
     alt=""
     loading="eager"
     fetchpriority="high"

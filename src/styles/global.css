@@ -478,6 +478,16 @@ body.ready main { opacity: 1; }
    block. display:contents removes it from layout while keeping the source
    selection it exists for. */
 .bgwrap picture { display: contents; }
+
+/* CR-003 — the studio photographs moved to <picture> for the same offline
+   pre-generation reason as the posters, and need the same treatment: an inline
+   <picture> between these containers and their <img> breaks percentage sizing
+   (#about .portrait img is height:100%) and inserts a stray inline box in front
+   of the absolutely-positioned ones. */
+#about .portrait picture,
+.about-secondary picture,
+.contact-hero picture,
+.silence picture { display: contents; }
 .cue .poster {
   position: absolute;
   top: -4%;

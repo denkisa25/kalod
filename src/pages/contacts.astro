@@ -1,9 +1,10 @@
 ---
-import { Image } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import vuMeterPhoto from '../assets/studio/IMG_8950.jpg';
+import { studioSources } from '../lib/studio';
+
+const vuMeterPhoto = studioSources('IMG_8950');
 ---
 <BaseLayout title="contacts | kaloyan dimitrov" description="get in touch with kaloyan dimitrov — email, phone and socials for music, mix and sound design work.">
   <Header hero current="contacts" />
@@ -21,7 +22,10 @@ import vuMeterPhoto from '../assets/studio/IMG_8950.jpg';
            the photo covers the whole section, there's nothing for it to show
            through. -->
       <section class="contact-hero">
-        <Image class="contact-photo" src={vuMeterPhoto} alt="Neve 8803 and Drawmer VU meters in the studio" widths={[900, 1800]} sizes="100vw" />
+        <picture>
+          <source type="image/avif" srcset={vuMeterPhoto.avif} sizes="100vw" />
+          <img class="contact-photo" src={vuMeterPhoto.src} srcset={vuMeterPhoto.webp} sizes="100vw" alt="Neve 8803 and Drawmer VU meters in the studio" width={vuMeterPhoto.width} height={vuMeterPhoto.height} loading="lazy" decoding="async" />
+        </picture>
         <div class="contact-scrim" aria-hidden="true"></div>
         <div class="contact-meta">
           <div class="eyebrow">contacts</div>

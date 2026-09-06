@@ -13,7 +13,8 @@
     "test": "node --test --experimental-strip-types \"src/**/*.test.ts\"",
     "check:featured": "node scripts/check-featured.mjs",
     "optimize:posters": "node scripts/optimize-posters.mjs",
-    "sync:stream": "node scripts/sync-stream-map.mjs"
+    "sync:stream": "node scripts/sync-stream-map.mjs",
+    "optimize:studio": "node scripts/optimize-studio.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",

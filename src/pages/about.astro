@@ -1,11 +1,12 @@
 ---
-import { Image } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import HeritageBackground from '../components/HeritageBackground.astro';
-import portraitPhoto from '../assets/studio/IMG_6235.jpg';
-import secondaryPhoto from '../assets/studio/IMG_6681.jpg';
+import { studioSources } from '../lib/studio';
+
+const portraitPhoto = studioSources('IMG_6235');
+const secondaryPhoto = studioSources('IMG_6681');
 ---
 <BaseLayout title="about | kaloyan dimitrov" description="kaloyan dimitrov is a composer, sound designer and mix engineer working across film, television and advertising.">
   <HeritageBackground />
@@ -14,7 +15,10 @@ import secondaryPhoto from '../assets/studio/IMG_6681.jpg';
     <section class="block">
       <div id="about">
         <div class="portrait">
-          <Image src={portraitPhoto} alt="window into kaloyan's live room" widths={[340, 680]} sizes="(max-width: 760px) 100vw, 340px" />
+          <picture>
+            <source type="image/avif" srcset={portraitPhoto.avif} sizes="(max-width: 760px) 100vw, 340px" />
+            <img src={portraitPhoto.src} srcset={portraitPhoto.webp} sizes="(max-width: 760px) 100vw, 340px" alt="window into kaloyan's live room" width={portraitPhoto.width} height={portraitPhoto.height} loading="lazy" decoding="async" />
+          </picture>
         </div>
         <div class="bio">
           <div class="eyebrow">about</div>
@@ -24,7 +28,10 @@ import secondaryPhoto from '../assets/studio/IMG_6681.jpg';
         </div>
       </div>
       <div class="about-secondary">
-        <Image src={secondaryPhoto} alt="rhodes and keys in the studio" widths={[600, 1200]} sizes="(max-width: 760px) 100vw, 800px" />
+        <picture>
+          <source type="image/avif" srcset={secondaryPhoto.avif} sizes="(max-width: 760px) 100vw, 800px" />
+          <img src={secondaryPhoto.src} srcset={secondaryPhoto.webp} sizes="(max-width: 760px) 100vw, 800px" alt="rhodes and keys in the studio" width={secondaryPhoto.width} height={secondaryPhoto.height} loading="lazy" decoding="async" />
+        </picture>
       </div>
     </section>
   </main>
