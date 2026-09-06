@@ -82,17 +82,21 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
   // for every cue that attaches later.
   if (cues.length > 0 && byIdx.size > 0) loadYouTubeAPI();
 
-  // On touch devices, only the very FIRST cue attached gets a real attempt.
-  // That one is tied closely enough to the opener's "enter with sound" tap
-  // (a fresh, direct gesture) that iOS actually allows it — confirmed
-  // working live. Every cue after that is triggered by a scroll, which iOS
-  // does not treat as a qualifying gesture for a brand-new cross-origin
-  // iframe's audio, and reliably fails, showing YouTube's own paused/play-
-  // button state instead (see cr-002-mobile-playback-qa.md). Skipping only
-  // those later attempts — not the first — avoids that broken-looking
-  // fallback without also killing the one case that does work.
-  const touchOnlyFirstAttempt = matchMedia('(pointer: coarse)').matches;
-  let hasAttemptedOnce = false;
+  // Only IFRAME-backed cues ever had the problem this guards against. iOS is
+  // unreliable about muted autoplay for a cross-origin iframe attached
+  // programmatically on scroll, and shows YouTube's own paused/play-button
+  // state when it refuses (cr-002-mobile-playback-qa.md finding 1), so the
+  // first cue got a real attempt and later ones were skipped rather than
+  // rendering that broken-looking fallback.
+  //
+  // A native <video> from Cloudflare Stream has no such failure mode: muted
+  // autoplay on iOS is reliable for a real media element. Post-CR-003 every
+  // home cue is native, so this is dormant there — it stays for /work detail
+  // pages and any project still on YouTube. Applying it to native video was
+  // suppressing playback that works, which is why cues 02-10 never started
+  // on mobile.
+  const iframeTouchLimit = matchMedia('(pointer: coarse)').matches;
+  let iframeAttempted = false;
 
   let activeCue: HTMLElement | null = null; // cue with a live (or fading-out) iframe
   let audibleCue: HTMLElement | null = null; // cue currently unmuted / ramping up
@@ -182,13 +186,17 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
       detach(previous);
     }
 
-    if (touchOnlyFirstAttempt && hasAttemptedOnce) return;
-
     const data = byIdx.get(Number(cue.dataset.idx));
     const source = data && getVideoSource(data.videoRef);
     const spec = source?.getBackgroundEmbed(data!.videoRef);
     if (!spec) return;
-    hasAttemptedOnce = true;
+
+    // Checked after the spec resolves, so it can see which KIND of embed this
+    // is — the whole point of scoping it to iframes.
+    if (spec.kind === 'iframe') {
+      if (iframeTouchLimit && iframeAttempted) return;
+      iframeAttempted = true;
+    }
 
     const bgwrap = cue.querySelector('.bgwrap');
     activeCue = cue;
@@ -206,6 +214,11 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
       v.playsInline = true;
       v.autoplay = true;
       v.setAttribute('aria-hidden', 'true');
+      // the cue's own still, so a slow first segment shows the frame the
+      // visitor is already looking at rather than a black box
+      const still = cue.querySelector<HTMLImageElement>('img.poster');
+      if (still?.currentSrc) v.poster = still.currentSrc;
+      v.preload = 'auto';
       v.addEventListener('loadeddata', () => setTimeout(() => v.classList.add('on'), 350));
       bgwrap?.appendChild(v);
       onVideoReady(v, () => {

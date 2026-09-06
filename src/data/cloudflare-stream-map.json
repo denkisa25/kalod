@@ -1,1 +1,52 @@
-{}
+{
+  "viktoria-trailer-2": {
+    "uid": "c282ffd2a024fdc93162ee64cadf81a7",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/c282ffd2a024fdc93162ee64cadf81a7/downloads/default.mp4",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/c282ffd2a024fdc93162ee64cadf81a7/thumbnails/thumbnail.jpg"
+  },
+  "burkinabe-rising": {
+    "uid": "70f0323fc819251c3dbf6b72298f54a2",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/70f0323fc819251c3dbf6b72298f54a2/downloads/default.mp4",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/70f0323fc819251c3dbf6b72298f54a2/thumbnails/thumbnail.jpg"
+  },
+  "audi-quattro-hitchhiker": {
+    "uid": "4824c450e19ae3ea1d83526e0a6d7a34",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/4824c450e19ae3ea1d83526e0a6d7a34/downloads/default.mp4",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/4824c450e19ae3ea1d83526e0a6d7a34/thumbnails/thumbnail.jpg"
+  },
+  "investbulgaria-move-to-be-moved": {
+    "uid": "2d5187549e421aa9c8323536783090b6",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/2d5187549e421aa9c8323536783090b6/downloads/default.mp4",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/2d5187549e421aa9c8323536783090b6/thumbnails/thumbnail.jpg"
+  },
+  "wantoks-dance-of-resilience-in-melanesia": {
+    "uid": "c9ca42fedc65142ca7d47e55c2d1160b",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/c9ca42fedc65142ca7d47e55c2d1160b/downloads/default.mp4",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/c9ca42fedc65142ca7d47e55c2d1160b/thumbnails/thumbnail.jpg"
+  },
+  "btv-tv-talent-show": {
+    "uid": "338cc1916a3803c6dcd93b43fe411cc7",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/338cc1916a3803c6dcd93b43fe411cc7/downloads/default.mp4",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/338cc1916a3803c6dcd93b43fe411cc7/thumbnails/thumbnail.jpg"
+  },
+  "btv-action-id-car": {
+    "uid": "e7cf51e8ab68c099b8d7fd0f5a61909f",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/e7cf51e8ab68c099b8d7fd0f5a61909f/downloads/default.mp4",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/e7cf51e8ab68c099b8d7fd0f5a61909f/thumbnails/thumbnail.jpg"
+  },
+  "btv-comedy-the-cool-cre": {
+    "uid": "2706b3d1ab80a6e40a8cc88ac376ba36",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/2706b3d1ab80a6e40a8cc88ac376ba36/downloads/default.mp4",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/2706b3d1ab80a6e40a8cc88ac376ba36/thumbnails/thumbnail.jpg"
+  },
+  "btv-comedy": {
+    "uid": "dec4416d4cb8b6c7314c7b1134fa382f",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/dec4416d4cb8b6c7314c7b1134fa382f/downloads/default.mp4",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/dec4416d4cb8b6c7314c7b1134fa382f/thumbnails/thumbnail.jpg"
+  },
+  "btv-action-robot": {
+    "uid": "96deeddf0efca760f826b6dbbc0a00ac",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/96deeddf0efca760f826b6dbbc0a00ac/downloads/default.mp4",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/96deeddf0efca760f826b6dbbc0a00ac/thumbnails/thumbnail.jpg"
+  }
+}

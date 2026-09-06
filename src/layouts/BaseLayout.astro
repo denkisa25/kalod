@@ -23,6 +23,11 @@ interface Props {
    *  iframe's src is actually set — shaves the connection setup + iframe_api
    *  script fetch off the time-to-first-frame for the first video. */
   hasVideo?: boolean;
+  /** CR-003 — Cloudflare Stream origin (customer-<code>.cloudflarestream.com).
+   *  Passed by pages whose video comes from Stream; when set it REPLACES the
+   *  YouTube hints, because preloading an IFrame API the page never calls is a
+   *  wasted request, not free insurance. */
+  streamHost?: string;
 }
 const {
   title,
@@ -33,6 +38,7 @@ const {
   image = '/posters/opt/viktoria-trailer-2-1280.jpg',
   ogType = 'website',
   hasVideo = false,
+  streamHost,
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
@@ -63,7 +69,13 @@ const indexable: boolean = import.meta.env.SITE_INDEXABLE === true;
   <link rel="canonical" href={canonicalURL} />
   <link rel="icon" href={withBase('/favicon.svg')} />
 
-  {hasVideo && (
+  {hasVideo && streamHost && (
+    <>
+      <link rel="preconnect" href={`https://${streamHost}`} crossorigin />
+      <link rel="dns-prefetch" href={`https://${streamHost}`} />
+    </>
+  )}
+  {hasVideo && !streamHost && (
     <>
       <link rel="preconnect" href="https://www.youtube.com" />
       <link rel="dns-prefetch" href="https://www.youtube.com" />

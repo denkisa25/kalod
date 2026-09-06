@@ -43,6 +43,13 @@ const showOpener: boolean = import.meta.env.SITE_OPENER === true;
 // makes a missing poster a build error with a clear stack, not a mid-render
 // failure buried in JSX.
 const posters = Object.fromEntries(projects.map((p) => [p.slug, posterSources(p.slug)]));
+
+/** Every home cue is on Stream post-CR-003 (enforced by check-featured.mjs), so
+ *  derive the origin from the first one rather than hardcoding the customer
+ *  code — it is account-specific and would rot silently if duplicated here. */
+const streamHost = projects[0].videoRef.cloudflare
+  ? new URL(projects[0].videoRef.cloudflare.mp4Url).host
+  : undefined;
 ---
 <BaseLayout
   title="kaloyan dimitrov | music + sound post"
@@ -50,6 +57,7 @@ const posters = Object.fromEntries(projects.map((p) => [p.slug, posterSources(p.
   image={projects[0].poster}
   hasOpener={showOpener}
   hasVideo
+  streamHost={streamHost}
 >
   <Header hero dimNavWhileHero />
 
