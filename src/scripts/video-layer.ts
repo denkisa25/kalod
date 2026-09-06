@@ -188,10 +188,19 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
           mediaTeardowns.delete(cue);
         }
         media?.remove();
-        // The observer will not fire again if the ratio never re-crossed the
-        // threshold, so a cue that is still on screen has to be revived here
-        // or it stays a poster for good.
-        if (!attached.has(cue) && isCueActive(cue)) attach(cue);
+        // Safety net for a cue left visible with nothing playing, because the
+        // observer will not fire again when the ratio never re-crossed the
+        // threshold.
+        //
+        // The activeCue === null guard is load-bearing and was missing in the
+        // first version of this, which regressed every cue to a frozen first
+        // frame with no audio. Without it, a cue still ≥55% visible when its
+        // own fade-out completed would re-attach and detach whichever cue had
+        // legitimately taken over — that cue's fade would then complete and
+        // revive it in turn, ping-ponging forever and tearing down each
+        // element before it could start. Revive only when nothing else holds
+        // the single active stream.
+        if (activeCue === null && !attached.has(cue) && isCueActive(cue)) attach(cue);
       });
     } else {
       if (players.get(cue) === player) players.delete(cue);
