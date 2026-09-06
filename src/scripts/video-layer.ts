@@ -34,6 +34,10 @@ function videoDisabled(): boolean {
 export interface FeedAudioController {
   pauseForOverlay(): void;
   resumeFromOverlay(): void;
+  /** Live state for the on-device diagnostic panel (?debug=sound). iOS media
+   *  policy cannot be reproduced in a desktop emulator, so the only way to
+   *  tell WHY audio is silent on a real phone is to read it off that phone. */
+  debugSnapshot(): Record<string, unknown>;
   /** CR-4 acceptance: "verified by inspecting player states, not by ear."
    *  Reports every attached background player's real isMuted()/state, so
    *  the "at most one unmuted, playing source" invariant can be asserted
@@ -77,7 +81,7 @@ function rampVolume(player: YTPlayer, from: number, to: number, ms: number, onDo
  *  (an actual crossfade, not a hard cut), verified after settling rather
  *  than mid-transition. */
 function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, CueData>): FeedAudioController {
-  const noop: FeedAudioController = { pauseForOverlay() {}, resumeFromOverlay() {}, debugAudioState: () => [] };
+  const noop: FeedAudioController = { pauseForOverlay() {}, resumeFromOverlay() {}, debugSnapshot: () => ({}), debugAudioState: () => [] };
   if (videoDisabled()) return noop;
 
   // Start fetching the IFrame API immediately instead of waiting for the
@@ -117,6 +121,49 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
    *  Inferring health from querySelector treated both as healthy and refused
    *  to re-attach, which is what left cues stuck on their posters. */
   const attached = new Set<HTMLElement>();
+  /** How many times the unmute verification decided WebKit had refused and
+   *  reverted to muted. Non-zero on a phone means the platform is rejecting
+   *  the unmute; zero means audio is silent for some other reason. */
+  let unmuteReverts = 0;
+
+  /** THE single <video> the feed ever uses, plus its adapter.
+   *
+   *  iOS grants unmuted playback per media ELEMENT, unlocked by a user
+   *  gesture on that element. Creating a fresh <video> per cue meant every
+   *  cue scrolled to was a brand-new, never-unlocked element, so audio could
+   *  only ever work on the cue the visitor physically tapped — which is
+   *  exactly what was reported. The unlock follows the element OBJECT, not its
+   *  position in the DOM, so one element moved between cues carries its
+   *  permission with it and audio survives scrolling.
+   *
+   *  One element also means the same adapter identity for every cue, which is
+   *  what lets makeAudible() below recognise that an outgoing and incoming cue
+   *  are the same physical player and skip the crossfade that would otherwise
+   *  fade out the very element it just faded in. */
+  /** Teardown for whatever source the shared element currently holds. Kept
+   *  outside the per-cue map because the element outlives any single cue. */
+  let previousSourceTeardown: (() => void) | null = null;
+  let feedVideo: HTMLVideoElement | null = null;
+  let feedPlayer: YTPlayer | null = null;
+
+  function getFeedVideo(): { video: HTMLVideoElement; player: YTPlayer } {
+    if (feedVideo && feedPlayer) return { video: feedVideo, player: feedPlayer };
+    const v = document.createElement('video');
+    // Set before any src is ever assigned, and never unset — iOS decides
+    // autoplay eligibility from the state at load time.
+    v.muted = true;
+    v.playsInline = true;
+    v.loop = true;
+    v.autoplay = true;
+    v.preload = 'auto';
+    v.setAttribute('aria-hidden', 'true');
+    v.addEventListener('error', () => {
+      if (activeCue) attached.delete(activeCue);
+    });
+    feedVideo = v;
+    feedPlayer = adaptVideoElement(v);
+    return { video: v, player: feedPlayer };
+  }
 
   /** Match YouTube's PlayerState values, which native-video-player.ts's
    *  adapter deliberately agrees with. ENDED 0, PLAYING 1, PAUSED 2,
@@ -171,12 +218,16 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
       } catch {
         return;
       }
+      unmuteReverts += 1;
       if (audibleCue === cue) audibleCue = null;
       player.playVideo();
     }, UNMUTE_VERIFY_MS);
     if (previousCue && previousCue !== cue) {
       const prevPlayer = players.get(previousCue);
-      if (prevPlayer) {
+      // Identity check, not just existence: every cue now shares one player,
+      // so without this the outgoing fade would immediately silence the cue
+      // that was just faded in.
+      if (prevPlayer && prevPlayer !== player) {
         const startVolume = prevPlayer.getVolume();
         rampVolume(prevPlayer, startVolume, 0, CROSSFADE_MS, () => {
           try {
@@ -206,7 +257,15 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
     // up its OWN attachment or has been overtaken by a newer one.
     const teardown = mediaTeardowns.get(cue);
 
-    if (player && wasAudible && isSoundEnabled()) {
+    // The shared feed element is deliberately excluded from the fade-out
+    // path. A crossfade needs two sources; with one element the outgoing and
+    // incoming cue ARE the same element, so ramping its volume to zero and
+    // muting it 400ms later silences the cue that just took it over — which
+    // is precisely why audio stopped following the scroll. Audio necessarily
+    // cuts when a single element changes source; the incoming makeAudible()
+    // sets the correct state. iframe-backed cues still have their own
+    // elements and keep the real crossfade.
+    if (player && player !== feedPlayer && wasAudible && isSoundEnabled()) {
       // players.delete() waits until the fade actually finishes (not
       // synchronously here) — CR-4's debugAudioState() reads this map, and
       // an outgoing player deleted from it mid-fade would let the
@@ -231,7 +290,10 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
           teardown();
           mediaTeardowns.delete(cue);
         }
-        media?.remove();
+        // The shared feed element is moved by the next attach(), never
+        // removed — removing it here would destroy the very element whose iOS
+        // unlock the whole design depends on.
+        if (media && media !== feedVideo) media.remove();
         // Safety net for a cue left visible with nothing playing, because the
         // observer will not fire again when the ratio never re-crossed the
         // threshold.
@@ -252,7 +314,7 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
         teardown();
         mediaTeardowns.delete(cue);
       }
-      media?.remove();
+      if (media && media !== feedVideo) media.remove();
     }
   }
 
@@ -313,41 +375,35 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
     // adaptVideoElement() lets this share every bit of makeAudible()/
     // rampVolume()/debugAudioState() above unchanged.
     if (spec.kind === 'video') {
-      const v = document.createElement('video');
-      // ORDER MATTERS on iOS. muted and playsinline must be set BEFORE src, so
-      // the element already qualifies for the muted-autoplay exemption at the
-      // moment WebKit starts loading. Assigning src first and muting after is
-      // a documented way to have iOS refuse autoplay outright.
-      v.muted = true;
-      v.playsInline = true;
-      v.loop = true;
-      v.autoplay = true;
-      // HLS where it can be played, MP4 otherwise — see hls-source.ts. Still
-      // assigned before the poster/preload lines below for the same iOS
-      // reason the muted/playsinline ordering exists.
-      mediaTeardowns.set(cue, attachVideoSource(v, spec));
-      v.setAttribute('aria-hidden', 'true');
+      // Reused, never recreated. Its muted/playsinline state was set once at
+      // creation and is deliberately never unset, because iOS decides autoplay
+      // eligibility from the element's state when loading begins.
+      const { video: v, player: sharedPlayer } = getFeedVideo();
+      // Drop the previous cue's source before pointing the element at a new
+      // one — an HLS instance left attached would keep feeding the old stream
+      // into this element and keep fetching its segments.
+      previousSourceTeardown?.();
+      v.classList.remove('on');
+      // HLS where it can be played, MP4 otherwise — see hls-source.ts.
+      previousSourceTeardown = attachVideoSource(v, spec);
+      mediaTeardowns.set(cue, previousSourceTeardown);
       // the cue's own still, so a slow first segment shows the frame the
       // visitor is already looking at rather than a black box
       const still = cue.querySelector<HTMLImageElement>('img.poster');
       if (still?.currentSrc) v.poster = still.currentSrc;
-      v.preload = 'auto';
-      v.addEventListener('loadeddata', () => setTimeout(() => v.classList.add('on'), 350));
-      // A source that fails (bad segment, dropped connection, a rendition the
-      // device cannot decode) must release the cue, or the guard at the top of
-      // attach() blocks every future attempt and it never recovers.
-      v.addEventListener('error', () => {
-        attached.delete(cue);
-      });
+      v.addEventListener('loadeddata', () => setTimeout(() => v.classList.add('on'), 350), { once: true });
+      // appendChild MOVES the element out of whichever cue held it rather than
+      // copying it. That is the entire point: one element, one iOS unlock,
+      // carried along as the visitor scrolls.
       bgwrap?.appendChild(v);
       // Marked live at APPEND, not at loadedmetadata: between the two, a
-      // second observer callback would otherwise attach a duplicate element.
+      // second observer callback would otherwise attach a duplicate.
       attached.add(cue);
+      players.set(cue, sharedPlayer);
       onVideoReady(v, () => {
-        // the cue may have scrolled back out (and its <video> replaced or
-        // removed) by the time metadata finishes loading
+        // the cue may have scrolled back out (and the shared element moved on)
+        // by the time metadata finishes loading
         if (cue.querySelector('video') !== v) return;
-        players.set(cue, adaptVideoElement(v));
         // The autoplay ATTRIBUTE alone is unreliable for an element created
         // and inserted by script — iOS in particular often ignores it and
         // waits for an explicit request. The detail-overlay path has always
@@ -454,6 +510,27 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
       pausedForOverlay = false;
       if (activeCue && isSoundEnabled()) makeAudible(activeCue);
     },
+    debugSnapshot() {
+      const v = activeCue?.querySelector('video') ?? null;
+      return {
+        soundEnabled: isSoundEnabled(),
+        activeCue: activeCue?.dataset.idx ?? null,
+        audibleCue: audibleCue?.dataset.idx ?? null,
+        pausedForOverlay,
+        unmuteReverts,
+        video: v
+          ? {
+              muted: v.muted,
+              // iOS ignores volume assignment entirely; if this reads 1 after
+              // a ramp to 0 that is the platform, not a bug.
+              volume: v.volume,
+              paused: v.paused,
+              readyState: v.readyState,
+              src: v.currentSrc.includes('m3u8') ? 'hls' : v.currentSrc.includes('.mp4') ? 'mp4' : 'other',
+            }
+          : null,
+      };
+    },
     debugAudioState() {
       return Array.from(players.entries()).map(([cue, player]) => ({
         idx: cue.dataset.idx ?? '',
@@ -472,6 +549,7 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
 export const NOOP_FEED_AUDIO: FeedAudioController = {
   pauseForOverlay() {},
   resumeFromOverlay() {},
+  debugSnapshot: () => ({}),
   debugAudioState: () => [],
 };
 
