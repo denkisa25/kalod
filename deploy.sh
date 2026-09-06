@@ -86,6 +86,22 @@ log "npm ci done"
 export VIPS_CONCURRENCY=1
 export NODE_OPTIONS="--max-old-space-size=700"
 
+# The failure taskset alone does NOT fix. Rolldown's rayon pool panicked with
+#   ThreadPoolBuildError { IOError(Os { code: 11, WouldBlock }) }
+# EAGAIN on thread creation is the account's NPROC ceiling (max threads), not
+# its CPU entitlement — taskset limits which cores threads are scheduled on,
+# it does not stop rayon asking for more threads than the account may hold.
+# RAYON_NUM_THREADS caps the pool at the source. Override if the host's limits
+# change: RAYON_NUM_THREADS=1 bash deploy.sh
+export RAYON_NUM_THREADS="${RAYON_NUM_THREADS:-2}"
+# libuv's pool is smaller but counts against the same ceiling.
+export UV_THREADPOOL_SIZE="${UV_THREADPOOL_SIZE:-2}"
+
+# Printed because if this fails again, these three numbers say whether the cap
+# is still being hit and how much headroom the account actually had.
+log "limits: nproc=$(nproc 2>/dev/null || echo '?') ulimit-u=$(ulimit -u 2>/dev/null || echo '?') procs-now=$(ps -u "$(whoami)" --no-headers 2>/dev/null | wc -l | tr -d ' ')"
+log "concurrency: RAYON_NUM_THREADS=${RAYON_NUM_THREADS} UV_THREADPOOL_SIZE=${UV_THREADPOOL_SIZE} VIPS_CONCURRENCY=${VIPS_CONCURRENCY}"
+
 if command -v taskset >/dev/null 2>&1; then
   log "building with taskset -c 0,1 (LVE CPU pin)"
   taskset -c 0,1 npm run build
