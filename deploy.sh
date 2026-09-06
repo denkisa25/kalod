@@ -93,14 +93,24 @@ export NODE_OPTIONS="--max-old-space-size=700"
 # it does not stop rayon asking for more threads than the account may hold.
 # RAYON_NUM_THREADS caps the pool at the source. Override if the host's limits
 # change: RAYON_NUM_THREADS=1 bash deploy.sh
-export RAYON_NUM_THREADS="${RAYON_NUM_THREADS:-2}"
+export RAYON_NUM_THREADS="${RAYON_NUM_THREADS:-1}"
 # libuv's pool is smaller but counts against the same ceiling.
-export UV_THREADPOOL_SIZE="${UV_THREADPOOL_SIZE:-2}"
+export UV_THREADPOOL_SIZE="${UV_THREADPOOL_SIZE:-1}"
+# esbuild is a Go binary and hit the same wall one layer down, dying on its
+# FOURTH thread: "failed to create new OS thread (have 3 already; errno=11)".
+# Go sizes its scheduler off runtime.NumCPU(); taskset already narrows that to
+# 2 via sched_getaffinity, but Go still spawns extra threads for blocking
+# syscalls. GOMAXPROCS=1 is the floor.
+export GOMAXPROCS="${GOMAXPROCS:-1}"
 
 # Printed because if this fails again, these three numbers say whether the cap
 # is still being hit and how much headroom the account actually had.
 log "limits: nproc=$(nproc 2>/dev/null || echo '?') ulimit-u=$(ulimit -u 2>/dev/null || echo '?') procs-now=$(ps -u "$(whoami)" --no-headers 2>/dev/null | wc -l | tr -d ' ')"
-log "concurrency: RAYON_NUM_THREADS=${RAYON_NUM_THREADS} UV_THREADPOOL_SIZE=${UV_THREADPOOL_SIZE} VIPS_CONCURRENCY=${VIPS_CONCURRENCY}"
+log "concurrency: RAYON=${RAYON_NUM_THREADS} UV=${UV_THREADPOOL_SIZE} GOMAXPROCS=${GOMAXPROCS} VIPS=${VIPS_CONCURRENCY}"
+# ulimit -u reports "unlimited" on this host while the real ceiling is
+# CloudLinux's LVE NPROC cap — a cgroup limit, invisible to POSIX rlimits. So
+# the number above is not the constraint; cPanel > Resource Usage is where an
+# NPROC fault actually shows up.
 
 if command -v taskset >/dev/null 2>&1; then
   log "building with taskset -c 0,1 (LVE CPU pin)"
