@@ -48,8 +48,15 @@ fi
 
 if [ -n "${activate}" ]; then
   log "sourcing nodevenv: ${activate}"
+  # `set -u` must be off across this source. CloudLinux's activate references
+  # CL_VIRTUAL_ENV with no default (line 78), which is fatal under nounset —
+  # virtualenv-style activate scripts assume an unguarded shell, and Python's
+  # venv has the identical problem. Scoped as tightly as possible so nounset
+  # still guards the rest of this script.
+  set +u
   # shellcheck disable=SC1090
   source "${activate}"
+  set -u
 else
   log "WARNING: no nodevenv found — falling back to whatever node is on PATH."
   log "  If this fails, open cPanel > Setup Node.js App, read the app's real"
