@@ -107,6 +107,12 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
    *  for a cue that has scrolled away, which is exactly the bandwidth this
    *  whole change exists to save. */
   const mediaTeardowns = new Map<HTMLElement, () => void>();
+  /** Cues with a LIVE attachment. DOM presence is not the same thing: an
+   *  element sits in the DOM for the length of the audio crossfade after
+   *  detach, and a cue whose HLS import was cancelled keeps an empty <video>.
+   *  Inferring health from querySelector treated both as healthy and refused
+   *  to re-attach, which is what left cues stuck on their posters. */
+  const attached = new Set<HTMLElement>();
 
   function makeAudible(cue: HTMLElement) {
     const player = players.get(cue);
@@ -149,6 +155,12 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
     const player = players.get(cue);
     const wasAudible = audibleCue === cue;
     silence(cue);
+    // Marked dead NOW, not when the fade finishes — otherwise a scroll back
+    // during the crossfade sees a live cue and declines to re-attach.
+    attached.delete(cue);
+    // Captured so the deferred cleanup below can tell whether it is tidying
+    // up its OWN attachment or has been overtaken by a newer one.
+    const teardown = mediaTeardowns.get(cue);
 
     if (player && wasAudible && isSoundEnabled()) {
       // players.delete() waits until the fade actually finishes (not
@@ -167,21 +179,53 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
         } catch {
           /* already torn down */
         }
-        players.delete(cue);
-        mediaTeardowns.get(cue)?.();
-        mediaTeardowns.delete(cue);
+        // If the visitor scrolled back during the fade, attach() has already
+        // replaced these. Deleting unconditionally would strip the NEW
+        // attachment's player and teardown and strand it.
+        if (players.get(cue) === player) players.delete(cue);
+        if (teardown && mediaTeardowns.get(cue) === teardown) {
+          teardown();
+          mediaTeardowns.delete(cue);
+        }
         media?.remove();
+        // The observer will not fire again if the ratio never re-crossed the
+        // threshold, so a cue that is still on screen has to be revived here
+        // or it stays a poster for good.
+        if (!attached.has(cue) && isCueActive(cue)) attach(cue);
       });
     } else {
-      players.delete(cue);
-      mediaTeardowns.get(cue)?.();
-      mediaTeardowns.delete(cue);
+      if (players.get(cue) === player) players.delete(cue);
+      if (teardown && mediaTeardowns.get(cue) === teardown) {
+        teardown();
+        mediaTeardowns.delete(cue);
+      }
       media?.remove();
     }
   }
 
+  /** Is this cue currently occupying enough of the viewport to deserve the
+   *  one active stream? Mirrors the IntersectionObserver's own threshold. */
+  function isCueActive(cue: HTMLElement): boolean {
+    const r = cue.getBoundingClientRect();
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    const visible = Math.min(r.bottom, vh) - Math.max(r.top, 0);
+    return r.height > 0 && visible / r.height >= CUE_ACTIVE_THRESHOLD;
+  }
+
   function attach(cue: HTMLElement) {
-    if (cue.querySelector('iframe, video')) return;
+    if (attached.has(cue)) return;
+
+    // Something is in the DOM but not live: either mid-crossfade teardown, or
+    // a <video> whose source never arrived because its import was cancelled.
+    // Clear it out and start fresh rather than bailing — bailing is what left
+    // the cue showing a poster with no way back.
+    const stale = cue.querySelector('iframe, video');
+    if (stale) {
+      mediaTeardowns.get(cue)?.();
+      mediaTeardowns.delete(cue);
+      players.delete(cue);
+      stale.remove();
+    }
 
     // whichever cue crosses the activation threshold stops the previous
     // one's stream regardless of whether the new cue has video of its own
@@ -236,7 +280,16 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
       if (still?.currentSrc) v.poster = still.currentSrc;
       v.preload = 'auto';
       v.addEventListener('loadeddata', () => setTimeout(() => v.classList.add('on'), 350));
+      // A source that fails (bad segment, dropped connection, a rendition the
+      // device cannot decode) must release the cue, or the guard at the top of
+      // attach() blocks every future attempt and it never recovers.
+      v.addEventListener('error', () => {
+        attached.delete(cue);
+      });
       bgwrap?.appendChild(v);
+      // Marked live at APPEND, not at loadedmetadata: between the two, a
+      // second observer callback would otherwise attach a duplicate element.
+      attached.add(cue);
       onVideoReady(v, () => {
         // the cue may have scrolled back out (and its <video> replaced or
         // removed) by the time metadata finishes loading
@@ -249,7 +302,22 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
         // cues past the first stayed on their poster on mobile even after the
         // touch guard stopped suppressing them. A rejection here is the
         // browser's autoplay policy, not an error worth surfacing.
-        v.play().catch(() => {});
+        // One retry, and only one. iOS can reject this first request while it
+        // is still settling the element even though the policy would allow it
+        // a moment later — that transient rejection is a share of the cues
+        // that "sometimes" stayed on their poster. Bounded deliberately: a
+        // genuine policy refusal must not become a retry loop.
+        let retried = false;
+        const tryPlay = () => {
+          v.play().catch(() => {
+            if (retried || cue !== activeCue) return;
+            retried = true;
+            v.addEventListener('canplay', () => {
+              if (v.paused && cue === activeCue) v.play().catch(() => {});
+            }, { once: true });
+          });
+        };
+        tryPlay();
         if (cue === activeCue) makeAudible(cue);
       });
       return;
@@ -261,6 +329,7 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
     f.title = `${data!.title} — background`;
     f.addEventListener('load', () => setTimeout(() => f.classList.add('on'), 350));
     bgwrap?.appendChild(f);
+    attached.add(cue);
 
     if (data!.videoRef.provider === 'youtube') {
       loadYouTubeAPI().then((YT) => {
