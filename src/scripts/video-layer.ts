@@ -41,6 +41,10 @@ export interface FeedAudioController {
   debugAudioState(): Array<{ idx: string; muted: boolean; playerState: number }>;
 }
 
+/** How long to wait before checking that unmuting did not cost us playback.
+ *  Long enough for WebKit to have acted, short enough that a visitor does not
+ *  sit looking at a stalled poster. */
+const UNMUTE_VERIFY_MS = 350;
 const CROSSFADE_MS = 400;
 
 function rampVolume(player: YTPlayer, from: number, to: number, ms: number, onDone?: () => void): void {
@@ -114,6 +118,10 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
    *  to re-attach, which is what left cues stuck on their posters. */
   const attached = new Set<HTMLElement>();
 
+  /** Matches YouTube's PlayerState.PLAYING and native-video-player.ts's
+   *  adapter, which deliberately agrees on the same numbers. */
+  const PLAYING = 1;
+
   function makeAudible(cue: HTMLElement) {
     const player = players.get(cue);
     if (!player || pausedForOverlay || !isSoundEnabled()) return;
@@ -130,6 +138,35 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
     const previousCue = audibleCue;
     audibleCue = cue;
     rampVolume(player, 0, 100, CROSSFADE_MS);
+
+    // iOS/WebKit PAUSES a media element that becomes unmuted without a fresh
+    // user gesture. The tap on the sound control is a gesture for whichever
+    // cue is playing at that moment, but every cue scrolled to afterwards is a
+    // brand-new element that never received one — so unmuting it silently
+    // stopped playback, leaving the poster on screen. That is both halves of
+    // the reported fault: frozen picture AND no sound, from one cause.
+    //
+    // Playback is the thing that must never be sacrificed. If unmuting cost us
+    // the picture, go back to muted and resume; the visitor keeps a running
+    // feed and gets audio on the cue they actually tapped, which is the most
+    // any platform permits (cr-002-mobile-playback-qa.md finding 4).
+    setTimeout(() => {
+      if (players.get(cue) !== player) return;
+      let state: number;
+      try {
+        state = player.getPlayerState();
+      } catch {
+        return;
+      }
+      if (state === PLAYING) return;
+      try {
+        player.mute();
+      } catch {
+        return;
+      }
+      if (audibleCue === cue) audibleCue = null;
+      player.playVideo();
+    }, UNMUTE_VERIFY_MS);
     if (previousCue && previousCue !== cue) {
       const prevPlayer = players.get(previousCue);
       if (prevPlayer) {
