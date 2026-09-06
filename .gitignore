@@ -25,3 +25,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# raw production media (opener cue stems/footage) — never belongs in git history
+lab/
