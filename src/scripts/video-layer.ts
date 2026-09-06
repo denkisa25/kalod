@@ -118,9 +118,10 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
    *  to re-attach, which is what left cues stuck on their posters. */
   const attached = new Set<HTMLElement>();
 
-  /** Matches YouTube's PlayerState.PLAYING and native-video-player.ts's
-   *  adapter, which deliberately agrees on the same numbers. */
-  const PLAYING = 1;
+  /** Match YouTube's PlayerState values, which native-video-player.ts's
+   *  adapter deliberately agrees with. ENDED 0, PLAYING 1, PAUSED 2,
+   *  BUFFERING 3. */
+  const PAUSED = 2;
 
   function makeAudible(cue: HTMLElement) {
     const player = players.get(cue);
@@ -158,7 +159,13 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
       } catch {
         return;
       }
-      if (state === PLAYING) return;
+      // ONLY a hard pause means WebKit refused the unmute. The first version
+      // of this check treated anything that was not PLAYING as failure, which
+      // swept in BUFFERING — and unmuting an HLS stream routinely buffers for
+      // a moment while it fetches the audio track. So it re-muted cues that
+      // were about to play with sound, turning "frozen, no audio" into
+      // "playing, no audio". Buffering is normal; leave it alone.
+      if (state !== PAUSED) return;
       try {
         player.mute();
       } catch {
