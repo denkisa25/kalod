@@ -15,6 +15,10 @@
     <div class="stage-ambient" aria-hidden="true"></div>
     <div id="player">
       <div class="skeleton" aria-hidden="true"><span></span><span></span></div>
+      <!-- CR-003: mid-playback stall indicator, driven by the native
+           waiting/playing events. Distinct from .skeleton, which covers the
+           initial load only. -->
+      <div class="buffering" id="playerBuffering" aria-hidden="true" hidden></div>
       <div class="ph">video pending — client to supply link</div>
       <!-- Tap/click anywhere on the video to play/pause — mirrors common
            video-player convention. Not in the tab order / not announced:
@@ -44,7 +48,14 @@
          move/tap/key (player-controls.ts). -->
     <div class="controls" id="playerControls">
       <div class="scrub" id="scrub" role="slider" aria-label="seek" tabindex="0" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-        <div class="scrub-track"><div class="scrub-fill" id="scrubFill"></div></div>
+        <div class="scrub-track">
+          <!-- CR-003: how much is buffered ahead of the playhead. Only a real
+               <video> can report this (HTMLMediaElement.buffered) — the
+               YouTube IFrame API exposes nothing equivalent, so this stays at
+               zero width for iframe-backed cues rather than lying. -->
+          <div class="scrub-buffer" id="scrubBuffer"></div>
+          <div class="scrub-fill" id="scrubFill"></div>
+        </div>
       </div>
       <div class="controls-row">
         <button id="cPlay" type="button" aria-label="play" data-blip>play</button>
@@ -54,6 +65,13 @@
         <span class="c-spacer"></span>
         <button id="cMute" type="button" aria-label="mute" data-blip>vol</button>
         <input id="cVolume" type="range" min="0" max="100" value="100" aria-label="volume" />
+        <!-- CR-003 — native-video-only controls. player-controls.ts hides
+             these entirely for iframe-backed cues rather than showing a
+             control that silently does nothing (the same mistake CR-001's
+             review caught with the Vimeo control bar). -->
+        <button id="cRate" type="button" aria-label="playback speed" data-blip hidden>1&times;</button>
+        <button id="cPiP" type="button" aria-label="picture in picture" data-blip hidden>pip</button>
+        <button id="cFull" type="button" aria-label="fullscreen" data-blip>full</button>
         <button id="dPrev" type="button" aria-label="previous cue" data-blip>&larr; prev</button>
         <button id="dNext" type="button" aria-label="next cue" data-blip>next &rarr;</button>
         <button id="cHint" type="button" aria-label="keyboard shortcuts" aria-expanded="false" data-blip>?</button>

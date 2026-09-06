@@ -36,10 +36,21 @@ export function initPlayerControls(): PlayerControls {
   const hintBtn = document.getElementById('cHint');
   const tapFeedback = document.getElementById('tapFeedback');
   const hint = document.getElementById('shortcutHint');
+  const scrubBuffer = document.getElementById('scrubBuffer');
+  const buffering = document.getElementById('playerBuffering');
+  const rateBtn = document.getElementById('cRate');
+  const pipBtn = document.getElementById('cPiP');
+  const fullBtn = document.getElementById('cFull');
 
   let player: YTPlayer | null = null;
   let scrubbing = false;
   let idleTimer: ReturnType<typeof setTimeout> | null = null;
+  /** unsubscribes the CURRENT player's media listeners — called before every
+   *  rebind so a previous cue's <video> cannot keep driving this UI */
+  let unsubscribeMedia: (() => void) | null = null;
+  let rafId: number | null = null;
+
+  const RATES = [1, 1.25, 1.5, 2, 0.5] as const;
 
   function updatePlayIcon(): void {
     if (!playBtn) return;
@@ -58,20 +69,51 @@ export function initPlayerControls(): PlayerControls {
     muteBtn.setAttribute('aria-label', muted ? 'unmute' : 'mute');
   }
 
-  function tick(): void {
-    if (player && !scrubbing) {
-      const dur = player.getDuration();
-      const cur = player.getCurrentTime();
-      if (elapsedEl) elapsedEl.textContent = formatTime(cur);
-      if (totalEl) totalEl.textContent = formatTime(dur);
-      const pct = dur > 0 ? Math.min(100, (cur / dur) * 100) : 0;
-      if (scrubFill) scrubFill.style.width = `${pct}%`;
-      scrub?.setAttribute('aria-valuenow', String(Math.round(pct)));
-      updatePlayIcon();
-    }
-    requestAnimationFrame(tick);
+  /** One render of the transport, whatever drove it. */
+  function render(): void {
+    if (!player || scrubbing) return;
+    const dur = player.getDuration();
+    const cur = player.getCurrentTime();
+    if (elapsedEl) elapsedEl.textContent = formatTime(cur);
+    if (totalEl) totalEl.textContent = formatTime(dur);
+    const pct = dur > 0 ? Math.min(100, (cur / dur) * 100) : 0;
+    if (scrubFill) scrubFill.style.width = `${pct}%`;
+    scrub?.setAttribute('aria-valuenow', String(Math.round(pct)));
+    // Only a real media element can report this; stays 0 for iframes.
+    if (scrubBuffer) scrubBuffer.style.width = `${(player.native?.bufferedRatio() ?? 0) * 100}%`;
+    updatePlayIcon();
   }
-  requestAnimationFrame(tick);
+
+  /** CR-003 — YouTube's IFrame API has no timeupdate event, so the only way
+   *  to drive this UI was a rAF loop that ran for the entire life of the page
+   *  whether or not anything was playing. A native <video> emits real events,
+   *  so polling is now the FALLBACK rather than the default, and it stops when
+   *  no iframe player is bound. The scrub fill carries a CSS transition so
+   *  timeupdate's ~4Hz cadence still reads as smooth motion. */
+  function startPolling(): void {
+    if (rafId !== null) return;
+    const loop = () => {
+      render();
+      rafId = requestAnimationFrame(loop);
+    };
+    rafId = requestAnimationFrame(loop);
+  }
+  function stopPolling(): void {
+    if (rafId === null) return;
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+
+  function setBuffering(on: boolean): void {
+    if (buffering) buffering.hidden = !on;
+  }
+
+  function updateRateLabel(): void {
+    if (!rateBtn || !player?.native) return;
+    const r = player.native.getRate();
+    rateBtn.textContent = `${r}\u00d7`;
+    rateBtn.setAttribute('aria-label', `playback speed ${r}x`);
+  }
 
   function seekToRatio(ratio: number): void {
     if (!player) return;
@@ -86,10 +128,13 @@ export function initPlayerControls(): PlayerControls {
 
   scrub?.addEventListener('pointerdown', (e) => {
     scrubbing = true;
+    // kills the smoothing transition so the fill tracks the pointer exactly
+    scrub.classList.add('scrubbing');
     seekToRatio(ratioFromClientX(e.clientX));
     const move = (ev: PointerEvent) => seekToRatio(ratioFromClientX(ev.clientX));
     const up = () => {
       scrubbing = false;
+      scrub.classList.remove('scrubbing');
       removeEventListener('pointermove', move);
       removeEventListener('pointerup', up);
     };
@@ -158,6 +203,44 @@ export function initPlayerControls(): PlayerControls {
     hintBtn.setAttribute('aria-expanded', String(willShow));
   });
 
+  rateBtn?.addEventListener('click', () => {
+    if (!player?.native) return;
+    const i = RATES.indexOf(player.native.getRate() as (typeof RATES)[number]);
+    const next = RATES[(i + 1) % RATES.length];
+    player.native.setRate(next);
+    // CR-9's ambient surround is a second <video> playing the same source,
+    // and it is not driven by the player adapter. Leaving it at 1x while the
+    // frame runs at 2x makes the blurred spill visibly disagree with the
+    // picture it is supposed to be bleeding from, so it follows the rate too.
+    // (They were never frame-synced — two independent elements — but matching
+    // rates at least keeps them drifting together rather than apart.)
+    const ambientVideo = detail?.querySelector<HTMLVideoElement>('.stage-ambient video');
+    if (ambientVideo) ambientVideo.playbackRate = next;
+    updateRateLabel();
+  });
+
+  pipBtn?.addEventListener('click', () => {
+    void player?.native?.togglePiP();
+  });
+
+  // Fullscreens #detail, NOT the <video>. Fullscreening the media element
+  // hands over to the browser's own control chrome, which is exactly the
+  // YouTube-looking thing CR-8 exists to avoid; fullscreening our container
+  // keeps the custom transport, the letterbox and the ambient blur. Works for
+  // iframe-backed cues too, which is why this button is never hidden.
+  fullBtn?.addEventListener('click', () => {
+    if (document.fullscreenElement) {
+      void document.exitFullscreen();
+    } else {
+      void detail?.requestFullscreen?.().catch(() => {});
+    }
+  });
+  document.addEventListener('fullscreenchange', () => {
+    const on = document.fullscreenElement === detail;
+    fullBtn?.setAttribute('aria-label', on ? 'exit fullscreen' : 'fullscreen');
+    if (fullBtn) fullBtn.textContent = on ? 'exit' : 'full';
+  });
+
   function showChrome(): void {
     chrome?.classList.remove('idle');
     if (idleTimer) clearTimeout(idleTimer);
@@ -216,11 +299,47 @@ export function initPlayerControls(): PlayerControls {
 
   return {
     bindPlayer(p) {
+      // Always detach the previous cue's listeners first — without this a
+      // rebind leaves the old <video> still driving this UI, and the two
+      // fight over the scrub bar.
+      unsubscribeMedia?.();
+      unsubscribeMedia = null;
+      stopPolling();
+      setBuffering(false);
+
       player = p;
       chrome?.classList.remove('idle');
       if (p && volumeInput) volumeInput.value = String(p.getVolume());
+
+      const native = p?.native;
+      // Controls that cannot work over a cross-origin iframe are hidden
+      // rather than shown inert — CR-001's review caught exactly this with
+      // the Vimeo control bar, and a dead button is worse than no button.
+      if (rateBtn) rateBtn.hidden = !native;
+      if (pipBtn) pipBtn.hidden = !native?.supportsPiP();
+
+      if (native) {
+        unsubscribeMedia = native.on(
+          ['timeupdate', 'progress', 'play', 'pause', 'seeked', 'durationchange', 'ratechange'],
+          render,
+        );
+        const stall = native.on(['waiting'], () => setBuffering(true));
+        const resume = native.on(['playing', 'canplay', 'pause'], () => setBuffering(false));
+        const prevUnsub = unsubscribeMedia;
+        unsubscribeMedia = () => {
+          prevUnsub();
+          stall();
+          resume();
+        };
+        updateRateLabel();
+      } else if (p) {
+        // iframe-backed cue: no media events exist, so fall back to polling.
+        startPolling();
+      }
+
       updateMuteIcon();
       updatePlayIcon();
+      render();
       showChrome();
     },
   };
