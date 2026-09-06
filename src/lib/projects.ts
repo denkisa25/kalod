@@ -52,7 +52,7 @@ function resolvePoster(slug: string): string {
  *  reverts to its original provider automatically if ever removed from the
  *  map. */
 function resolveVideoRef(slug: string, video: string | null): VideoRef {
-  const migrated = (cloudflareStreamMap as Record<string, { uid: string; mp4Url: string; thumbnailUrl: string }>)[slug];
+  const migrated = (cloudflareStreamMap as Record<string, { uid: string; mp4Url: string; hlsUrl?: string; thumbnailUrl: string }>)[slug];
   if (migrated) {
     return { provider: 'cloudflare', id: migrated.uid, cloudflare: migrated };
   }

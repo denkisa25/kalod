@@ -19,12 +19,15 @@ export interface VideoRef {
   /** Cloudflare Stream only — direct URLs from cloudflare-stream-map.json
    *  (via scripts/upload-to-cloudflare-stream.mjs), not something parsed
    *  from a single embeddable link the way YouTube/Vimeo ids are. */
-  cloudflare?: { mp4Url: string; thumbnailUrl: string };
+  cloudflare?: { mp4Url: string; hlsUrl?: string; thumbnailUrl: string };
 }
 
 export type EmbedSpec =
   | { kind: 'iframe'; src: string }
-  | { kind: 'video'; src: string };
+  /** `src` is the progressive MP4 and is always present as the fallback.
+   *  `hlsSrc` is the adaptive-bitrate manifest, preferred wherever it can be
+   *  played — see src/lib/hls-source.ts for how that choice is made. */
+  | { kind: 'video'; src: string; hlsSrc?: string };
 
 export interface VideoSource {
   /** muted, looping, chromeless — feed background loops */
@@ -110,11 +113,11 @@ class VimeoSource implements VideoSource {
 class CloudflareStreamSource implements VideoSource {
   getBackgroundEmbed(ref: VideoRef): EmbedSpec | null {
     if (!ref.cloudflare) return null;
-    return { kind: 'video', src: ref.cloudflare.mp4Url };
+    return { kind: 'video', src: ref.cloudflare.mp4Url, hlsSrc: ref.cloudflare.hlsUrl };
   }
   getPlayerEmbed(ref: VideoRef): EmbedSpec | null {
     if (!ref.cloudflare) return null;
-    return { kind: 'video', src: ref.cloudflare.mp4Url };
+    return { kind: 'video', src: ref.cloudflare.mp4Url, hlsSrc: ref.cloudflare.hlsUrl };
   }
   getPreviewFrames(ref: VideoRef): [string, string] | null {
     if (!ref.cloudflare) return null;

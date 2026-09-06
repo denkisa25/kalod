@@ -1,6 +1,7 @@
 import { getVideoSource, type VideoRef } from '../lib/video-source';
 import { loadYouTubeAPI, type YTPlayer } from '../lib/youtube-api';
 import { adaptVideoElement, onVideoReady } from '../lib/native-video-player';
+import { attachVideoSource } from '../lib/hls-source';
 import { isSoundEnabled, onSoundChange } from './sound-control';
 import { initPlayerControls } from './player-controls';
 import { pad, roleLine, CUE_ACTIVE_THRESHOLD, type Role } from '../lib/format';
@@ -102,6 +103,10 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
   let audibleCue: HTMLElement | null = null; // cue currently unmuted / ramping up
   let pausedForOverlay = false;
   const players = new Map<HTMLElement, YTPlayer>();
+  /** HLS teardown per cue. An Hls instance left alive keeps fetching segments
+   *  for a cue that has scrolled away, which is exactly the bandwidth this
+   *  whole change exists to save. */
+  const mediaTeardowns = new Map<HTMLElement, () => void>();
 
   function makeAudible(cue: HTMLElement) {
     const player = players.get(cue);
@@ -163,10 +168,14 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
           /* already torn down */
         }
         players.delete(cue);
+        mediaTeardowns.get(cue)?.();
+        mediaTeardowns.delete(cue);
         media?.remove();
       });
     } else {
       players.delete(cue);
+      mediaTeardowns.get(cue)?.();
+      mediaTeardowns.delete(cue);
       media?.remove();
     }
   }
@@ -216,7 +225,10 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
       v.playsInline = true;
       v.loop = true;
       v.autoplay = true;
-      v.src = spec.src;
+      // HLS where it can be played, MP4 otherwise — see hls-source.ts. Still
+      // assigned before the poster/preload lines below for the same iOS
+      // reason the muted/playsinline ordering exists.
+      mediaTeardowns.set(cue, attachVideoSource(v, spec));
       v.setAttribute('aria-hidden', 'true');
       // the cue's own still, so a slow first segment shows the frame the
       // visitor is already looking at rather than a black box
@@ -371,6 +383,15 @@ export function initDetailOverlay(cueList: CueData[], feedAudio: FeedAudioContro
     return Array.from(detail!.querySelectorAll<HTMLElement>('button, a[href], input'));
   }
 
+  /** HLS teardowns for the overlay's own two <video> elements (the frame and
+   *  CR-9's blurred ambient copy). Cleared on every render and on close, for
+   *  the same segment-fetching reason as the feed's map. */
+  let overlayTeardowns: Array<() => void> = [];
+  function runOverlayTeardowns(): void {
+    overlayTeardowns.forEach((fn) => fn());
+    overlayTeardowns = [];
+  }
+
   function render(i: number) {
     current = ((i % cueList.length) + cueList.length) % cueList.length;
     const p = cueList[current];
@@ -382,6 +403,7 @@ export function initDetailOverlay(cueList: CueData[], feedAudio: FeedAudioContro
     dClient.textContent = p.client;
     dNote.textContent = p.excerpt;
 
+    runOverlayTeardowns();
     player!.querySelectorAll('iframe, video').forEach((f) => f.remove());
     ambient?.querySelectorAll('iframe, video').forEach((f) => f.remove());
     controls.bindPlayer(null);
@@ -406,10 +428,10 @@ export function initDetailOverlay(cueList: CueData[], feedAudio: FeedAudioContro
       if (ph) ph.style.display = 'none';
       if (skeleton) skeleton.style.display = 'flex';
       const v = document.createElement('video');
-      v.src = spec.src;
       v.playsInline = true;
       v.autoplay = true;
       v.title = p.title;
+      overlayTeardowns.push(attachVideoSource(v, spec));
       v.addEventListener('loadeddata', () => {
         if (skeleton) skeleton.style.display = 'none';
       });
@@ -418,11 +440,19 @@ export function initDetailOverlay(cueList: CueData[], feedAudio: FeedAudioContro
       const ambientSpec = source?.getBackgroundEmbed(p.videoRef);
       if (ambient && ambientSpec?.kind === 'video') {
         const bg = document.createElement('video');
-        bg.src = ambientSpec.src;
         bg.muted = true;
         bg.loop = true;
         bg.playsInline = true;
         bg.autoplay = true;
+        // HLS here too, despite this copy being blurred to ~40px and dimmed to
+        // 35% (CR-9) so rendition quality is invisible. The first instinct was
+        // the MP4 — a second ABR session competes with the frame the viewer is
+        // actually watching — but the MP4 is ONE fixed rendition, and on this
+        // catalogue that means 61 MB for burkinabe-rising and 24 MB for
+        // viktoria. Guaranteeing that download to avoid contention trades a
+        // small problem for a much larger one. Adaptive on both lets each pick
+        // something the connection can carry.
+        overlayTeardowns.push(attachVideoSource(bg, ambientSpec));
         bg.setAttribute('aria-hidden', 'true');
         bg.tabIndex = -1;
         ambient.appendChild(bg);
@@ -508,6 +538,7 @@ export function initDetailOverlay(cueList: CueData[], feedAudio: FeedAudioContro
   }
 
   function close() {
+    runOverlayTeardowns();
     renderToken++; // any in-flight loadYouTubeAPI().then() for this cue is now stale
     detail!.classList.remove('open');
     document.body.style.overflow = '';

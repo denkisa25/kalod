@@ -126,7 +126,11 @@ async function main() {
       const mp4Url = await ensureMp4(v.uid);
       // Same customer subdomain as the MP4; thumbnails need no enable step.
       const thumbnailUrl = mp4Url.replace('/downloads/default.mp4', '/thumbnails/thumbnail.jpg');
-      map[slug] = { uid: v.uid, mp4Url, thumbnailUrl };
+      // HLS is the PREFERRED source (adaptive bitrate); the MP4 stays as the
+      // fallback for browsers without native HLS where hls.js also fails.
+      // Both derive from the same customer subdomain, so no extra API call.
+      const hlsUrl = mp4Url.replace('/downloads/default.mp4', '/manifest/video.m3u8');
+      map[slug] = { uid: v.uid, mp4Url, hlsUrl, thumbnailUrl };
       writeFileSync(MAP_PATH, JSON.stringify(map, null, 2) + '\n');
       wrote += 1;
       console.log('ready');
