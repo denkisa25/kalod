@@ -28,3 +28,4 @@ pnpm-debug.log*
 
 # raw production media (opener cue stems/footage) — never belongs in git history
 lab/
+.env.local
