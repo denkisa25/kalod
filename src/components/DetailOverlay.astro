@@ -22,6 +22,11 @@
            keyboard/screen-reader-accessible play/pause control; this is a
            pointer-only convenience layer on top of the same toggle. -->
       <div class="clickzone" id="playerClickzone" aria-hidden="true"></div>
+      <!-- CR-003: transient play/pause confirmation on tap. aria-hidden
+           because #cPlay already announces the state change to assistive
+           tech; this is purely visual feedback for a tap that lands on the
+           video rather than on the control bar. -->
+      <div class="tap-feedback" id="tapFeedback" aria-hidden="true" data-state="play"></div>
     </div>
   </div>
 

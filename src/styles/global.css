@@ -1552,3 +1552,60 @@ body.sound-unset .sound-hint {
 @media (max-width: 767px) {
   .sound-hint { display: none; }
 }
+
+
+/* ── CR-003 — tap-to-play/pause confirmation ──────────────────────────────
+   Now that the ten cues are native <video> rather than a YouTube iframe, a tap
+   on the frame is ours to respond to. The glyph is CSS-drawn, not an icon
+   font: CR-8 asks for the site's own language, "no icon-pack look". */
+.tap-feedback {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 84px;
+  height: 84px;
+  margin: -42px 0 0 -42px;
+  border: 1px solid var(--color-accent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-bg) 55%, transparent);
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+.tap-feedback.show { animation: tap-pulse var(--dur-3) var(--ease-out) forwards; }
+@keyframes tap-pulse {
+  0%   { opacity: 0;   transform: scale(0.82); }
+  30%  { opacity: 1;   transform: scale(1); }
+  100% { opacity: 0;   transform: scale(1.22); }
+}
+
+/* play: a triangle. pause: two bars. Both drawn from the same element so
+   there is nothing to load and nothing to swap. */
+.tap-feedback::before {
+  content: '';
+  display: block;
+}
+.tap-feedback[data-state="play"]::before {
+  width: 0;
+  height: 0;
+  margin-left: 6px; /* optical centering — a triangle's mass sits left */
+  border-left: 22px solid var(--color-heading);
+  border-top: 14px solid transparent;
+  border-bottom: 14px solid transparent;
+}
+.tap-feedback[data-state="pause"]::before {
+  width: 20px;
+  height: 26px;
+  border-left: 7px solid var(--color-heading);
+  border-right: 7px solid var(--color-heading);
+  box-sizing: border-box;
+}
+
+/* CLAUDE.md: reduced motion drops the movement, keeps the confirmation —
+   the point of this element is telling the viewer their tap registered. */
+@media (prefers-reduced-motion: reduce) {
+  .tap-feedback.show { animation: tap-fade var(--dur-3) steps(1, end) forwards; }
+  @keyframes tap-fade { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
+}

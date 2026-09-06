@@ -34,6 +34,7 @@ export function initPlayerControls(): PlayerControls {
   const elapsedEl = document.getElementById('cElapsed');
   const totalEl = document.getElementById('cTotal');
   const hintBtn = document.getElementById('cHint');
+  const tapFeedback = document.getElementById('tapFeedback');
   const hint = document.getElementById('shortcutHint');
 
   let player: YTPlayer | null = null;
@@ -96,10 +97,24 @@ export function initPlayerControls(): PlayerControls {
     addEventListener('pointerup', up);
   });
 
+  /** CR-003 — flash the state the tap PRODUCED, not the one it interrupted:
+   *  tapping a playing video shows the pause glyph. Restarting the animation
+   *  needs the class removed and the frame forced, otherwise a second tap
+   *  inside the animation's duration does nothing visible. */
+  function flashTapFeedback(nowPlaying: boolean): void {
+    if (!tapFeedback) return;
+    tapFeedback.dataset.state = nowPlaying ? 'play' : 'pause';
+    tapFeedback.classList.remove('show');
+    void tapFeedback.offsetWidth;
+    tapFeedback.classList.add('show');
+  }
+
   function togglePlay(): void {
     if (!player) return;
-    if (player.getPlayerState() === YT_PLAYING) player.pauseVideo();
+    const wasPlaying = player.getPlayerState() === YT_PLAYING;
+    if (wasPlaying) player.pauseVideo();
     else player.playVideo();
+    flashTapFeedback(!wasPlaying);
   }
   playBtn?.addEventListener('click', togglePlay);
   // click/tap anywhere on the video toggles play/pause, same as #cPlay —

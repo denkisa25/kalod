@@ -208,11 +208,15 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
     // rampVolume()/debugAudioState() above unchanged.
     if (spec.kind === 'video') {
       const v = document.createElement('video');
-      v.src = spec.src;
+      // ORDER MATTERS on iOS. muted and playsinline must be set BEFORE src, so
+      // the element already qualifies for the muted-autoplay exemption at the
+      // moment WebKit starts loading. Assigning src first and muting after is
+      // a documented way to have iOS refuse autoplay outright.
       v.muted = true;
-      v.loop = true;
       v.playsInline = true;
+      v.loop = true;
       v.autoplay = true;
+      v.src = spec.src;
       v.setAttribute('aria-hidden', 'true');
       // the cue's own still, so a slow first segment shows the frame the
       // visitor is already looking at rather than a black box
@@ -226,6 +230,14 @@ function initBackgroundLoop(cues: NodeListOf<HTMLElement>, byIdx: Map<number, Cu
         // removed) by the time metadata finishes loading
         if (cue.querySelector('video') !== v) return;
         players.set(cue, adaptVideoElement(v));
+        // The autoplay ATTRIBUTE alone is unreliable for an element created
+        // and inserted by script — iOS in particular often ignores it and
+        // waits for an explicit request. The detail-overlay path has always
+        // called play() for this reason; the feed path did not, which is why
+        // cues past the first stayed on their poster on mobile even after the
+        // touch guard stopped suppressing them. A rejection here is the
+        // browser's autoplay policy, not an error worth surfacing.
+        v.play().catch(() => {});
         if (cue === activeCue) makeAudible(cue);
       });
       return;
