@@ -1,15 +1,15 @@
 {
-  "note": "CR-003 — the home cue feed, in order. Every slug MUST be one of the client's own-channel uploads (see the 29-video table in docs/video-migration-guide.md) so it can be served from Cloudflare Stream as a native <video>. A third-party-channel slug here would silently keep the iOS autoplay failure from cr-002-mobile-playback-qa.md. Run `npm run check:featured` after editing. An empty order[] falls back to the old date sort. This file is the intended data source for a future admin panel.",
+  "note": "CR-003 — the home cue feed, in order. THIS FILE IS THE CONTROL SURFACE: reorder `order` and rebuild, no code changes. It is also the intended data source for a future admin panel. Every slug must be on Cloudflare Stream (see src/data/cloudflare-stream-map.json) so it plays as a native <video> — a slug that isn't falls back to a YouTube iframe, which does not autoplay on iOS (cr-002-mobile-playback-qa.md). Run `npm run check:featured` after editing; it hard-fails on any cue missing from the Stream map. An empty order[] falls back to a date sort.",
   "order": [
     "viktoria-trailer-2",
+    "burkinabe-rising",
+    "investbulgaria-move-to-be-moved",
+    "audi-quattro-hitchhiker",
+    "wantoks-dance-of-resilience-in-melanesia",
     "btv-tv-talent-show",
     "btv-action-id-car",
-    "btv-comedy",
-    "btv-action-robot",
     "btv-comedy-the-cool-cre",
-    "so-independent-ii-2013-promo-trailer",
-    "tikves",
-    "devin-transparency-tvc",
-    "boss-explosion"
+    "btv-comedy",
+    "btv-action-robot"
   ]
 }
