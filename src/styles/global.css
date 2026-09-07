@@ -1115,6 +1115,12 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
 
 .shortcut-hint {
   position: absolute;
+  /* role="tooltip" with nothing interactive inside, but it is a sibling of
+     .chrome under #detail, so with the overlay open it inherited
+     pointer-events:auto and — anchored bottom-right at z-index 3, right where
+     the transport sits — swallowed clicks on the controls beneath it. It is
+     read-only text; it has no business receiving pointer events at all. */
+  pointer-events: none;
   z-index: 3;
   bottom: 90px;
   right: clamp(20px, 4vw, 48px);

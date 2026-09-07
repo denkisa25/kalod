@@ -197,6 +197,14 @@ export function initPlayerControls(): PlayerControls {
     if (v > 0 && player.isMuted()) player.unMute();
     updateMuteIcon();
   });
+  /** The hint is a transient disclosure, not a setting. Nothing reset it, so
+   *  opening it once left it on screen for every subsequent cue and after the
+   *  overlay had been closed and reopened. */
+  function hideHint(): void {
+    if (hint) hint.hidden = true;
+    hintBtn?.setAttribute('aria-expanded', 'false');
+  }
+
   hintBtn?.addEventListener('click', () => {
     const willShow = hint?.hidden !== false;
     if (hint) hint.hidden = !willShow;
@@ -245,7 +253,11 @@ export function initPlayerControls(): PlayerControls {
     chrome?.classList.remove('idle');
     if (idleTimer) clearTimeout(idleTimer);
     idleTimer = setTimeout(() => {
-      if (player?.getPlayerState() === YT_PLAYING) chrome?.classList.add('idle');
+      if (player?.getPlayerState() === YT_PLAYING) {
+        chrome?.classList.add('idle');
+        // the controls have gone; the panel explaining them should go too
+        hideHint();
+      }
     }, IDLE_MS);
   }
   detail?.addEventListener('pointermove', showChrome);
@@ -306,6 +318,9 @@ export function initPlayerControls(): PlayerControls {
       unsubscribeMedia = null;
       stopPolling();
       setBuffering(false);
+      // called on every cue change and on close, so this is the one place that
+      // reliably clears a hint left open on the previous cue
+      hideHint();
 
       player = p;
       chrome?.classList.remove('idle');
