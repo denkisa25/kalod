@@ -211,6 +211,21 @@ export function initPlayerControls(): PlayerControls {
     hintBtn.setAttribute('aria-expanded', String(willShow));
   });
 
+  /** Click anywhere else to dismiss, as a tooltip should behave.
+   *
+   *  Both exclusions matter. This fires on pointerdown while the button
+   *  toggles on click, so without skipping #cHint the panel would be hidden
+   *  here and immediately reopened by the button's own handler — the button
+   *  would look broken. #shortcutHint is skipped so a click landing on the
+   *  panel does not dismiss it mid-read; it takes no pointer events today, but
+   *  that should not be a load-bearing assumption. */
+  detail?.addEventListener('pointerdown', (e) => {
+    if (hint?.hidden !== false) return;
+    const t = e.target as HTMLElement | null;
+    if (t?.closest?.('#cHint') || t?.closest?.('#shortcutHint')) return;
+    hideHint();
+  });
+
   rateBtn?.addEventListener('click', () => {
     if (!player?.native) return;
     const i = RATES.indexOf(player.native.getRate() as (typeof RATES)[number]);

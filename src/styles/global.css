@@ -333,6 +333,14 @@ body.ready #filters { opacity: 1; pointer-events: auto; }
    contacts started rendering the hero header permanently and the pill
    silently kept the compact-header offset). */
 body:has(header.header--hero) #filters { top: 150px; }
+/* The home feed gets more air under the tagline. 150px clears the hero header
+   (which ends at 112px) but only by 38px, and against a full-bleed video the
+   pill reads as crowding the wordmark block rather than floating clear of it.
+   Scoped to the feed deliberately: on /work the same pill sits above the
+   "work" heading, whose padding-top floor was sized to clear it at exactly
+   150px (see .work-head), so moving it globally would reintroduce the
+   collision that floor exists to prevent. */
+body:has(#feed):has(header.header--hero) #filters { top: calc(150px + var(--space-5)); }
 .filter {
   display: flex;
   align-items: center;
