@@ -62,14 +62,39 @@ jobs:
           test -f dist/index.html || { echo "::error::build produced no index.html"; exit 1; }
           echo "pages built: $(find dist -name '*.html' | wc -l)"
 
-      # The deploy branch is an ARTIFACT, not history. It is rebuilt as a single
-      # commit and force-pushed every time, so the repository does not
-      # accumulate a new copy of every image on every deploy.
+      # Commits ON TOP of the deploy branch's existing history — deliberately
+      # NOT a force-push. The first version rebuilt the branch as one orphan
+      # commit and force-pushed it, which broke cPanel: its checkout sat on a
+      # commit that no longer existed in the remote, its pull could not
+      # fast-forward, and cPanel surfaced that as "could not contact the remote
+      # repository". An artifact branch can be force-pushed only while nothing
+      # tracks it, and something does.
+      #
+      # History growth is far cheaper than it looks: git stores blobs by content
+      # hash, so the posters and other unchanged assets are stored once no
+      # matter how many builds reference them. Only genuinely changed files add
+      # objects.
       - name: publish to deploy branch
         env:
           SITE_BASE: ${{ vars.SITE_BASE || '/new' }}
         run: |
           STAGE="$(mktemp -d)"
+          REMOTE="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git"
+
+          # Continue the existing branch when there is one; create it on the
+          # first ever run.
+          if git clone --quiet --branch deploy --single-branch "$REMOTE" "$STAGE" 2>/dev/null; then
+            echo "continuing existing deploy branch"
+          else
+            echo "deploy branch does not exist yet — creating it"
+            mkdir -p "$STAGE"
+            git -C "$STAGE" init -q
+            git -C "$STAGE" checkout -q -b deploy
+          fi
+
+          # Replace the payload wholesale so files dropped from the build stop
+          # being served, which a plain copy-over would leave behind.
+          rm -rf "$STAGE/dist"
           mkdir -p "$STAGE/dist"
           cp -R dist/. "$STAGE/dist/"
 
@@ -117,13 +142,13 @@ jobs:
           NOTE
 
           cd "$STAGE"
-          git init -q
-          git checkout -q -b deploy
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
+          if git diff --cached --quiet; then
+            echo "no change in built output — nothing to publish"
+            exit 0
+          fi
           git commit -q -m "build ${GITHUB_SHA::7} (SITE_BASE=${SITE_BASE})"
-          git push -q --force \
-            "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" \
-            deploy
+          git push -q "$REMOTE" deploy
           echo "published $(find dist -name '*.html' | wc -l) pages to the deploy branch"
