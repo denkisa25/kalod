@@ -1,0 +1,92 @@
+# Builds the site on a clean runner and ships only dist/ to cPanel over SSH.
+#
+# WHY THIS EXISTS. Building on the shared host was abandoned after five
+# distinct resource walls, each of which only became visible once the previous
+# one was fixed: rayon's thread pool (EAGAIN), esbuild's Go runtime (died on its
+# fourth OS thread), libvips (segfault on the studio photos), and finally V8
+# aborting under cPanel's deploy cgroup — first with a heap OOM at ~46 MB, then
+# with no message at all. The account's real ceilings are LVE cgroup limits that
+# cannot be read from inside the shell (ulimit reports "unlimited"), so tuning
+# against them was guesswork. The host is a perfectly good static file server;
+# it is not a build machine, and this stops asking it to be one.
+#
+# The site is fully static, so nothing but the built output needs to reach it.
+name: build and deploy
+
+on:
+  push:
+    branches: [main]
+  # so a deploy can be re-run without an empty commit
+  workflow_dispatch:
+
+concurrency:
+  # never let two deploys interleave rsync into the same docroot
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.12.0'
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm test
+
+      # SITE_BASE and INDEXABLE are repository VARIABLES, not secrets, so the
+      # launch flip is a settings change rather than a commit: set SITE_BASE=/
+      # and INDEXABLE=true when the site moves to the domain root. Defaults keep
+      # the current /new preview behaviour, and default to NOT indexable, which
+      # is the safe direction to fail in.
+      - name: build
+        env:
+          SITE_BASE: ${{ vars.SITE_BASE || '/new' }}
+          INDEXABLE: ${{ vars.INDEXABLE }}
+        run: |
+          echo "SITE_BASE=$SITE_BASE  INDEXABLE=${INDEXABLE:-<unset>}"
+          npm run build
+          test -f dist/index.html || { echo "build produced no index.html"; exit 1; }
+          echo "pages: $(find dist -name '*.html' | wc -l)"
+
+      # The key goes through an env var rather than being interpolated straight
+      # into the shell line: a secret expanded inline is pasted verbatim into
+      # the command, which breaks on the newlines a private key is made of and
+      # would put its contents into any shell trace. env keeps it opaque.
+      - name: add ssh key
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT || 22 }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      # --delete keeps the docroot honest: without it, files removed from the
+      # build linger forever (the pre-optimisation posters are still sitting
+      # there from before the AVIF work). The excludes are host machinery that
+      # is NOT part of the build and must survive — deleting .user.ini or php.ini
+      # would break the account's Node.js app registration, and cPanel recreates
+      # neither.
+      - name: rsync dist to cpanel
+        run: |
+          rsync -az --delete \
+            --exclude '.well-known/' \
+            --exclude 'cgi-bin/' \
+            --exclude '.user.ini' \
+            --exclude 'php.ini' \
+            --exclude 'tmp/' \
+            -e "ssh -p ${{ secrets.SSH_PORT || 22 }} -o StrictHostKeyChecking=yes" \
+            dist/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.DEPLOY_PATH }}"
+
+      - name: verify what landed
+        run: |
+          ssh -p "${{ secrets.SSH_PORT || 22 }}" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "ls ${{ secrets.DEPLOY_PATH }}/index.html && find ${{ secrets.DEPLOY_PATH }} -name '*.html' | wc -l"
