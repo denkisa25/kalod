@@ -28,6 +28,34 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      # Fails immediately and legibly when the deploy secrets are not configured
+      # yet, instead of building for a minute and then dying inside ssh with
+      # something like "Could not resolve hostname". The first run of this
+      # workflow fired automatically on the commit that added it, before any
+      # secrets existed, and produced exactly that confusion.
+      - name: check deploy secrets are configured
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          missing=""
+          [ -n "$SSH_HOST" ]        || missing="$missing SSH_HOST"
+          [ -n "$SSH_USER" ]        || missing="$missing SSH_USER"
+          [ -n "$SSH_PRIVATE_KEY" ] || missing="$missing SSH_PRIVATE_KEY"
+          [ -n "$DEPLOY_PATH" ]     || missing="$missing DEPLOY_PATH"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secret(s):$missing"
+            echo "Set them under Settings > Secrets and variables > Actions > Secrets."
+            echo "  SSH_HOST     e.g. jump22.jump.bg"
+            echo "  SSH_USER     e.g. kickstic"
+            echo "  DEPLOY_PATH  e.g. /home/kickstic/public_html/kalodimitrov.com/new/"
+            echo "  SSH_PRIVATE_KEY  the private half of the key authorised in cPanel"
+            exit 1
+          fi
+          echo "all deploy secrets present"
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
