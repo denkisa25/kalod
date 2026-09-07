@@ -1006,7 +1006,17 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
    The wrapper is now transparent to pointers and its actually-interactive
    regions opt back in. */
 .chrome { pointer-events: none; }
-.chrome-top, .controls, .info { pointer-events: auto; }
+/* Scoped to #detail.open, and that scoping is load-bearing. `pointer-events:
+   none` on a parent does NOT stop a child that sets `pointer-events: auto` —
+   so re-enabling these unconditionally left them live even while #detail was
+   closed and invisible. They are flex children of .chrome, which fills
+   #detail (position:fixed, inset:0), with .chrome-top pinned to the top edge
+   and .controls/.info grouped at the bottom. The result was two invisible
+   bars across every page: the top one swallowing clicks on the header nav,
+   the bottom one swallowing "watch full video" on the feed. */
+#detail.open .chrome-top,
+#detail.open .controls,
+#detail.open .info { pointer-events: auto; }
 .chrome.idle .chrome-top, .chrome.idle .controls, .chrome.idle .info { pointer-events: none; }
 /* chrome-top absorbs the free space so it stays pinned to the top edge
    while .controls and .info (siblings, not a wrapper) group together at
