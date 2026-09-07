@@ -65,10 +65,50 @@ export function attachVideoSource(video: HTMLVideoElement, spec: VideoSourceSpec
           // The feed attaches and tears down cues on scroll, so a long buffer
           // is wasted bandwidth for a cue the visitor has already passed.
           maxBufferLength: 20,
-          // Start conservatively and let ABR climb; the alternative is opening
-          // on the highest rendition, which is the very cost being avoided.
+          // Auto, but see the estimate below — "auto" alone is what made every
+          // cue open at 240p.
           startLevel: -1,
+          // hls.js assumes 500kbps until it has measured anything, so the first
+          // segments of every cue were fetched at the lowest rendition and only
+          // climbed afterwards. On a full-bleed background loop that opening is
+          // the whole impression, and it is why the feed looked poor while the
+          // detail player looked fine — by the time the player opened, ABR had
+          // learned the real bandwidth. 3 Mbps is a fairer modern starting
+          // guess; a genuinely slow connection still corrects downward within a
+          // segment or two, which is ABR working rather than failing.
+          abrEwmaDefaultEstimate: 3_000_000,
+          // Never fetch a rendition larger than the element can show. Full-bleed
+          // on desktop resolves high, a small viewport resolves lower, and it
+          // stops bandwidth going to pixels that get scaled away.
+          capLevelToPlayerSize: true,
         });
+        // abrEwmaDefaultEstimate alone does NOT decide the opening rendition —
+        // measured, every cue still began at 240p with it raised. hls.js takes
+        // the manifest's first level until ABR has data, so the start level has
+        // to be chosen explicitly. Pick the best rendition the element can
+        // actually show, then hand back to ABR.
+        hls.on(Hls.Events.MANIFEST_PARSED, (_e, data) => {
+          const target = video.clientHeight * (window.devicePixelRatio || 1);
+          let best = -1;
+          let bestHeight = 0;
+          data.levels.forEach((lvl, i) => {
+            if (lvl.height <= target * 1.1 && lvl.height > bestHeight) {
+              best = i;
+              bestHeight = lvl.height;
+            }
+          });
+          // Nothing small enough (a very short element) — take the lowest
+          // rather than forcing the largest rendition onto a tiny box.
+          if (best === -1) {
+            best = data.levels.reduce((lo, lvl, i) => (lvl.height < data.levels[lo].height ? i : lo), 0);
+          }
+          hls.startLevel = best;
+          // The first fragment may already be in flight at the manifest's
+          // default level; nextLevel makes the correction immediate instead of
+          // waiting for ABR to climb over several segments.
+          hls.nextLevel = best;
+        });
+
         hls.on(Hls.Events.ERROR, (_e, data) => {
           // Only fatal errors are worth acting on — hls.js recovers from most
           // network and media errors on its own.
