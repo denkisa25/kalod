@@ -58,5 +58,203 @@
     "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/96deeddf0efca760f826b6dbbc0a00ac/downloads/default.mp4",
     "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/96deeddf0efca760f826b6dbbc0a00ac/thumbnails/thumbnail.jpg",
     "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/96deeddf0efca760f826b6dbbc0a00ac/manifest/video.m3u8"
+  },
+  "btv-master-chef-tv-promo": {
+    "uid": "4a26833abb3add89c61ab5196f43b73b",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/4a26833abb3add89c61ab5196f43b73b/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/4a26833abb3add89c61ab5196f43b73b/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/4a26833abb3add89c61ab5196f43b73b/thumbnails/thumbnail.jpg"
+  },
+  "mocca-mocc": {
+    "uid": "9d7bc75a3d299bbba3b80660a23166d6",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/9d7bc75a3d299bbba3b80660a23166d6/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/9d7bc75a3d299bbba3b80660a23166d6/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/9d7bc75a3d299bbba3b80660a23166d6/thumbnails/thumbnail.jpg"
+  },
+  "hooligan": {
+    "uid": "5826c9acb39e56cf755b31735456c71a",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/5826c9acb39e56cf755b31735456c71a/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/5826c9acb39e56cf755b31735456c71a/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/5826c9acb39e56cf755b31735456c71a/thumbnails/thumbnail.jpg"
+  },
+  "indiabulls": {
+    "uid": "f3545caf6000cef86e3d510100a20bfe",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/f3545caf6000cef86e3d510100a20bfe/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/f3545caf6000cef86e3d510100a20bfe/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/f3545caf6000cef86e3d510100a20bfe/thumbnails/thumbnail.jpg"
+  },
+  "so-independent-i": {
+    "uid": "f8f2b15a01092055d0396942e840f18e",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/f8f2b15a01092055d0396942e840f18e/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/f8f2b15a01092055d0396942e840f18e/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/f8f2b15a01092055d0396942e840f18e/thumbnails/thumbnail.jpg"
+  },
+  "lunch-break-clip-1": {
+    "uid": "fd92fe44891645e1cd912e8e99e05372",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/fd92fe44891645e1cd912e8e99e05372/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/fd92fe44891645e1cd912e8e99e05372/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/fd92fe44891645e1cd912e8e99e05372/thumbnails/thumbnail.jpg"
+  },
+  "handy-angry-birds-tvc": {
+    "uid": "92e035bd84087f44073fbfc26c8411e0",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/92e035bd84087f44073fbfc26c8411e0/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/92e035bd84087f44073fbfc26c8411e0/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/92e035bd84087f44073fbfc26c8411e0/thumbnails/thumbnail.jpg"
+  },
+  "project-title-one": {
+    "uid": "f283fd99990f9e7e1b32a728f63c539a",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/f283fd99990f9e7e1b32a728f63c539a/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/f283fd99990f9e7e1b32a728f63c539a/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/f283fd99990f9e7e1b32a728f63c539a/thumbnails/thumbnail.jpg"
+  },
+  "boss-explosion": {
+    "uid": "6dbe6409e9edacf03ee38494d1567073",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/6dbe6409e9edacf03ee38494d1567073/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/6dbe6409e9edacf03ee38494d1567073/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/6dbe6409e9edacf03ee38494d1567073/thumbnails/thumbnail.jpg"
+  },
+  "the-clockmaker": {
+    "uid": "ce0c6e2635ce32e8232a51547511ef67",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/ce0c6e2635ce32e8232a51547511ef67/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/ce0c6e2635ce32e8232a51547511ef67/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/ce0c6e2635ce32e8232a51547511ef67/thumbnails/thumbnail.jpg"
+  },
+  "hyundai_we": {
+    "uid": "89d796dba589b63c562a01c5e72b23d1",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/89d796dba589b63c562a01c5e72b23d1/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/89d796dba589b63c562a01c5e72b23d1/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/89d796dba589b63c562a01c5e72b23d1/thumbnails/thumbnail.jpg"
+  },
+  "devin-transparency-tvc": {
+    "uid": "e9829119c820630d67e84af5f2fa046c",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/e9829119c820630d67e84af5f2fa046c/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/e9829119c820630d67e84af5f2fa046c/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/e9829119c820630d67e84af5f2fa046c/thumbnails/thumbnail.jpg"
+  },
+  "veda-bulgarika": {
+    "uid": "bace76d9093dd95fa5bdbfbe15255f07",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/bace76d9093dd95fa5bdbfbe15255f07/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/bace76d9093dd95fa5bdbfbe15255f07/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/bace76d9093dd95fa5bdbfbe15255f07/thumbnails/thumbnail.jpg"
+  },
+  "handy-vtora-mladost-tvc": {
+    "uid": "54e9202068023acc99aecccf76bea8ee",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/54e9202068023acc99aecccf76bea8ee/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/54e9202068023acc99aecccf76bea8ee/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/54e9202068023acc99aecccf76bea8ee/thumbnails/thumbnail.jpg"
+  },
+  "handy-nokia-lumia-tvc": {
+    "uid": "2a339cf5f1be6a60486b192b450770f1",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/2a339cf5f1be6a60486b192b450770f1/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/2a339cf5f1be6a60486b192b450770f1/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/2a339cf5f1be6a60486b192b450770f1/thumbnails/thumbnail.jpg"
+  },
+  "handy-asha": {
+    "uid": "3db7a29d4b8b83329016a4b0f5ed34f2",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/3db7a29d4b8b83329016a4b0f5ed34f2/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/3db7a29d4b8b83329016a4b0f5ed34f2/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/3db7a29d4b8b83329016a4b0f5ed34f2/thumbnails/thumbnail.jpg"
+  },
+  "loop-after9": {
+    "uid": "b8057e146101a15cb69581c7d4c90a25",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/b8057e146101a15cb69581c7d4c90a25/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/b8057e146101a15cb69581c7d4c90a25/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/b8057e146101a15cb69581c7d4c90a25/thumbnails/thumbnail.jpg"
+  },
+  "tikves": {
+    "uid": "666df8b64c8be2fc02e1b40f47523f50",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/666df8b64c8be2fc02e1b40f47523f50/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/666df8b64c8be2fc02e1b40f47523f50/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/666df8b64c8be2fc02e1b40f47523f50/thumbnails/thumbnail.jpg"
+  },
+  "hope-for-the-little-ones": {
+    "uid": "02c1794d26abd27272b1ffecd052f596",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/02c1794d26abd27272b1ffecd052f596/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/02c1794d26abd27272b1ffecd052f596/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/02c1794d26abd27272b1ffecd052f596/thumbnails/thumbnail.jpg"
+  },
+  "lunch-break-finale": {
+    "uid": "d209a0e28a40e1c1ab34e6306ed1ec0a",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/d209a0e28a40e1c1ab34e6306ed1ec0a/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/d209a0e28a40e1c1ab34e6306ed1ec0a/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/d209a0e28a40e1c1ab34e6306ed1ec0a/thumbnails/thumbnail.jpg"
+  },
+  "the-bow": {
+    "uid": "7d7fea60a782a572b3a7948d14305227",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/7d7fea60a782a572b3a7948d14305227/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/7d7fea60a782a572b3a7948d14305227/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/7d7fea60a782a572b3a7948d14305227/thumbnails/thumbnail.jpg"
+  },
+  "handy-romantic-dogs-tvc": {
+    "uid": "00da9815c550dd232b35792278dda876",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/00da9815c550dd232b35792278dda876/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/00da9815c550dd232b35792278dda876/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/00da9815c550dd232b35792278dda876/thumbnails/thumbnail.jpg"
+  },
+  "mtel-comfort": {
+    "uid": "95a69064de5fc556e9d68458559a5b7b",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/95a69064de5fc556e9d68458559a5b7b/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/95a69064de5fc556e9d68458559a5b7b/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/95a69064de5fc556e9d68458559a5b7b/thumbnails/thumbnail.jpg"
+  },
+  "orehite-bela": {
+    "uid": "d3476f4894ba7924868524cca6426afe",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/d3476f4894ba7924868524cca6426afe/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/d3476f4894ba7924868524cca6426afe/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/d3476f4894ba7924868524cca6426afe/thumbnails/thumbnail.jpg"
+  },
+  "a-presidential-campaign-tvc-2": {
+    "uid": "06f1865bbdbb06ed3f03ddb59ed031ec",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/06f1865bbdbb06ed3f03ddb59ed031ec/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/06f1865bbdbb06ed3f03ddb59ed031ec/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/06f1865bbdbb06ed3f03ddb59ed031ec/thumbnails/thumbnail.jpg"
+  },
+  "bella-tocheni": {
+    "uid": "84be43de1abd2ae40a97875c47415694",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/84be43de1abd2ae40a97875c47415694/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/84be43de1abd2ae40a97875c47415694/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/84be43de1abd2ae40a97875c47415694/thumbnails/thumbnail.jpg"
+  },
+  "bella-supersta-tvc": {
+    "uid": "82620f29c918117e8bd214df28824ef6",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/82620f29c918117e8bd214df28824ef6/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/82620f29c918117e8bd214df28824ef6/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/82620f29c918117e8bd214df28824ef6/thumbnails/thumbnail.jpg"
+  },
+  "so-independent-ii-2013-promo-trailer": {
+    "uid": "526748d8f339894b9c0c6324ee6b9d78",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/526748d8f339894b9c0c6324ee6b9d78/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/526748d8f339894b9c0c6324ee6b9d78/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/526748d8f339894b9c0c6324ee6b9d78/thumbnails/thumbnail.jpg"
+  },
+  "shpek-naroden": {
+    "uid": "83e5c2cdc3d14ab5e5643d81330c7399",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/83e5c2cdc3d14ab5e5643d81330c7399/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/83e5c2cdc3d14ab5e5643d81330c7399/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/83e5c2cdc3d14ab5e5643d81330c7399/thumbnails/thumbnail.jpg"
+  },
+  "pirinsko-radler": {
+    "uid": "9164aa83e1a90189fb3f7fcc0aa95366",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/9164aa83e1a90189fb3f7fcc0aa95366/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/9164aa83e1a90189fb3f7fcc0aa95366/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/9164aa83e1a90189fb3f7fcc0aa95366/thumbnails/thumbnail.jpg"
+  },
+  "kubeti-cubes": {
+    "uid": "a5637cd115ebedcb56e18855dddc36c3",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/a5637cd115ebedcb56e18855dddc36c3/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/a5637cd115ebedcb56e18855dddc36c3/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/a5637cd115ebedcb56e18855dddc36c3/thumbnails/thumbnail.jpg"
+  },
+  "o-leki-tvc": {
+    "uid": "a2545bcc45a0813cd949cdc07f2e6979",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/a2545bcc45a0813cd949cdc07f2e6979/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/a2545bcc45a0813cd949cdc07f2e6979/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/a2545bcc45a0813cd949cdc07f2e6979/thumbnails/thumbnail.jpg"
+  },
+  "loop-weekend": {
+    "uid": "b1da7c8f9531d168bf5d9d9d96660379",
+    "mp4Url": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/b1da7c8f9531d168bf5d9d9d96660379/downloads/default.mp4",
+    "hlsUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/b1da7c8f9531d168bf5d9d9d96660379/manifest/video.m3u8",
+    "thumbnailUrl": "https://customer-a3tdnd25lxjdn49c.cloudflarestream.com/b1da7c8f9531d168bf5d9d9d96660379/thumbnails/thumbnail.jpg"
   }
 }
