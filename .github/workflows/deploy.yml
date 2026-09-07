@@ -85,6 +85,23 @@ jobs:
               - /bin/cp -R $REPO_PATH/dist/. $DEPLOYPATH
           CPANEL
 
+          # The server-side checkout still holds node_modules/, .astro/ and other
+          # debris from when it tracked `main` and ran builds in place. On main
+          # those were gitignored; this branch previously had no .gitignore, so
+          # git reported the tree as dirty — and cPanel DISABLES "Deploy HEAD
+          # Commit" on a dirty working tree. Ignoring them here is what makes
+          # the button clickable without anyone having to hand-clean the server.
+          cat > "$STAGE/.gitignore" <<'IGNORE'
+          node_modules/
+          .astro/
+          .cache/
+          npm-debug.log*
+          .DS_Store
+          tmp/
+          .env
+          .env.local
+          IGNORE
+
           cat > "$STAGE/README.md" <<'NOTE'
           # deploy branch — generated, do not edit
 
