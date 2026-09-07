@@ -1,18 +1,21 @@
 {
   "a-presidential-campaign-tvc-2": {
     "widths": [
-      480
+      480,
+      960,
+      1600
     ],
-    "width": 720,
-    "height": 405
+    "width": 1600,
+    "height": 900
   },
   "audi-quattro-hitchhiker": {
     "widths": [
       480,
-      960
+      960,
+      1600
     ],
-    "width": 1344,
-    "height": 559
+    "width": 1600,
+    "height": 900
   },
   "bella-supersta-tvc": {
     "widths": [
@@ -20,15 +23,17 @@
       960,
       1600
     ],
-    "width": 1920,
-    "height": 1080
+    "width": 1600,
+    "height": 900
   },
   "bella-tocheni": {
     "widths": [
-      480
+      480,
+      960,
+      1600
     ],
-    "width": 720,
-    "height": 576
+    "width": 1600,
+    "height": 900
   },
   "boss-explosion": {
     "widths": [
@@ -36,8 +41,8 @@
       960,
       1600
     ],
-    "width": 1920,
-    "height": 1080
+    "width": 1600,
+    "height": 900
   },
   "btv-action-id-car": {
     "widths": [
@@ -45,8 +50,8 @@
       960,
       1600
     ],
-    "width": 1920,
-    "height": 1080
+    "width": 1600,
+    "height": 900
   },
   "btv-action-robot": {
     "widths": [
@@ -54,32 +59,35 @@
       960,
       1600
     ],
-    "width": 1920,
-    "height": 1090
+    "width": 1600,
+    "height": 900
   },
   "btv-comedy-the-cool-cre": {
     "widths": [
       480,
-      960
+      960,
+      1600
     ],
-    "width": 1280,
-    "height": 738
+    "width": 1600,
+    "height": 900
   },
   "btv-comedy": {
     "widths": [
       480,
-      960
+      960,
+      1600
     ],
-    "width": 1280,
-    "height": 738
+    "width": 1600,
+    "height": 900
   },
   "btv-master-chef-tv-promo": {
     "widths": [
       480,
-      960
+      960,
+      1600
     ],
-    "width": 1024,
-    "height": 576
+    "width": 1600,
+    "height": 900
   },
   "btv-tv-talent-show": {
     "widths": [
@@ -87,8 +95,8 @@
       960,
       1600
     ],
-    "width": 1920,
-    "height": 1080
+    "width": 1600,
+    "height": 900
   },
   "burkinabe-rising": {
     "widths": [
@@ -96,118 +104,134 @@
       960,
       1600
     ],
-    "width": 2473,
-    "height": 1045
+    "width": 1600,
+    "height": 900
   },
   "devin-transparency-tvc": {
     "widths": [
       480,
-      960
+      960,
+      1600
     ],
-    "width": 1280,
-    "height": 720
+    "width": 1600,
+    "height": 900
   },
   "handy-angry-birds-tvc": {
     "widths": [
       480,
-      960
+      960,
+      1600
     ],
-    "width": 1280,
-    "height": 720
+    "width": 1600,
+    "height": 900
   },
   "handy-asha": {
     "widths": [
       480,
-      960
+      960,
+      1600
     ],
-    "width": 1000,
-    "height": 720
+    "width": 1600,
+    "height": 900
   },
   "handy-nokia-lumia-tvc": {
     "widths": [
       480,
-      960
+      960,
+      1600
     ],
-    "width": 1280,
-    "height": 720
+    "width": 1600,
+    "height": 900
   },
   "handy-romantic-dogs-tvc": {
     "widths": [
       480,
-      960
+      960,
+      1600
     ],
-    "width": 1280,
-    "height": 720
+    "width": 1600,
+    "height": 900
   },
   "handy-vtora-mladost-tvc": {
     "widths": [
       480,
-      960
+      960,
+      1600
     ],
-    "width": 1280,
-    "height": 720
+    "width": 1600,
+    "height": 900
   },
   "hooligan": {
     "widths": [
       480,
-      960
+      960,
+      1600
     ],
-    "width": 1280,
-    "height": 720
+    "width": 1600,
+    "height": 900
   },
   "hope-for-the-little-ones": {
     "widths": [
       480,
-      960
+      960,
+      1600
     ],
-    "width": 1280,
-    "height": 640
+    "width": 1600,
+    "height": 900
   },
   "hyundai_we": {
     "widths": [
-      480
+      480,
+      960,
+      1600
     ],
-    "width": 848,
-    "height": 360
+    "width": 1600,
+    "height": 900
   },
   "indiabulls": {
     "widths": [
       480,
-      960
+      960,
+      1600
     ],
-    "width": 1280,
-    "height": 720
+    "width": 1600,
+    "height": 900
   },
   "investbulgaria-move-to-be-moved": {
     "widths": [
       480,
-      960
+      960,
+      1600
     ],
-    "width": 1298,
-    "height": 552
+    "width": 1600,
+    "height": 900
   },
   "kubeti-cubes": {
     "widths": [
-      480
+      480,
+      960,
+      1600
     ],
-    "width": 720,
-    "height": 576
+    "width": 1600,
+    "height": 900
   },
   "loop-after9": {
     "widths": [
       480,
-      960
+      960,
+      1600
     ],
-    "width": 1536,
-    "height": 1152
+    "width": 1600,
+    "height": 900
   },
   "loop-weekend": {
     "widths": [
       480,
-      960
+      960,
+      1600
     ],
-    "width": 1536,
-    "height": 1152
+    "width": 1600,
+    "height": 900
   },
   "lunch-break-clip-1": {
     "widths": [
@@ -215,45 +239,53 @@
       960,
       1600
     ],
-    "width": 1920,
-    "height": 1080
+    "width": 1600,
+    "height": 900
   },
   "lunch-break-finale": {
     "widths": [
       480,
-      960
+      960,
+      1600
     ],
-    "width": 1280,
-    "height": 720
+    "width": 1600,
+    "height": 900
   },
   "mocca-mocc": {
     "widths": [
-      480
+      480,
+      960,
+      1600
     ],
-    "width": 787,
-    "height": 576
+    "width": 1600,
+    "height": 900
   },
   "mtel-comfort": {
     "widths": [
-      480
+      480,
+      960,
+      1600
     ],
-    "width": 768,
-    "height": 576
+    "width": 1600,
+    "height": 900
   },
   "o-leki-tvc": {
     "widths": [
-      480
+      480,
+      960,
+      1600
     ],
-    "width": 768,
-    "height": 544
+    "width": 1600,
+    "height": 900
   },
   "orehite-bela": {
     "widths": [
       480,
-      960
+      960,
+      1600
     ],
-    "width": 1024,
-    "height": 576
+    "width": 1600,
+    "height": 900
   },
   "pepsi-xmas": {
     "widths": [
@@ -269,39 +301,44 @@
       960,
       1600
     ],
-    "width": 1920,
-    "height": 1080
+    "width": 1600,
+    "height": 900
   },
   "project-title-one": {
     "widths": [
-      480
+      480,
+      960,
+      1600
     ],
-    "width": 720,
-    "height": 576
+    "width": 1600,
+    "height": 900
   },
   "shpek-naroden": {
     "widths": [
       480,
-      960
+      960,
+      1600
     ],
-    "width": 1440,
-    "height": 1152
+    "width": 1600,
+    "height": 900
   },
   "so-independent-i": {
     "widths": [
       480,
-      960
+      960,
+      1600
     ],
-    "width": 1280,
-    "height": 720
+    "width": 1600,
+    "height": 900
   },
   "so-independent-ii-2013-promo-trailer": {
     "widths": [
       480,
-      960
+      960,
+      1600
     ],
-    "width": 1280,
-    "height": 720
+    "width": 1600,
+    "height": 900
   },
   "societe-saving": {
     "widths": [
@@ -313,17 +350,21 @@
   },
   "the-bow": {
     "widths": [
-      480
+      480,
+      960,
+      1600
     ],
-    "width": 720,
-    "height": 576
+    "width": 1600,
+    "height": 900
   },
   "the-clockmaker": {
     "widths": [
-      480
+      480,
+      960,
+      1600
     ],
-    "width": 720,
-    "height": 576
+    "width": 1600,
+    "height": 900
   },
   "the-third-project-title": {
     "widths": [
@@ -335,25 +376,29 @@
   "tikves": {
     "widths": [
       480,
-      960
+      960,
+      1600
     ],
-    "width": 1280,
-    "height": 720
+    "width": 1600,
+    "height": 900
   },
   "veda-bulgarika": {
     "widths": [
       480,
-      960
+      960,
+      1600
     ],
-    "width": 1280,
-    "height": 720
+    "width": 1600,
+    "height": 900
   },
   "viktoria-trailer-2": {
     "widths": [
-      480
+      480,
+      960,
+      1600
     ],
-    "width": 841,
-    "height": 1200
+    "width": 1600,
+    "height": 900
   },
   "viktoria": {
     "widths": [
@@ -369,8 +414,8 @@
       960,
       1600
     ],
-    "width": 2476,
-    "height": 1046
+    "width": 1600,
+    "height": 900
   },
   "yet-another-one": {
     "widths": [

@@ -14,7 +14,8 @@
     "check:featured": "node scripts/check-featured.mjs",
     "optimize:posters": "node scripts/optimize-posters.mjs",
     "sync:stream": "node scripts/sync-stream-map.mjs",
-    "optimize:studio": "node scripts/optimize-studio.mjs"
+    "optimize:studio": "node scripts/optimize-studio.mjs",
+    "posters:from-video": "node scripts/fetch-stream-posters.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",

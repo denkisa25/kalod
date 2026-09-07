@@ -1,0 +1,4 @@
+{
+  "_note": "Per-slug poster timestamps for scripts/fetch-stream-posters.mjs. Anything not listed uses the script's default. Change a value and re-run with --only <slug> to re-cut one poster.",
+  "btv-action-id-car": "12s"
+}
