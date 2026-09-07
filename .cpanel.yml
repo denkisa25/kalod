@@ -1,0 +1,6 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/$USER/public_html/kalodimitrov.com/new/
+    - export REPO_PATH=/home/$USER/repositories/kalodimitrov
+    - /bin/cp -R $REPO_PATH/dist/. $DEPLOYPATH
