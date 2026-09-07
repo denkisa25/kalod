@@ -997,6 +997,16 @@ footer a:hover, footer button:hover { color: var(--color-accent); }
   transition: opacity 0.4s var(--ease-out);
 }
 .chrome.idle { opacity: 0; }
+/* The wrapper spans the whole player (inset:0, above .clickzone), so with
+   default pointer-events it swallowed every tap that landed in its empty
+   middle — which is the entire centre of the video. Tapping to pause did
+   nothing because the tap never reached .clickzone underneath. The rule below
+   only ever disabled the CHILDREN when idle, not the wrapper itself, so this
+   was broken whether the chrome was showing or hidden.
+   The wrapper is now transparent to pointers and its actually-interactive
+   regions opt back in. */
+.chrome { pointer-events: none; }
+.chrome-top, .controls, .info { pointer-events: auto; }
 .chrome.idle .chrome-top, .chrome.idle .controls, .chrome.idle .info { pointer-events: none; }
 /* chrome-top absorbs the free space so it stays pinned to the top edge
    while .controls and .info (siblings, not a wrapper) group together at
