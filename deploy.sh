@@ -84,7 +84,15 @@ log "npm ci done"
 # the account's real limit). VIPS_DISC_THRESHOLD was removed after it caused a
 # segfault in libvips' image step once the real (CPU) bug above was fixed.
 export VIPS_CONCURRENCY=1
-export NODE_OPTIONS="--max-old-space-size=700"
+# Lowered from 700 and made overridable after the cPanel task runner died with
+# "JavaScript heap out of memory" at roughly 46 MB of heap — the GC log shows
+# scavenges topping out in the 30-46 MB range, so V8's cap was never the
+# binding constraint. The OS refused the allocation: cPanel's deploy runs under
+# a tighter memory cgroup than an interactive SSH session (procs-now=14 there
+# against 9 over SSH). A smaller cap means V8 reserves and grows less
+# aggressively, which is the only lever available from inside the script.
+# The build no longer processes images, so it needs very little.
+export NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=256 --max-semi-space-size=4}"
 
 # The failure taskset alone does NOT fix. Rolldown's rayon pool panicked with
 #   ThreadPoolBuildError { IOError(Os { code: 11, WouldBlock }) }
